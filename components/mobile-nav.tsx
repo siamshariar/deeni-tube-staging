@@ -1,25 +1,22 @@
 "use client"
 
 import Link from "next/link"
-import { Home, PlaySquare, BookOpen, User, Search } from "lucide-react"
-import { useState } from "react"
+import { Home, PlaySquare, BookOpen, Users, Search } from "lucide-react"
 import { usePathname } from "next/navigation"
-import ShortsModal from "./shorts-modal"
 
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
-  { href: "/search", icon: Search, label: "Search" },
-  { href: "/subscriptions", icon: BookOpen, label: "Subscriptions" },
-  { href: "/you", icon: User, label: "You" },
+  { href: "/search-new", icon: Search, label: "Search" },
+  { href: "/channels", icon: Users, label: "Channels" },
+  { href: "/playlists", icon: BookOpen, label: "Playlists" },
+  { href: "/shorts", icon: PlaySquare, label: "Shorts" },
 ]
 
 export default function MobileNav() {
-  const [shortsModalOpen, setShortsModalOpen] = useState(false)
   const pathname = usePathname()
 
   return (
     <>
-      {/* Spacer so page content isn't hidden behind the fixed nav */}
       <div
         className="md:hidden"
         style={{ height: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
@@ -52,7 +49,6 @@ export default function MobileNav() {
                 aria-current={isActive ? "page" : undefined}
               >
                 <div className="relative flex items-center justify-center">
-                  {/* Active pill indicator above icon */}
                   {isActive && (
                     <span
                       className="absolute -top-2 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-foreground"
@@ -74,24 +70,8 @@ export default function MobileNav() {
               </Link>
             )
           })}
-
-          {/* Shorts button */}
-          <button
-            onClick={() => setShortsModalOpen(true)}
-            className="flex flex-col items-center justify-center flex-1 gap-0.5 min-h-[44px] text-muted-foreground hover:text-foreground transition-colors duration-150"
-            aria-label="Open Shorts"
-          >
-            <div className="relative flex items-center justify-center">
-              <PlaySquare className="h-6 w-6" strokeWidth={1.75} />
-            </div>
-            <span className="text-[10px] leading-none font-medium tracking-tight opacity-70">
-              Shorts
-            </span>
-          </button>
         </div>
       </nav>
-
-      <ShortsModal isOpen={shortsModalOpen} onClose={() => setShortsModalOpen(false)} />
     </>
   )
 }

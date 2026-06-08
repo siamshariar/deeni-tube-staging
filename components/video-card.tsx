@@ -15,9 +15,15 @@ import { useMediaQuery } from "@/hooks/use-media-query"
 
 interface VideoCardProps {
   isHorizontal?: boolean
+  videoId?: string
+  videoTitle?: string
+  channelName?: string
+  views?: string
+  timeAgo?: string
+  duration?: string
 }
 
-export default function VideoCard({ isHorizontal = false }: VideoCardProps) {
+export default function VideoCard({ isHorizontal = false, videoId, videoTitle, channelName, views, timeAgo, duration }: VideoCardProps) {
   const [open, setOpen] = useState(false)
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
@@ -28,6 +34,8 @@ export default function VideoCard({ isHorizontal = false }: VideoCardProps) {
       setOpen(true)
     }
   }
+
+  const videoUrl = `/videos/${videoId || "video-1"}/${videoId || "video-1"}`
 
   const menuItems = (
     <>
@@ -66,10 +74,10 @@ export default function VideoCard({ isHorizontal = false }: VideoCardProps) {
     </>
   )
 
-if (isHorizontal) {
+  if (isHorizontal) {
     return (
       <div className="flex flex-col p-3">
-        <Link href="#" className="block">
+        <Link href={videoUrl} className="block">
           <div className="relative aspect-video w-full">
             <Image
               src="/placeholder.svg?height=480&width=854"
@@ -78,28 +86,28 @@ if (isHorizontal) {
               className="object-cover rounded-lg"
             />
             <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1 py-0.5 rounded">
-              18:28
+              {duration || "18:28"}
             </div>
           </div>
         </Link>
         <div className="flex mt-3 gap-3">
-          <Link href="#" className="flex-shrink-0">
+          <Link href={videoUrl} className="flex-shrink-0">
             <Avatar className="h-9 w-9">
               <AvatarImage src="/placeholder.svg?height=36&width=36" />
               <AvatarFallback>YT</AvatarFallback>
             </Avatar>
           </Link>
           <div className="flex-1 min-w-0">
-            <Link href="#" className="line-clamp-2 font-medium text-sm">
-              নাসিরুদ্দীন আলবানী (রাহিঃ) কি সারাবিশ্বে একই দিনে ঈদ পালন করার পক্ষে মত দিয়েছেন?
+            <Link href={videoUrl} className="line-clamp-2 font-medium text-sm">
+              {videoTitle || "নাসিরুদ্দীন আলবানী (রাহিঃ) কি সারাবিশ্বে একই দিনে ঈদ পালন করার পক্ষে মত দিয়েছেন?"}
             </Link>
-            <Link href="#" className="text-muted-foreground text-xs mt-1 block">
-              SOHIH ISLAMER POTHE
+            <Link href={videoUrl} className="text-muted-foreground text-xs mt-1 block">
+              {channelName || "SOHIH ISLAMER POTHE"}
             </Link>
             <div className="text-muted-foreground text-xs flex items-center gap-1">
-              <span>33K views</span>
+              <span>{views || "33K views"}</span>
               <span>•</span>
-              <span>8 days ago</span>
+              <span>{timeAgo || "8 days ago"}</span>
             </div>
           </div>
           {isDesktop ? (
@@ -142,32 +150,32 @@ if (isHorizontal) {
 
   return (
     <div className="flex flex-col">
-      <Link href="#" className="block">
+      <Link href={videoUrl} className="block">
         <div className="relative aspect-video w-full">
           <Image src="/placeholder.svg?height=480&width=854" alt="Thumbnail" fill className="object-cover rounded-lg" />
           <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1 py-0.5 rounded">
-            4:47
+            {duration || "4:47"}
           </div>
         </div>
       </Link>
       <div className="flex mt-2 gap-2">
-        <Link href="#" className="flex-shrink-0">
+        <Link href={videoUrl} className="flex-shrink-0">
           <Avatar className="h-9 w-9">
             <AvatarImage src="/placeholder.svg?height=36&width=36" />
             <AvatarFallback>YT</AvatarFallback>
           </Avatar>
         </Link>
         <div className="flex-1 min-w-0">
-          <Link href="#" className="line-clamp-2 font-medium text-sm">
-            Heated Debate: Dr. Zakir Naik Gets Angry at an Atheist
+          <Link href={videoUrl} className="line-clamp-2 font-medium text-sm">
+            {videoTitle || "Heated Debate: Dr. Zakir Naik Gets Angry at an Atheist"}
           </Link>
-          <Link href="#" className="text-muted-foreground text-xs mt-1 block">
-            Daily Dawah
+          <Link href={videoUrl} className="text-muted-foreground text-xs mt-1 block">
+            {channelName || "Daily Dawah"}
           </Link>
           <div className="text-muted-foreground text-xs">
-            <span>208K views</span>
+            <span>{views || "208K views"}</span>
             <span> • </span>
-            <span>6 days ago</span>
+            <span>{timeAgo || "6 days ago"}</span>
           </div>
         </div>
         {isDesktop ? (
