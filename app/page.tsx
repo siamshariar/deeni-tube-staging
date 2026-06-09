@@ -155,7 +155,7 @@ export default function Home() {
       <div className="flex">
         <DesktopSidebar className="hidden md:block" />
 
-        <main className="flex-1 md:pl-[240px] md:pt-[108px] pt-[36px] md:pb-0 pb-nav-safe overflow-x-hidden">
+        <main className="flex-1 md:pl-[240px] md:pt-[108px] pt-[10px] md:pb-0 pb-nav-safe overflow-x-hidden">
           {/* Language Indicator - Shows selected languages */}
           {hasSelected && preferredLanguages.length > 0 && (
             <div className="px-4 py-1.5 text-xs text-muted-foreground bg-muted/30 border-b hidden md:block">
