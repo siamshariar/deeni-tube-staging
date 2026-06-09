@@ -47,7 +47,13 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       <div className="fixed top-0 left-0 bottom-0 w-[280px] bg-background z-50 md:hidden overflow-y-auto">
         <div className="flex items-center px-4 py-3 border-b sticky top-0 bg-background">
           <Link href="/" onClick={onClose}>
-            <Image src="/youtube-logo.svg" alt="YouTube" width={90} height={20} className="h-5 w-auto" />
+            <Image 
+              src="/DeeniTubeLogo.png" 
+              alt="Deeni.tube" 
+              width={100} 
+              height={24} 
+              className="h-6 w-auto" 
+            />
           </Link>
         </div>
 

@@ -7,9 +7,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "YouTube Clone",
-  description: "YouTube clone built with Next.js, Tailwind CSS, and shadcn/ui",
-    generator: 'v0.app'
+  title: "Deeni.tube - Authentic Islamic Videos",
+  description: "Watch authentic Islamic videos from trusted scholars. Browse channels, scholars, and categories for the best Islamic content.",
+  generator: 'v0.app'
 }
 
 export const viewport = {

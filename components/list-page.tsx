@@ -2,12 +2,13 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Search, X, ChevronDown } from "lucide-react"
+import { ArrowLeft, Search, X, ChevronDown, Bell, BellRing, BellOff } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import AppHeader from "@/components/app-header"
 import MobileNav from "@/components/mobile-nav"
 import DesktopSidebar from "@/components/desktop-sidebar"
+import { useChannelPreferences } from "@/hooks/use-channel-preferences"
 
 export interface ListItem {
   id: string
@@ -40,6 +41,9 @@ export default function ListPage({ title, items, languageFilter = true, showSort
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Channel preference hooks (only used for channel type)
+  const { getPreference, setPreference } = useChannelPreferences()
+
   const filteredItems = items
     .filter((item) => {
       if (!searchQuery) return true
@@ -50,12 +54,25 @@ export default function ListPage({ title, items, languageFilter = true, showSort
       return b.name.localeCompare(a.name)
     })
 
-  // Use channel-new for channel detail, otherwise use basePath
   const getDetailPath = (slug: string) => {
     if (itemType === "channel") {
       return `/channel-new/${slug}`
     }
     return `/${basePath}/${slug}`
+  }
+
+  const handleBellClick = (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation()
+    const current = getPreference(itemId)
+    const next = current === "all" ? "personalized" : current === "personalized" ? "none" : "all"
+    setPreference(itemId, next)
+  }
+
+  const getBellIcon = (itemId: string) => {
+    const pref = getPreference(itemId)
+    if (pref === "none") return <BellOff className="h-4 w-4 text-muted-foreground/50" />
+    if (pref === "all") return <Bell className="h-4 w-4 text-primary" />
+    return <BellRing className="h-4 w-4 text-primary" />
   }
 
   return (
@@ -135,10 +152,10 @@ export default function ListPage({ title, items, languageFilter = true, showSort
               </div>
             ) : (
               filteredItems.map((item) => (
-                <button
+                <div
                   key={item.id}
+                  className="w-full flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
                   onClick={() => router.push(getDetailPath(item.slug))}
-                  className="w-full flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
                 >
                   <Avatar className="h-12 w-12 flex-shrink-0">
                     <AvatarImage src={item.image || `/placeholder.svg?height=48&width=48`} alt={item.name} />
@@ -153,7 +170,24 @@ export default function ListPage({ title, items, languageFilter = true, showSort
                       <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{item.description}</p>
                     )}
                   </div>
-                </button>
+
+                  {/* Bell icon for channel preference - only for channel type */}
+                  {itemType === "channel" && (
+                    <button
+                      onClick={(e) => handleBellClick(e, item.id)}
+                      className="p-2 rounded-full hover:bg-muted transition-colors flex-shrink-0"
+                      title={
+                        getPreference(item.id) === "none"
+                          ? "Ignored - Click to follow"
+                          : getPreference(item.id) === "all"
+                          ? "All notifications - Click to change"
+                          : "Personalized - Click to change"
+                      }
+                    >
+                      {getBellIcon(item.id)}
+                    </button>
+                  )}
+                </div>
               ))
             )}
           </div>

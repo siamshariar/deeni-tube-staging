@@ -14,16 +14,24 @@ export default function AppHeader() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [mobileSearchQuery, setMobileSearchQuery] = useState("")
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+  const [authLoaded, setAuthLoaded] = useState(false)
 
+  // Check auth state on mount
   useEffect(() => {
-    const prefs = localStorage.getItem("deeni-language-prefs")
-    if (prefs) {
-      try {
+    try {
+      const prefs = localStorage.getItem("deeni-language-prefs")
+      if (prefs) {
         const parsed = JSON.parse(prefs)
         setIsLoggedIn(!parsed.isGuest)
-      } catch {}
+      } else {
+        setIsLoggedIn(false)
+      }
+    } catch {
+      setIsLoggedIn(false)
     }
+    const timer = setTimeout(() => setAuthLoaded(true), 100)
+    return () => clearTimeout(timer)
   }, [])
 
   const handleMobileSearchSubmit = (e: React.FormEvent) => {
@@ -38,17 +46,17 @@ export default function AppHeader() {
   return (
     <>
       {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 bg-background z-20 border-b">
+      <header className="md:hidden fixed top-0 left-0 right-0 bg-background z-20 border-b w-full max-w-[100vw]">
         {showMobileSearch ? (
-          <div className="flex items-center gap-2 px-3 py-2">
+          <div className="flex items-center gap-2 px-3 py-2 w-full">
             <button
               onClick={() => { setShowMobileSearch(false); setMobileSearchQuery("") }}
               className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <form onSubmit={handleMobileSearchSubmit} className="flex-1 flex items-center gap-2">
-              <div className="relative flex-1">
+            <form onSubmit={handleMobileSearchSubmit} className="flex-1 flex items-center gap-2 min-w-0">
+              <div className="relative flex-1 min-w-0">
                 <input
                   type="text"
                   value={mobileSearchQuery}
@@ -69,17 +77,24 @@ export default function AppHeader() {
             </form>
           </div>
         ) : (
-          <div className="flex items-center justify-between px-4 py-2">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setMobileSidebarOpen(true)} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors">
+          <div className="flex items-center justify-between px-4 py-2 w-full">
+            <div className="flex items-center gap-3 min-w-0">
+              <button onClick={() => setMobileSidebarOpen(true)} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors flex-shrink-0">
                 <Menu className="h-5 w-5" />
               </button>
-              <Link href="/">
-                <Image src="/youtube-logo.svg" alt="YouTube" width={90} height={20} className="h-5 w-auto" />
+              <Link href="/" className="flex-shrink-0">
+                <Image 
+                  src="/DeeniTubeLogo.png" 
+                  alt="Deeni.tube" 
+                  width={90} 
+                  height={24} 
+                  className="h-6 w-auto" 
+                  priority
+                />
               </Link>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-shrink-0">
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowMobileSearch(true)}>
                 <Search className="h-5 w-5" />
               </Button>
@@ -89,7 +104,10 @@ export default function AppHeader() {
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Bell className="h-5 w-5" />
               </Button>
-              {isLoggedIn ? (
+              {/* Mobile Auth Area */}
+              {!authLoaded ? (
+                <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+              ) : isLoggedIn ? (
                 <AccountDropdown />
               ) : (
                 <Link href="/signin">
@@ -104,32 +122,42 @@ export default function AppHeader() {
       </header>
 
       {/* Desktop Header */}
-      <header className="hidden md:flex fixed top-0 left-0 right-0 items-center justify-between px-4 py-2 border-b bg-background z-20">
-        <div className="flex items-center gap-4">
+      <header className="hidden md:flex fixed top-0 left-0 right-0 items-center justify-between px-4 py-2 border-b bg-background z-20 w-full max-w-[100vw]">
+        <div className="flex items-center gap-4 flex-shrink-0">
           <Link href="/">
-            <Image src="/youtube-logo.svg" alt="YouTube" width={120} height={30} className="h-6 w-auto" />
+            <Image 
+              src="/DeeniTubeLogo.png" 
+              alt="Deeni.tube" 
+              width={120} 
+              height={30} 
+              className="h-7 w-auto" 
+              priority
+            />
           </Link>
         </div>
 
-        <div className="flex-1 max-w-[720px] mx-4">
+        <div className="flex-1 max-w-[720px] mx-4 min-w-0">
           <form onSubmit={(e) => e.preventDefault()} className="flex items-center">
-            <div className="relative flex-1">
+            <div className="relative flex-1 min-w-0">
               <input type="text" placeholder="Search" className="w-full h-10 py-2 px-4 rounded-l-full border focus:outline-none focus:border-blue-500" />
             </div>
-            <Button variant="secondary" size="icon" className="rounded-r-full h-10 border border-l-0 bg-gray-100 hover:bg-gray-200">
+            <Button variant="secondary" size="icon" className="rounded-r-full h-10 border border-l-0 bg-gray-100 hover:bg-gray-200 flex-shrink-0">
               <Search className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full ml-2 bg-gray-100 hover:bg-gray-200">
+            <Button variant="ghost" size="icon" className="rounded-full ml-2 bg-gray-100 hover:bg-gray-200 flex-shrink-0">
               <Mic className="w-5 h-5" />
             </Button>
           </form>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-shrink-0">
           <Button variant="ghost" size="icon" className="rounded-full">
-            <Bell className="w-5 h-5" />
+            <Bell className="w-5 w-5" />
           </Button>
-          {isLoggedIn ? (
+          {/* Desktop Auth Area */}
+          {!authLoaded ? (
+            <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+          ) : isLoggedIn ? (
             <AccountDropdown />
           ) : (
             <Link href="/signin">

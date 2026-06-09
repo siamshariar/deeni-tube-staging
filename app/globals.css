@@ -49,6 +49,30 @@
   }
 }
 
+/* CRITICAL FIX: Prevent any horizontal scroll */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+}
+
+body {
+  overflow-x: hidden !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  position: relative;
+}
+
+/* Prevent any element from causing horizontal overflow */
+[class*="fixed"],
+[class*="absolute"] {
+  max-width: 100vw;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -63,21 +87,22 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-
-  /* iOS safe area helpers */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-
   .mb-safe {
     margin-bottom: env(safe-area-inset-bottom, 0px);
   }
-
-  /* Bottom nav safe area — height of nav + iOS home indicator */
   .pb-nav-safe {
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }

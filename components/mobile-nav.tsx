@@ -1,15 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { Home, PlaySquare, BookOpen, Users, Search } from "lucide-react"
+import { Home, Users, GraduationCap, BookOpen, PlaySquare } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
-  { href: "/search-new", icon: Search, label: "Search" },
   { href: "/channels", icon: Users, label: "Channels" },
+  { href: "/scholars", icon: GraduationCap, label: "Scholars" },
   { href: "/playlists", icon: BookOpen, label: "Playlists" },
-  { href: "/shorts", icon: PlaySquare, label: "Shorts" },
 ]
 
 export default function MobileNav() {
