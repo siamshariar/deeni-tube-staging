@@ -18,6 +18,8 @@ import {
   RefreshCw,
   FileText,
   User,
+  Monitor,
+  Sun,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -26,6 +28,9 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
@@ -38,9 +43,12 @@ function getInitials(name: string): string {
     .substring(0, 2)
 }
 
+type ThemeMode = "device" | "light" | "dark"
+
 export default function AccountDropdown() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [theme, setTheme] = useState<ThemeMode>("device")
   const [userData, setUserData] = useState({
     name: "Tamzid Muhammad",
     email: "muhammad.tamzid@sun-asterisk.com",
@@ -49,7 +57,6 @@ export default function AccountDropdown() {
   })
   const isMounted = useRef(false)
 
-  // Read user data once on mount - no dependency on 'open'
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("deeni-user-data")
@@ -62,9 +69,16 @@ export default function AccountDropdown() {
           initials: parsed.initials || getInitials(parsed.name || "Tamzid Muhammad"),
         })
       }
+      const storedTheme = localStorage.getItem("deeni-theme") as ThemeMode
+      if (storedTheme) setTheme(storedTheme)
     } catch {}
     isMounted.current = true
   }, [])
+
+  const handleThemeChange = (newTheme: ThemeMode) => {
+    setTheme(newTheme)
+    localStorage.setItem("deeni-theme", newTheme)
+  }
 
   const handleSignOut = () => {
     localStorage.setItem("deeni-language-prefs", JSON.stringify({
@@ -80,6 +94,22 @@ export default function AccountDropdown() {
   const handleNavigate = (path: string) => {
     setOpen(false)
     router.push(path)
+  }
+
+  const getThemeLabel = () => {
+    switch (theme) {
+      case "light": return "Light theme"
+      case "dark": return "Dark theme"
+      default: return "Device theme"
+    }
+  }
+
+  const getThemeIcon = () => {
+    switch (theme) {
+      case "light": return <Sun className="h-5 w-5" />
+      case "dark": return <Moon className="h-5 w-5" />
+      default: return <Monitor className="h-5 w-5" />
+    }
   }
 
   return (
@@ -119,30 +149,30 @@ export default function AccountDropdown() {
         {/* Account Section */}
         <DropdownMenuGroup>
           <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/you-new")}>
-            <User className="mr-3 h-5 w-5 text-muted-foreground" />
+            <User className="mr-3 h-5 w-5" />
             <span>Your channel</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="py-3 cursor-pointer">
-            <RefreshCw className="mr-3 h-5 w-5 text-muted-foreground" />
+            <RefreshCw className="mr-3 h-5 w-5" />
             <span>Switch account</span>
             <ChevronRight className="ml-auto h-4 w-4" />
           </DropdownMenuItem>
           <DropdownMenuItem className="py-3 cursor-pointer" onClick={handleSignOut}>
-            <LogOut className="mr-3 h-5 w-5 text-muted-foreground" />
+            <LogOut className="mr-3 h-5 w-5" />
             <span>Sign out</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
 
-        {/* YouTube Section */}
+        {/* Studio Section */}
         <DropdownMenuGroup>
           <DropdownMenuItem className="py-3 cursor-pointer">
-            <Youtube className="mr-3 h-5 w-5 text-muted-foreground" />
-            <span>YouTube Studio</span>
+            <Youtube className="mr-3 h-5 w-5" />
+            <span>Deeni.tube Studio</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="py-3 cursor-pointer">
-            <DollarSign className="mr-3 h-5 w-5 text-muted-foreground" />
+            <DollarSign className="mr-3 h-5 w-5" />
             <span>Purchases and memberships</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -152,31 +182,52 @@ export default function AccountDropdown() {
         {/* Preferences Section */}
         <DropdownMenuGroup>
           <DropdownMenuItem className="py-3 cursor-pointer">
-            <FileText className="mr-3 h-5 w-5 text-muted-foreground" />
-            <span>Your data in YouTube</span>
+            <FileText className="mr-3 h-5 w-5" />
+            <span>Your data in Deeni.tube</span>
           </DropdownMenuItem>
-          <DropdownMenuItem className="py-3 cursor-pointer">
-            <Moon className="mr-3 h-5 w-5 text-muted-foreground" />
-            <span>Appearance: Device theme</span>
-            <ChevronRight className="ml-auto h-4 w-4" />
-          </DropdownMenuItem>
+          
+          {/* Appearance Submenu */}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="py-3 cursor-pointer">
+              {getThemeIcon()}
+              <span className="ml-3">Appearance: {getThemeLabel()}</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="w-48">
+              <DropdownMenuItem onClick={() => handleThemeChange("device")} className="py-2.5 cursor-pointer">
+                <Monitor className="mr-3 h-5 w-5" />
+                <span>Device theme</span>
+                {theme === "device" && <Check className="ml-auto h-4 w-4" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleThemeChange("light")} className="py-2.5 cursor-pointer">
+                <Sun className="mr-3 h-5 w-5" />
+                <span>Light theme</span>
+                {theme === "light" && <Check className="ml-auto h-4 w-4" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleThemeChange("dark")} className="py-2.5 cursor-pointer">
+                <Moon className="mr-3 h-5 w-5" />
+                <span>Dark theme</span>
+                {theme === "dark" && <Check className="ml-auto h-4 w-4" />}
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
           <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/you-new")}>
-            <Globe className="mr-3 h-5 w-5 text-muted-foreground" />
+            <Globe className="mr-3 h-5 w-5" />
             <span>Language: English</span>
             <ChevronRight className="ml-auto h-4 w-4" />
           </DropdownMenuItem>
           <DropdownMenuItem className="py-3 cursor-pointer">
-            <ShieldAlert className="mr-3 h-5 w-5 text-muted-foreground" />
+            <ShieldAlert className="mr-3 h-5 w-5" />
             <span>Restricted Mode: Off</span>
             <ChevronRight className="ml-auto h-4 w-4" />
           </DropdownMenuItem>
           <DropdownMenuItem className="py-3 cursor-pointer">
-            <Globe className="mr-3 h-5 w-5 text-muted-foreground" />
+            <Globe className="mr-3 h-5 w-5" />
             <span>Location: Bangladesh</span>
             <ChevronRight className="ml-auto h-4 w-4" />
           </DropdownMenuItem>
           <DropdownMenuItem className="py-3 cursor-pointer">
-            <Keyboard className="mr-3 h-5 w-5 text-muted-foreground" />
+            <Keyboard className="mr-3 h-5 w-5" />
             <span>Keyboard shortcuts</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -186,15 +237,15 @@ export default function AccountDropdown() {
         {/* Support Section */}
         <DropdownMenuGroup>
           <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/settings")}>
-            <Settings className="mr-3 h-5 w-5 text-muted-foreground" />
+            <Settings className="mr-3 h-5 w-5" />
             <span>Settings</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/help")}>
-            <HelpCircle className="mr-3 h-5 w-5 text-muted-foreground" />
+            <HelpCircle className="mr-3 h-5 w-5" />
             <span>Help</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="py-3 cursor-pointer">
-            <MessageSquare className="mr-3 h-5 w-5 text-muted-foreground" />
+            <MessageSquare className="mr-3 h-5 w-5" />
             <span>Send feedback</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -202,3 +253,6 @@ export default function AccountDropdown() {
     </DropdownMenu>
   )
 }
+
+// Need to import Check in account-dropdown
+import { Check } from "lucide-react"

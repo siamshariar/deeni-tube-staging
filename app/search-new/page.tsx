@@ -2,19 +2,24 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, X, ChevronDown, ArrowLeft } from "lucide-react"
+import { Search, X, ChevronDown, ArrowLeft, Filter, History, Trash2 } from "lucide-react"
 import AppHeader from "@/components/app-header"
 import MobileNav from "@/components/mobile-nav"
 import DesktopSidebar from "@/components/desktop-sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useMediaQuery } from "@/hooks/use-media-query"
 import Image from "next/image"
 import Link from "next/link"
 
 const languages = [
-  { code: "en", label: "En" },
-  { code: "ar", label: "Ar" },
-  { code: "hi", label: "Hi" },
-  { code: "bn", label: "Bn" },
+  { code: "en", label: "English" },
+  { code: "ar", label: "Arabic" },
+  { code: "hi", label: "Hindi" },
+  { code: "bn", label: "Bengali" },
+  { code: "ur", label: "Urdu" },
+  { code: "tr", label: "Turkish" },
 ]
 
 const categoryOptions = [
@@ -38,6 +43,13 @@ const channelOptions = [
   "Eman Channel", "Quran Weekly",
 ]
 
+const recentSearches = [
+  "Quran tafsir",
+  "How to pray salah",
+  "Islamic lectures",
+  "Stories of prophets",
+]
+
 const sampleResults = [
   {
     id: "1",
@@ -48,6 +60,7 @@ const sampleResults = [
     timeAgo: "6 days ago",
     duration: "18:28",
     thumbnail: "/placeholder.svg?height=480&width=854",
+    description: "A powerful reminder about the true purpose of life from an Islamic perspective.",
   },
   {
     id: "2",
@@ -58,6 +71,7 @@ const sampleResults = [
     timeAgo: "3 days ago",
     duration: "25:15",
     thumbnail: "/placeholder.svg?height=480&width=854",
+    description: "Complete tafsir of Surah Al-Fatiha by Sheikh Yasir Qadhi with detailed explanations.",
   },
   {
     id: "3",
@@ -68,6 +82,40 @@ const sampleResults = [
     timeAgo: "1 week ago",
     duration: "12:40",
     thumbnail: "/placeholder.svg?height=480&width=854",
+    description: "Learn how to pray salah correctly with this step by step guide for beginners.",
+  },
+  {
+    id: "4",
+    title: "The Day of Judgment - Signs and Events",
+    channel: "Peace TV",
+    channelAvatar: "/placeholder.svg?height=36&width=36",
+    views: "350K views",
+    timeAgo: "2 weeks ago",
+    duration: "32:10",
+    thumbnail: "/placeholder.svg?height=480&width=854",
+    description: "An in-depth look at the signs of the Day of Judgment from Islamic sources.",
+  },
+  {
+    id: "5",
+    title: "Powerful Dua for Protection and Guidance",
+    channel: "Huda TV",
+    channelAvatar: "/placeholder.svg?height=36&width=36",
+    views: "420K views",
+    timeAgo: "1 month ago",
+    duration: "8:45",
+    thumbnail: "/placeholder.svg?height=480&width=854",
+    description: "A collection of powerful duas for protection from evil and guidance in life.",
+  },
+  {
+    id: "6",
+    title: "Islamic Morning Routine - Start Your Day Right",
+    channel: "Daily Dawah",
+    channelAvatar: "/placeholder.svg?height=36&width=36",
+    views: "180K views",
+    timeAgo: "3 weeks ago",
+    duration: "10:30",
+    thumbnail: "/placeholder.svg?height=480&width=854",
+    description: "Start your day with these Islamic morning practices and duas.",
   },
 ]
 
@@ -115,46 +163,32 @@ function MultiSelect({ label, options, selected, onChange, searchable = false }:
   return (
     <div ref={ref} className="relative">
       <p className="text-sm font-medium mb-1.5 text-foreground">{label}</p>
-
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`w-full min-h-10 px-3 py-2 flex items-center gap-2 flex-wrap rounded-lg border text-left transition-colors ${
-          open
-            ? "border-primary ring-2 ring-primary/20"
-            : "border-border hover:border-muted-foreground"
+        className={`w-full min-h-10 px-3 py-2 flex items-center gap-2 flex-wrap rounded-xl border text-left transition-colors ${
+          open ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-muted-foreground"
         } bg-background`}
       >
         <div className="flex flex-wrap gap-1.5 flex-1">
           {selected.length === 0 ? (
-            <span className="text-sm text-muted-foreground">Search {label.toLowerCase()}...</span>
+            <span className="text-sm text-muted-foreground">Select {label.toLowerCase()}...</span>
           ) : (
             selected.map((val) => (
-              <span
-                key={val}
-                className="flex items-center gap-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-md font-medium"
-              >
+              <span key={val} className="flex items-center gap-1 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-medium">
                 {val}
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => remove(val, e)}
-                  onKeyDown={(e) => e.key === "Enter" && remove(val, e as any)}
-                  className="cursor-pointer hover:opacity-70"
-                >
+                <span role="button" tabIndex={0} onClick={(e) => remove(val, e)} className="cursor-pointer hover:opacity-70">
                   <X className="h-3 w-3" />
                 </span>
               </span>
             ))
           )}
         </div>
-        <ChevronDown
-          className={`h-4 w-4 text-muted-foreground flex-shrink-0 ml-auto transition-transform ${open ? "rotate-180" : ""}`}
-        />
+        <ChevronDown className={`h-4 w-4 text-muted-foreground flex-shrink-0 ml-auto transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-popover border rounded-lg shadow-lg overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full bg-popover border rounded-xl shadow-lg overflow-hidden">
           {searchable && (
             <div className="p-2 border-b">
               <div className="relative">
@@ -164,7 +198,7 @@ function MultiSelect({ label, options, selected, onChange, searchable = false }:
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder={`Search ${label.toLowerCase()}...`}
-                  className="w-full h-8 pl-7 pr-2 text-sm rounded border bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  className="w-full h-8 pl-7 pr-2 text-sm rounded-lg border bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary/30"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -172,9 +206,7 @@ function MultiSelect({ label, options, selected, onChange, searchable = false }:
           )}
           <div className="max-h-48 overflow-y-auto">
             {filteredOptions.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-                No {label.toLowerCase()} found
-              </div>
+              <div className="px-4 py-3 text-sm text-muted-foreground text-center">No {label.toLowerCase()} found</div>
             ) : (
               filteredOptions.map((option) => {
                 const isSelected = selected.includes(option)
@@ -183,20 +215,14 @@ function MultiSelect({ label, options, selected, onChange, searchable = false }:
                     key={option}
                     type="button"
                     onClick={() => toggle(option)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors hover:bg-muted ${
-                      isSelected ? "bg-muted/60 font-medium" : ""
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors hover:bg-muted ${isSelected ? "bg-muted/60 font-medium" : ""}`}
                   >
-                    <span
-                      className={`h-4 w-4 rounded border flex items-center justify-center flex-shrink-0 ${
-                        isSelected
-                          ? "bg-primary border-primary text-primary-foreground"
-                          : "border-border"
-                      }`}
-                    >
+                    <span className={`h-4 w-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                      isSelected ? "bg-primary border-primary" : "border-muted-foreground/30"
+                    }`}>
                       {isSelected && (
-                        <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none">
-                          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <svg viewBox="0 0 12 12" className="h-3 w-3 text-primary-foreground" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       )}
                     </span>
@@ -212,15 +238,43 @@ function MultiSelect({ label, options, selected, onChange, searchable = false }:
   )
 }
 
+function VideoSkeleton() {
+  return (
+    <div className="flex gap-3 py-3">
+      <Skeleton className="w-40 md:w-56 aspect-video rounded-lg flex-shrink-0" />
+      <div className="flex-1 min-w-0 space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-3 w-32" />
+      </div>
+    </div>
+  )
+}
+
 export default function SearchNewPage() {
   const router = useRouter()
+  const isMobile = useMediaQuery("(max-width: 768px)")
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState("")
   const [activeLangs, setActiveLangs] = useState<string[]>(["en"])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedScholars, setSelectedScholars] = useState<string[]>([])
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [hasSearched, setHasSearched] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [results, setResults] = useState<typeof sampleResults>([])
+  const [recentSearchesList, setRecentSearchesList] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('recentSearches')
+      return stored ? JSON.parse(stored) : recentSearches
+    }
+    return recentSearches
+  })
+
+  useEffect(() => {
+    searchInputRef.current?.focus()
+  }, [])
 
   const toggleLang = (code: string) => {
     setActiveLangs((prev) =>
@@ -240,15 +294,124 @@ export default function SearchNewPage() {
     setResults([])
   }
 
+  const clearRecentSearches = () => {
+    setRecentSearchesList([])
+    localStorage.removeItem('recentSearches')
+  }
+
+  const removeRecentSearch = (search: string) => {
+    const updated = recentSearchesList.filter(s => s !== search)
+    setRecentSearchesList(updated)
+    localStorage.setItem('recentSearches', JSON.stringify(updated))
+  }
+
   const handleSearch = () => {
+    if (!query.trim() && !hasFilters) return
+
+    if (query.trim()) {
+      const updated = [query.trim(), ...recentSearchesList.filter(s => s !== query.trim())].slice(0, 8)
+      setRecentSearchesList(updated)
+      localStorage.setItem('recentSearches', JSON.stringify(updated))
+    }
+
+    setIsLoading(true)
     setHasSearched(true)
-    setResults(sampleResults)
+
+    setTimeout(() => {
+      setResults(sampleResults)
+      setIsLoading(false)
+    }, 800)
+  }
+
+  const handleRecentSearchClick = (search: string) => {
+    setQuery(search)
+    setTimeout(() => {
+      const updated = [search, ...recentSearchesList.filter(s => s !== search)].slice(0, 8)
+      setRecentSearchesList(updated)
+      localStorage.setItem('recentSearches', JSON.stringify(updated))
+      setIsLoading(true)
+      setHasSearched(true)
+      setTimeout(() => {
+        setResults(sampleResults)
+        setIsLoading(false)
+      }, 800)
+    }, 100)
   }
 
   const hasFilters =
     selectedCategories.length > 0 ||
     selectedScholars.length > 0 ||
     selectedChannels.length > 0
+
+  // Advanced search content
+  const advancedSearchContent = (
+    <div className="space-y-5 bg-card rounded-xl border p-4 md:p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold text-base">Advanced search</h2>
+        {hasFilters && (
+          <button onClick={clearAll} className="text-sm text-primary hover:underline">
+            Clear all filters
+          </button>
+        )}
+      </div>
+
+      {/* Language Filter */}
+      <div>
+        <p className="text-sm font-medium mb-2">Languages</p>
+        <div className="flex flex-wrap gap-2">
+          {languages.map((lang) => {
+            const isActive = activeLangs.includes(lang.code)
+            return (
+              <button
+                key={lang.code}
+                onClick={() => toggleLang(lang.code)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted hover:bg-muted/80 text-foreground"
+                }`}
+              >
+                {lang.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Categories */}
+      <MultiSelect
+        label="Categories"
+        options={categoryOptions}
+        selected={selectedCategories}
+        onChange={setSelectedCategories}
+        searchable={true}
+      />
+
+      {/* Scholars */}
+      <MultiSelect
+        label="Scholars"
+        options={scholarOptions}
+        selected={selectedScholars}
+        onChange={setSelectedScholars}
+        searchable={true}
+      />
+
+      {/* Channels */}
+      <MultiSelect
+        label="Channels"
+        options={channelOptions}
+        selected={selectedChannels}
+        onChange={setSelectedChannels}
+        searchable={true}
+      />
+
+      {/* Search Button */}
+      <Button onClick={handleSearch} className="w-full rounded-full" disabled={!query.trim() && !hasFilters}>
+        <Search className="h-4 w-4 mr-2" />
+        Search
+      </Button>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -260,10 +423,10 @@ export default function SearchNewPage() {
         </div>
 
         <div className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px]">
-          <div className="max-w-2xl mx-auto pb-nav-safe md:pb-6">
+          <div className="max-w-[1096px] mx-auto pb-nav-safe md:pb-6">
 
-            {/* Back + Title - Mobile Only */}
-            <div className="flex items-center gap-2 px-4 py-2 md:hidden border-b">
+            {/* Mobile Header */}
+            <div className="md:hidden flex items-center gap-2 px-4 py-3 sticky top-[56px] bg-background z-10">
               <button
                 onClick={() => {
                   if (hasSearched) {
@@ -274,157 +437,179 @@ export default function SearchNewPage() {
                   }
                 }}
                 className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors"
-                aria-label="Go back"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="font-semibold text-base">Search</h1>
-            </div>
-
-            {/* Search Input */}
-            <div className="px-4 py-3 border-b md:border-b-0">
-              <div className="relative flex items-center">
-                <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <div className="flex-1 relative">
                 <input
+                  ref={searchInputRef}
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search videos..."
-                  className="w-full h-10 pl-9 pr-9 rounded-lg border bg-muted/40 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  placeholder="Search"
+                  className="w-full h-10 pl-10 pr-10 rounded-full bg-muted/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:bg-muted transition-colors"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleSearch()
                   }}
                 />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 {query && (
-                  <button
-                    onClick={() => setQuery("")}
-                    className="absolute right-3 text-muted-foreground hover:text-foreground"
-                  >
+                  <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Advanced Search or Results */}
+            {/* Desktop Search Input */}
+            <div className="hidden md:flex items-center gap-3 px-6 py-4">
+              <div className="flex-1 relative max-w-2xl">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search"
+                  className="w-full h-12 pl-12 pr-12 rounded-full bg-muted/50 text-base placeholder:text-muted-foreground focus:outline-none focus:bg-muted transition-colors"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSearch()
+                  }}
+                />
+                {query && (
+                  <button onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Content */}
             {!hasSearched ? (
-              <div className="px-4 pt-4 space-y-5">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-sm text-foreground">Advanced search</h2>
-                  {hasFilters && (
-                    <button
-                      onClick={clearAll}
-                      className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-
-                {/* Language Filter */}
-                <div>
-                  <p className="text-sm font-medium mb-2">Languages</p>
-                  <div className="flex flex-wrap gap-2">
-                    {languages.map((lang) => {
-                      const isActive = activeLangs.includes(lang.code)
-                      return (
-                        <button
-                          key={lang.code}
-                          onClick={() => toggleLang(lang.code)}
-                          className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-                            isActive
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-background text-foreground border-border hover:bg-muted"
-                          }`}
-                        >
-                          {lang.label}
-                        </button>
-                      )
-                    })}
+              <div className="px-4 md:px-6">
+                {/* Recent Searches */}
+                {recentSearchesList.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="font-semibold text-sm">Recent searches</h2>
+                      <button onClick={clearRecentSearches} className="text-xs text-muted-foreground hover:text-foreground">
+                        Clear all
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      {recentSearchesList.map((search) => (
+                        <div key={search} className="flex items-center justify-between group">
+                          <button
+                            onClick={() => handleRecentSearchClick(search)}
+                            className="flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors flex-1 text-left"
+                          >
+                            <History className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm">{search}</span>
+                          </button>
+                          <button
+                            onClick={() => removeRecentSearch(search)}
+                            className="p-1.5 rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <X className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Categories */}
-                <MultiSelect
-                  label="Categories"
-                  options={categoryOptions}
-                  selected={selectedCategories}
-                  onChange={setSelectedCategories}
-                  searchable={true}
-                />
-
-                {/* Scholars */}
-                <MultiSelect
-                  label="Scholars"
-                  options={scholarOptions}
-                  selected={selectedScholars}
-                  onChange={setSelectedScholars}
-                  searchable={true}
-                />
-
-                {/* Channels */}
-                <MultiSelect
-                  label="Channels"
-                  options={channelOptions}
-                  selected={selectedChannels}
-                  onChange={setSelectedChannels}
-                  searchable={true}
-                />
-
-                {/* Search Button */}
-                <button
-                  type="button"
-                  onClick={handleSearch}
-                  className="w-full h-10 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                >
-                  <Search className="h-4 w-4" />
-                  Search
-                </button>
+                {/* Advanced Search - Always Visible */}
+                {advancedSearchContent}
               </div>
             ) : (
               /* Search Results */
-              <div className="px-4 pt-4">
+              <div className="px-4 md:px-6">
+                {/* Filter Chips */}
+                {(hasFilters || activeLangs.length > 1) && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {activeLangs.filter(l => l !== "en").map(lang => (
+                      <span key={lang} className="flex items-center gap-1 bg-primary/10 text-primary text-xs px-3 py-1 rounded-full font-medium">
+                        {languages.find(l => l.code === lang)?.label}
+                        <button onClick={() => toggleLang(lang)}><X className="h-3 w-3" /></button>
+                      </span>
+                    ))}
+                    {selectedCategories.map(cat => (
+                      <span key={cat} className="flex items-center gap-1 bg-primary/10 text-primary text-xs px-3 py-1 rounded-full font-medium">
+                        {cat}
+                        <button onClick={() => setSelectedCategories(prev => prev.filter(c => c !== cat))}><X className="h-3 w-3" /></button>
+                      </span>
+                    ))}
+                    {selectedScholars.map(s => (
+                      <span key={s} className="flex items-center gap-1 bg-primary/10 text-primary text-xs px-3 py-1 rounded-full font-medium">
+                        {s}
+                        <button onClick={() => setSelectedScholars(prev => prev.filter(sc => sc !== s))}><X className="h-3 w-3" /></button>
+                      </span>
+                    ))}
+                    {selectedChannels.map(ch => (
+                      <span key={ch} className="flex items-center gap-1 bg-primary/10 text-primary text-xs px-3 py-1 rounded-full font-medium">
+                        {ch}
+                        <button onClick={() => setSelectedChannels(prev => prev.filter(c => c !== ch))}><X className="h-3 w-3" /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <p className="text-sm text-muted-foreground mb-4">
-                  {results.length} results for &ldquo;{query}&rdquo;
+                  {isLoading ? 'Searching...' : `${results.length} results for "${query || 'filtered search'}"`}
                 </p>
-                <div className="space-y-4">
-                  {results.map((video) => (
-                    <Link
-                      key={video.id}
-                      href={`/videos/${video.id}`}
-                      className="flex gap-3 group"
-                    >
-                      <div className="relative w-40 h-24 flex-shrink-0">
-                        <Image
-                          src={video.thumbnail}
-                          alt={video.title}
-                          fill
-                          className="object-cover rounded-lg"
-                        />
-                        <div className="absolute bottom-1 right-1 bg-black bg-opacity-80 text-white text-xs px-1 py-0.5 rounded">
-                          {video.duration}
+
+                {isLoading ? (
+                  <div className="space-y-4">
+                    <VideoSkeleton />
+                    <VideoSkeleton />
+                    <VideoSkeleton />
+                    <VideoSkeleton />
+                  </div>
+                ) : results.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-1">No results found</h3>
+                    <p className="text-muted-foreground">Try different keywords or remove search filters</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {results.map((video) => (
+                      <Link key={video.id} href={`/videos/${video.channel}/${video.id}`} className="flex gap-3 md:gap-4 group">
+                        <div className="relative w-40 md:w-56 aspect-video flex-shrink-0">
+                          <Image src={video.thumbnail} alt={video.title} fill className="object-cover rounded-xl" />
+                          <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                            {video.duration}
+                          </div>
+                          <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="bg-black/60 rounded-full p-2">
+                              <svg viewBox="0 0 24 24" className="h-5 w-5 text-white fill-white"><path d="M8 5v14l11-7z"/></svg>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                          {video.title}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage src={video.channelAvatar} />
-                            <AvatarFallback>{video.channel.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs text-muted-foreground">{video.channel}</span>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm md:text-base line-clamp-2 group-hover:text-primary transition-colors">
+                            {video.title}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={video.channelAvatar} />
+                              <AvatarFallback className="text-[10px]">{video.channel.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs text-muted-foreground">{video.channel}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {video.views} • {video.timeAgo}
+                          </p>
+                          {!isMobile && video.description && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{video.description}</p>
+                          )}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          <span>{video.views}</span>
-                          <span className="mx-1">•</span>
-                          <span>{video.timeAgo}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -24,10 +24,15 @@ export default function Home() {
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(false)
   const [activeChip, setActiveChip] = useState("All")
-  const chipListRef = useRef<HTMLDivElement>(null)
+  const chipContainerRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  
+  // Drag state
   const isDragging = useRef(false)
   const startX = useRef(0)
-  const scrollLeftPos = useRef(0)
+  const scrollLeftStart = useRef(0)
+  const hasDragged = useRef(false)
+  const dragThreshold = 5
 
   const [initialLoading, setInitialLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -105,69 +110,126 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [prevScrollPos])
 
-  const checkScrollArrows = useCallback(() => {
-    if (chipListRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = chipListRef.current
-      setShowLeftArrow(scrollLeft > 12)
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 12)
-    }
+  const updateArrows = useCallback(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    
+    const scrollLeft = el.scrollLeft
+    const scrollWidth = el.scrollWidth
+    const clientWidth = el.clientWidth
+    const maxScroll = scrollWidth - clientWidth
+    
+    // Show left arrow if scrolled more than 10px
+    setShowLeftArrow(scrollLeft > 10)
+    // Show right arrow if not scrolled to end (with 10px tolerance)
+    setShowRightArrow(scrollLeft < maxScroll - 10)
   }, [])
 
   useEffect(() => {
-    const container = chipListRef.current
-    if (container) {
-      container.addEventListener("scroll", checkScrollArrows, { passive: true })
-      checkScrollArrows()
+    const el = scrollContainerRef.current
+    if (!el) return
+    
+    el.addEventListener("scroll", updateArrows, { passive: true })
+    window.addEventListener("resize", updateArrows)
+    
+    // Check arrows after delays to ensure content is rendered
+    const timeouts = [0, 100, 300, 500, 1000].map(delay => 
+      setTimeout(updateArrows, delay)
+    )
+    
+    return () => {
+      el.removeEventListener("scroll", updateArrows)
+      window.removeEventListener("resize", updateArrows)
+      timeouts.forEach(clearTimeout)
     }
-    return () => { if (container) container.removeEventListener("scroll", checkScrollArrows) }
-  }, [checkScrollArrows])
-
-  // Also check on resize and after chips render
-  useEffect(() => {
-    checkScrollArrows()
-  }, [checkScrollArrows])
+  }, [updateArrows, initialLoading])
 
   const scrollChips = (direction: "left" | "right") => {
-    if (chipListRef.current) {
-      const { clientWidth } = chipListRef.current
-      const scrollAmount = clientWidth * 0.75
-      const scrollPosition = direction === "left"
-        ? chipListRef.current.scrollLeft - scrollAmount
-        : chipListRef.current.scrollLeft + scrollAmount
-      chipListRef.current.scrollTo({ left: scrollPosition, behavior: "smooth" })
+    const el = scrollContainerRef.current
+    if (!el) return
+    
+    const scrollAmount = el.clientWidth * 0.8
+    
+    if (direction === "left") {
+      el.scrollBy({ left: -scrollAmount, behavior: "smooth" })
+    } else {
+      el.scrollBy({ left: scrollAmount, behavior: "smooth" })
     }
   }
 
+  // Mouse drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Only initiate drag on the container, not buttons
+    const target = e.target as HTMLElement
+    if (target.tagName === "BUTTON" || target.closest("button")) return
+    
     isDragging.current = true
-    startX.current = e.pageX - (chipListRef.current?.offsetLeft || 0)
-    scrollLeftPos.current = chipListRef.current?.scrollLeft || 0
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging.current) return
+    hasDragged.current = false
+    startX.current = e.clientX
+    scrollLeftStart.current = scrollContainerRef.current?.scrollLeft || 0
+    
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.cursor = "grabbing"
+      scrollContainerRef.current.style.userSelect = "none"
+      scrollContainerRef.current.style.scrollBehavior = "auto"
+    }
+    
     e.preventDefault()
-    const x = e.pageX - (chipListRef.current?.offsetLeft || 0)
-    const walk = (x - startX.current) * 2
-    if (chipListRef.current) chipListRef.current.scrollLeft = scrollLeftPos.current - walk
   }
 
-  const handleMouseUp = () => { isDragging.current = false }
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current || !scrollContainerRef.current) return
+      
+      const dx = e.clientX - startX.current
+      
+      if (Math.abs(dx) > dragThreshold) {
+        hasDragged.current = true
+      }
+      
+      if (hasDragged.current) {
+        e.preventDefault()
+        scrollContainerRef.current.scrollLeft = scrollLeftStart.current - dx
+      }
+    }
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    isDragging.current = true
-    startX.current = e.touches[0].pageX - (chipListRef.current?.offsetLeft || 0)
-    scrollLeftPos.current = chipListRef.current?.scrollLeft || 0
+    const handleMouseUp = (e: MouseEvent) => {
+      if (!isDragging.current) return
+      
+      isDragging.current = false
+      
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.style.cursor = ""
+        scrollContainerRef.current.style.userSelect = ""
+        scrollContainerRef.current.style.scrollBehavior = "smooth"
+      }
+      
+      if (hasDragged.current) {
+        const handleClick = (e: Event) => {
+          e.stopPropagation()
+          e.preventDefault()
+          document.removeEventListener("click", handleClick, true)
+        }
+        document.addEventListener("click", handleClick, true)
+        
+        setTimeout(() => {
+          document.removeEventListener("click", handleClick, true)
+        }, 0)
+      }
+    }
+
+    window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mouseup", handleMouseUp)
+    
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [])
+
+  const handleChipClick = (chip: string) => {
+    setActiveChip(chip)
   }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging.current) return
-    const x = e.touches[0].pageX - (chipListRef.current?.offsetLeft || 0)
-    const walk = (x - startX.current) * 2
-    if (chipListRef.current) chipListRef.current.scrollLeft = scrollLeftPos.current - walk
-  }
-
-  const handleTouchEnd = () => { isDragging.current = false }
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -177,85 +239,87 @@ export default function Home() {
       <div className="flex">
         <DesktopSidebar className="hidden md:block" />
 
-        <main className="flex-1 md:pl-[240px] md:pt-[108px] pt-0 md:pb-0 pb-nav-safe overflow-hidden w-full max-w-[100vw]">
+        <main className="flex-1 md:pl-[240px] md:pt-[62px] pt-0 md:pb-0 pb-nav-safe overflow-hidden w-full max-w-[100vw]">
           {hasSelected && preferredLanguages.length > 0 && (
             <div className="px-4 py-1.5 text-xs text-muted-foreground bg-muted/30 border-b hidden md:block">
               Content: {preferredLanguages.map(l => l.toUpperCase()).join(", ")}{isGuest && " (Guest)"}
             </div>
           )}
 
-          {/* YouTube-style Chip Bar */}
+          {/* Chip Bar - YouTube Style with Fixed Padding */}
           <div
-            className={`relative border-b bg-background z-10 transition-transform duration-300 md:fixed md:top-[56px] md:left-[240px] md:right-0 md:z-10 md:bg-background w-full max-w-[100vw] ${
-              visible ? "fixed top-[56px] left-0 right-0" : "fixed top-0 left-0 right-0 -translate-y-full"
-            }`}
+            className={`sticky top-[56px] md:top-[32px] z-10 bg-background border-b ${
+              visible ? "" : "-translate-y-full"
+            } transition-transform duration-300`}
           >
-            {/* Left gradient overlay */}
-            <div className={`absolute left-0 top-0 bottom-0 w-14 z-10 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none transition-opacity duration-200 ${
-              showLeftArrow ? "opacity-100" : "opacity-0"
-            }`} />
-
-            {/* Left Arrow */}
-            <div className={`absolute left-1 top-0 bottom-0 z-20 flex items-center transition-opacity duration-200 ${
-              showLeftArrow ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}>
-              <button
-                className="h-9 w-9 flex items-center justify-center bg-black/90 hover:bg-black rounded-full shadow-lg"
-                onClick={() => scrollChips("left")}
-                aria-label="Scroll left"
+            <div className="relative h-12">
+              {/* Scrollable Chip Container - Always same padding */}
+              <div
+                ref={scrollContainerRef}
+                className="h-full overflow-x-auto scrollbar-none px-[0.75rem] mr-4"
+                style={{ 
+                  scrollbarWidth: "none", 
+                  msOverflowStyle: "none",
+                  WebkitOverflowScrolling: "touch",
+                }}
+                onMouseDown={handleMouseDown}
+                onScroll={updateArrows}
               >
-                <ChevronLeft className="h-5 w-5 text-white" />
-              </button>
-            </div>
-
-            {/* Chip List */}
-            <div
-              ref={chipListRef}
-              className="flex gap-2 px-[0.75rem] py-2.5 overflow-x-auto scrollbar-none cursor-grab active:cursor-grabbing select-none"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              {chipItems.map((chip) => (
-                <button
-                  key={chip}
-                  onClick={() => setActiveChip(chip)}
-                  className={`px-3.5 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                    activeChip === chip
-                      ? "bg-foreground text-background"
-                      : "bg-muted hover:bg-muted/80 text-foreground"
-                  }`}
+                <div 
+                  ref={chipContainerRef}
+                  className="flex gap-2 py-2 w-max items-center h-full"
                 >
-                  {chip}
-                </button>
-              ))}
-            </div>
+                  {chipItems.map((chip) => (
+                    <button
+                      key={chip}
+                      onClick={() => handleChipClick(chip)}
+                      className={`px-3.5 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 select-none ${
+                        activeChip === chip
+                          ? "bg-foreground text-background"
+                          : "bg-muted hover:bg-muted/80 text-foreground"
+                      }`}
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Right gradient overlay */}
-            <div className={`absolute right-0 top-0 bottom-0 w-14 z-10 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none transition-opacity duration-200 ${
-              showRightArrow ? "opacity-100" : "opacity-0"
-            }`} />
-
-            {/* Right Arrow */}
-            <div className={`absolute right-1 top-0 bottom-0 z-20 flex items-center transition-opacity duration-200 ${
-              showRightArrow ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}>
-              <button
-                className="h-9 w-9 flex items-center justify-center bg-black/90 hover:bg-black rounded-full shadow-lg"
-                onClick={() => scrollChips("right")}
-                aria-label="Scroll right"
+              {/* Left Arrow Overlay */}
+              <div 
+                className={`absolute left-0 top-0 bottom-0 z-20 flex items-center transition-opacity duration-200 ${
+                  showLeftArrow ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
               >
-                <ChevronRight className="h-5 w-5 text-white" />
-              </button>
+                <div className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-background via-background to-transparent" />
+                <button
+                  className="relative ml-2 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg"
+                  onClick={() => scrollChips("left")}
+                  aria-label="Previous"
+                >
+                  <ChevronLeft className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              {/* Right Arrow Overlay */}
+              <div 
+                className={`absolute right-0 top-0 bottom-0 z-20 flex items-center justify-end transition-opacity duration-200 ${
+                  showRightArrow ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+              >
+                <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-background via-background to-transparent" />
+                <button
+                  className="relative mr-3 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg"
+                  onClick={() => scrollChips("right")}
+                  aria-label="Next"
+                >
+                  <ChevronRight className="h-5 w-5 text-white" />
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Initial Loading - Desktop */}
+          {/* Content */}
           {initialLoading && (
             <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -263,74 +327,51 @@ export default function Home() {
                   <Skeleton className="aspect-video w-full rounded-lg" />
                   <div className="flex mt-2 gap-2">
                     <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-3 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
+                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Initial Loading - Mobile */}
           {initialLoading && (
-            <div className="flex flex-col md:hidden pt-[48px]">
+            <div className="flex flex-col md:hidden">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={`msk-${i}`} className="flex flex-col p-3">
                   <Skeleton className="aspect-video w-full rounded-lg" />
                   <div className="flex mt-3 gap-3">
                     <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-3 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
+                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Desktop Grid */}
           {!initialLoading && (
             <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-              {videos.map((video) => (
-                <VideoCard key={video.id} isHorizontal={false} />
-              ))}
+              {videos.map((video) => <VideoCard key={video.id} isHorizontal={false} />)}
               {loadingMore && Array.from({ length: 4 }).map((_, i) => (
                 <div key={`ldsk-${i}`} className="flex flex-col">
                   <Skeleton className="aspect-video w-full rounded-lg" />
                   <div className="flex mt-2 gap-2">
                     <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-3 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
+                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Mobile List */}
           {!initialLoading && (
-            <div className="flex flex-col md:hidden pt-[48px]">
-              {videos.map((video) => (
-                <VideoCard key={video.id} isHorizontal={true} />
-              ))}
+            <div className="flex flex-col md:hidden">
+              {videos.map((video) => <VideoCard key={video.id} isHorizontal={true} />)}
               {loadingMore && Array.from({ length: 2 }).map((_, i) => (
                 <div key={`lmsk-${i}`} className="flex flex-col p-3">
                   <Skeleton className="aspect-video w-full rounded-lg" />
                   <div className="flex mt-3 gap-3">
                     <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-3 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
+                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
                   </div>
                 </div>
               ))}
@@ -341,8 +382,7 @@ export default function Home() {
             <div ref={loadingRef} className="flex justify-center p-4">
               {loadingMore && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  Loading...
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...
                 </div>
               )}
             </div>
