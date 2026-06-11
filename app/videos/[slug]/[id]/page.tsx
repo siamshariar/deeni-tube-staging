@@ -14,6 +14,7 @@ import MobileNav from "@/components/mobile-nav"
 import DesktopSidebar from "@/components/desktop-sidebar"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Skeleton } from "@/components/ui/skeleton"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 const videoData = {
@@ -43,46 +44,57 @@ const relatedVideos = [
   { id: "r8", title: "Dua for Guidance", channel: "Islamic Guidance", views: "95K views", timeAgo: "5 days ago", duration: "12:20", thumbnail: "/placeholder.svg?height=480&width=854", videoUrl: "https://www.youtube.com/embed/5qap5aO4i9A" },
 ]
 
-// Initial comments with numeric values
-const initialCommentsData = [
-  {
-    id: "c1", user: "Ahmad Khan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 days ago",
-    content: "MashaAllah, very beneficial lecture. The way the Sheikh explains the purpose of life is truly eye-opening. May Allah reward you for sharing this knowledge.",
-    likes: 245, dislikes: 12, replies: [
+// Comments data per video
+const commentsByVideoData: Record<string, any[]> = {
+  "v1": [
+    { id: "c1", user: "Ahmad Khan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 days ago", content: "MashaAllah, very beneficial lecture. The way the Sheikh explains the purpose of life is truly eye-opening. May Allah reward you for sharing this knowledge.", likes: 245, dislikes: 12, replies: [
       { id: "cr1", user: "Daily Dawah", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 day ago", content: "JazakAllah khair for your kind words. May Allah guide us all.", likes: 89, dislikes: 3, isChannel: true },
       { id: "cr2", user: "Mohammed Ali", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "12 hours ago", content: "Couldn't agree more. This channel has changed my life.", likes: 34, dislikes: 1 },
-    ]
-  },
-  { id: "c2", user: "Fatima Hassan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 week ago", content: "Beautiful reminder. In a world full of distractions, we need to constantly remind ourselves of our true purpose.", likes: 567, dislikes: 23, replies: [] },
-  { id: "c3", user: "Omar Farooq", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "3 days ago", content: "This changed my perspective on life entirely. Thank you Sheikh for this beautiful reminder.", likes: 189, dislikes: 8, replies: [
+    ]},
+    { id: "c2", user: "Fatima Hassan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 week ago", content: "Beautiful reminder. In a world full of distractions, we need to constantly remind ourselves of our true purpose.", likes: 567, dislikes: 23, replies: [] },
+    { id: "c3", user: "Omar Farooq", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "3 days ago", content: "This changed my perspective on life entirely. Thank you Sheikh for this beautiful reminder.", likes: 189, dislikes: 8, replies: [
       { id: "cr3", user: "Zainab Mohammed", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 days ago", content: "Same here brother. May Allah make it easy for all of us.", likes: 45, dislikes: 2 },
-    ]
-  },
-  { id: "c4", user: "Aisha Begum", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "5 days ago", content: "SubhanAllah! Every time I listen to this lecture, I learn something new.", likes: 123, dislikes: 5, replies: [] },
-  { id: "c5", user: "Ibrahim Malik", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 day ago", content: "May Allah bless the Sheikh and everyone involved in spreading this knowledge.", likes: 78, dislikes: 2, replies: [] },
-  { id: "c6", user: "Khadija Omar", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "4 days ago", content: "This lecture always brings tears to my eyes. JazakAllah khair for this reminder.", likes: 312, dislikes: 15, replies: [] },
-]
+    ]},
+    { id: "c4", user: "Aisha Begum", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "5 days ago", content: "SubhanAllah! Every time I listen to this lecture, I learn something new.", likes: 123, dislikes: 5, replies: [] },
+    { id: "c5", user: "Ibrahim Malik", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 day ago", content: "May Allah bless the Sheikh and everyone involved in spreading this knowledge.", likes: 78, dislikes: 2, replies: [] },
+    { id: "c6", user: "Khadija Omar", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "4 days ago", content: "This lecture always brings tears to my eyes. JazakAllah khair for this reminder.", likes: 312, dislikes: 15, replies: [] },
+  ],
+  "r1": [
+    { id: "r1c1", user: "Salman Khan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "3 days ago", content: "Very informative video about the afterlife. JazakAllah khair!", likes: 156, dislikes: 8, replies: [] },
+    { id: "r1c2", user: "Ayesha Siddiqua", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "5 days ago", content: "This answered so many of my questions. May Allah reward you.", likes: 234, dislikes: 12, replies: [
+      { id: "r1cr1", user: "Daily Dawah", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "4 days ago", content: "Ameen! Glad it was helpful.", likes: 45, dislikes: 1, isChannel: true },
+    ]},
+    { id: "r1c3", user: "Hassan Ali", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 week ago", content: "Everyone should watch this. Very important topic.", likes: 89, dislikes: 3, replies: [] },
+  ],
+  "r2": [
+    { id: "r2c1", user: "Mariam Begum", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 days ago", content: "The signs are so clear. May Allah protect us all.", likes: 345, dislikes: 15, replies: [] },
+    { id: "r2c2", user: "Abdullah Rahman", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "4 days ago", content: "Excellent explanation of the major and minor signs.", likes: 567, dislikes: 21, replies: [] },
+  ],
+}
 
-// Storage keys
-const VID_COMMENTS_KEY = 'video_comments_data'
-const VID_LIKED_KEY = 'video_liked_ids'
-const VID_DISLIKED_KEY = 'video_disliked_ids'
-
-function loadVideoComments(): any[] {
-  if (typeof window === 'undefined') return JSON.parse(JSON.stringify(initialCommentsData))
+// Load all comments from storage or use defaults
+const loadAllComments = (): Record<string, any[]> => {
+  if (typeof window === 'undefined') return JSON.parse(JSON.stringify(commentsByVideoData))
   try {
-    const raw = localStorage.getItem(VID_COMMENTS_KEY)
-    if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p }
+    const raw = localStorage.getItem('video_comments_all')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Object.keys(parsed).length > 0) return parsed
+    }
   } catch {}
-  const def = JSON.parse(JSON.stringify(initialCommentsData))
-  localStorage.setItem(VID_COMMENTS_KEY, JSON.stringify(def))
+  const def = JSON.parse(JSON.stringify(commentsByVideoData))
+  localStorage.setItem('video_comments_all', JSON.stringify(def))
   return def
 }
 
-function saveVideoComments(data: any[]) {
+const saveAllComments = (data: Record<string, any[]>) => {
   if (typeof window === 'undefined') return
-  localStorage.setItem(VID_COMMENTS_KEY, JSON.stringify(data))
+  localStorage.setItem('video_comments_all', JSON.stringify(data))
 }
+
+// Storage keys for liked/disliked
+const VID_LIKED_KEY = 'video_liked_ids'
+const VID_DISLIKED_KEY = 'video_disliked_ids'
 
 function loadIds(key: string): string[] {
   if (typeof window === 'undefined') return []
@@ -93,6 +105,11 @@ function saveIds(key: string, ids: string[]) {
   if (typeof window === 'undefined') return
   localStorage.setItem(key, JSON.stringify(ids))
 }
+
+// Global state
+let allCommentsData = loadAllComments()
+let likedIds: string[] = loadIds(VID_LIKED_KEY)
+let dislikedIds: string[] = loadIds(VID_DISLIKED_KEY)
 
 const saveWatchProgress = (videoId: string, progress: { watchedPercent: number; watchedTimestamp: number }) => {
   if (typeof window === 'undefined') return
@@ -118,6 +135,28 @@ const videoMenuItems = (
     <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer"><Flag className="h-5 w-5" /><span>Report</span></DropdownMenuItem>
   </>
 )
+
+// Comment Skeleton
+function CommentSkeleton() {
+  return (
+    <div className="mt-4 flex gap-3">
+      <Skeleton className="h-8 w-8 md:h-10 md:w-10 rounded-full flex-shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-12" />
+        </div>
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+        <div className="flex items-center gap-2 mt-2">
+          <Skeleton className="h-7 w-14 rounded-full" />
+          <Skeleton className="h-7 w-7 rounded-full" />
+          <Skeleton className="h-7 w-16 rounded-full" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // Reply Item
 function ReplyItem({ reply, onLike, onDislike, onReplyNested, isLiked, isDisliked }: {
@@ -245,11 +284,6 @@ function CommentItem({ comment, onLike, onDislike, onReply, onLikeReply, onDisli
   )
 }
 
-// Persistent data
-let videoCommentsData = loadVideoComments()
-let likedIds: string[] = loadIds(VID_LIKED_KEY)
-let dislikedIds: string[] = loadIds(VID_DISLIKED_KEY)
-
 export default function VideoPlayPage() {
   const router = useRouter()
   const params = useParams()
@@ -259,45 +293,47 @@ export default function VideoPlayPage() {
   const [isDisliked, setIsDisliked] = useState(false)
   const [commentText, setCommentText] = useState("")
   const [isSubscribed, setIsSubscribed] = useState(true)
-  const [comments, setComments] = useState<any[]>(() => {
-    return videoCommentsData.map((c: any) => ({
-      ...c,
-      replies: (c.replies || []).map((r: any) => ({ ...r, parentId: c.id }))
-    }))
-  })
+  const [comments, setComments] = useState<any[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(false)
   const [localLikedIds, setLocalLikedIds] = useState<string[]>(likedIds)
   const [localDislikedIds, setLocalDislikedIds] = useState<string[]>(dislikedIds)
-  
-  // Dynamic comment count
   const [totalCommentCount, setTotalCommentCount] = useState(0)
 
   const [currentVideo, setCurrentVideo] = useState({ ...videoData, videoUrl: videoData.videoUrl, comments: "1,234" })
   const [activeVideoId, setActiveVideoId] = useState("v1")
 
-  // Calculate total comments (main comments + replies)
+  // Calculate total comments
   const calculateCommentCount = (commentsList: any[]) => {
     let count = commentsList.length
-    commentsList.forEach((c: any) => {
-      if (c.replies) count += c.replies.length
-    })
+    commentsList.forEach((c: any) => { if (c.replies) count += c.replies.length })
     return count
   }
 
-  // Update comment count whenever comments change
+  // Load comments for current video
+  const loadCommentsForVideo = (videoId: string) => {
+    setCommentsLoading(true)
+    setComments([])
+    setTimeout(() => {
+      const videoComments = allCommentsData[videoId] || []
+      const loaded = videoComments.map((c: any) => ({
+        ...c,
+        replies: (c.replies || []).map((r: any) => ({ ...r, parentId: c.id }))
+      }))
+      setComments(loaded)
+      setTotalCommentCount(calculateCommentCount(loaded))
+      setCommentsLoading(false)
+    }, 600)
+  }
+
+  // Load comments on mount and when video changes
   useEffect(() => {
-    const count = calculateCommentCount(comments)
-    setTotalCommentCount(count)
-    // Also update the video's comment count display
-    setCurrentVideo(prev => ({
-      ...prev,
-      comments: count > 999 ? `${(count/1000).toFixed(1)}K` : String(count)
-    }))
-  }, [comments])
+    loadCommentsForVideo(activeVideoId)
+  }, [activeVideoId])
 
   // Sync to module-level + localStorage
   useEffect(() => { likedIds = localLikedIds; saveIds(VID_LIKED_KEY, localLikedIds) }, [localLikedIds])
   useEffect(() => { dislikedIds = localDislikedIds; saveIds(VID_DISLIKED_KEY, localDislikedIds) }, [localDislikedIds])
-  useEffect(() => { saveVideoComments(videoCommentsData) }, [comments])
+  useEffect(() => { saveAllComments(allCommentsData) }, [comments])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -313,20 +349,11 @@ export default function VideoPlayPage() {
   const handleRelatedVideoClick = (video: any) => {
     saveWatchProgress(currentVideo.id, { watchedPercent: 50, watchedTimestamp: 0 })
     setCurrentVideo({
-      id: video.id,
-      title: video.title,
-      channel: video.channel,
-      channelAvatar: "/placeholder.svg?height=36&width=36",
-      subscribers: `${Math.floor(Math.random() * 900) + 100}K subscribers`,
-      views: video.views,
-      publishedAt: video.timeAgo,
-      description: `Description for ${video.title}.`,
-      videoUrl: video.videoUrl,
-      isSubscribed: false,
-      likes: `${Math.floor(Math.random() * 20) + 1}K`,
-      dislikes: `${Math.floor(Math.random() * 500) + 10}`,
-      comments: `${Math.floor(Math.random() * 2000) + 100}`,
-      duration: video.duration || "0:00",
+      id: video.id, title: video.title, channel: video.channel, channelAvatar: "/placeholder.svg?height=36&width=36",
+      subscribers: `${Math.floor(Math.random() * 900) + 100}K subscribers`, views: video.views, publishedAt: video.timeAgo,
+      description: `Description for ${video.title}.`, videoUrl: video.videoUrl, isSubscribed: false,
+      likes: `${Math.floor(Math.random() * 20) + 1}K`, dislikes: `${Math.floor(Math.random() * 500) + 10}`,
+      comments: `${Math.floor(Math.random() * 2000) + 100}`, duration: video.duration || "0:00",
     })
     setActiveVideoId(video.id); setIsSubscribed(false); setShowFullDescription(false); setShowAllComments(false)
     setCommentText(""); setIsLiked(false); setIsDisliked(false)
@@ -335,36 +362,44 @@ export default function VideoPlayPage() {
 
   // Like/Dislike handlers
   const handleLikeComment = (commentId: string) => {
-    const src = videoCommentsData.find((c: any) => c.id === commentId)
+    const videoComments = allCommentsData[activeVideoId] || []
+    const src = videoComments.find((c: any) => c.id === commentId)
     if (!src) return
     const wasLiked = localLikedIds.includes(commentId)
     const wasDisliked = localDislikedIds.includes(commentId)
     if (wasLiked) { src.likes--; setLocalLikedIds(p => p.filter(id => id !== commentId)) }
     else { src.likes++; setLocalLikedIds(p => [...p, commentId]); if (wasDisliked) { src.dislikes--; setLocalDislikedIds(p => p.filter(id => id !== commentId)) } }
     setComments(prev => prev.map(c => c.id === commentId ? { ...c, likes: src.likes, dislikes: wasDisliked ? c.dislikes - 1 : c.dislikes } : c))
-    saveVideoComments(videoCommentsData)
+    allCommentsData[activeVideoId] = videoComments; saveAllComments(allCommentsData)
   }
 
   const handleDislikeComment = (commentId: string) => {
-    const src = videoCommentsData.find((c: any) => c.id === commentId)
+    const videoComments = allCommentsData[activeVideoId] || []
+    const src = videoComments.find((c: any) => c.id === commentId)
     if (!src) return
     const wasDisliked = localDislikedIds.includes(commentId)
     const wasLiked = localLikedIds.includes(commentId)
     if (wasDisliked) { src.dislikes--; setLocalDislikedIds(p => p.filter(id => id !== commentId)) }
     else { src.dislikes++; setLocalDislikedIds(p => [...p, commentId]); if (wasLiked) { src.likes--; setLocalLikedIds(p => p.filter(id => id !== commentId)) } }
     setComments(prev => prev.map(c => c.id === commentId ? { ...c, dislikes: src.dislikes, likes: wasLiked ? c.likes - 1 : c.likes } : c))
-    saveVideoComments(videoCommentsData)
+    allCommentsData[activeVideoId] = videoComments; saveAllComments(allCommentsData)
   }
 
   const handleReplyComment = (commentId: string, text: string) => {
     const nr = { id: `r${Date.now()}`, user: "You", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "Just now", content: text, likes: 0, dislikes: 0, parentId: commentId }
-    setComments(prev => prev.map(c => c.id === commentId ? { ...c, replies: [...(c.replies || []), nr] } : c))
-    const src = videoCommentsData.find((c: any) => c.id === commentId)
-    if (src) { if (!src.replies) src.replies = []; src.replies.push(nr); saveVideoComments(videoCommentsData) }
+    setComments(prev => {
+      const updated = prev.map(c => c.id === commentId ? { ...c, replies: [...(c.replies || []), nr] } : c)
+      setTotalCommentCount(calculateCommentCount(updated))
+      return updated
+    })
+    const videoComments = allCommentsData[activeVideoId] || []
+    const src = videoComments.find((c: any) => c.id === commentId)
+    if (src) { if (!src.replies) src.replies = []; src.replies.push(nr); allCommentsData[activeVideoId] = videoComments; saveAllComments(allCommentsData) }
   }
 
   const handleLikeReply = (commentId: string, replyId: string) => {
-    const src = videoCommentsData.find((c: any) => c.id === commentId)
+    const videoComments = allCommentsData[activeVideoId] || []
+    const src = videoComments.find((c: any) => c.id === commentId)
     if (!src?.replies) return
     const reply = src.replies.find((r: any) => r.id === replyId)
     if (!reply) return
@@ -373,11 +408,12 @@ export default function VideoPlayPage() {
     if (wasLiked) { reply.likes--; setLocalLikedIds(p => p.filter(id => id !== replyId)) }
     else { reply.likes++; setLocalLikedIds(p => [...p, replyId]); if (wasDisliked) { reply.dislikes--; setLocalDislikedIds(p => p.filter(id => id !== replyId)) } }
     setComments(prev => prev.map(c => c.id === commentId ? { ...c, replies: (c.replies || []).map((r: any) => r.id === replyId ? { ...r, likes: reply.likes, dislikes: wasDisliked ? r.dislikes - 1 : r.dislikes } : r) } : c))
-    saveVideoComments(videoCommentsData)
+    allCommentsData[activeVideoId] = videoComments; saveAllComments(allCommentsData)
   }
 
   const handleDislikeReply = (commentId: string, replyId: string) => {
-    const src = videoCommentsData.find((c: any) => c.id === commentId)
+    const videoComments = allCommentsData[activeVideoId] || []
+    const src = videoComments.find((c: any) => c.id === commentId)
     if (!src?.replies) return
     const reply = src.replies.find((r: any) => r.id === replyId)
     if (!reply) return
@@ -386,24 +422,34 @@ export default function VideoPlayPage() {
     if (wasDisliked) { reply.dislikes--; setLocalDislikedIds(p => p.filter(id => id !== replyId)) }
     else { reply.dislikes++; setLocalDislikedIds(p => [...p, replyId]); if (wasLiked) { reply.likes--; setLocalLikedIds(p => p.filter(id => id !== replyId)) } }
     setComments(prev => prev.map(c => c.id === commentId ? { ...c, replies: (c.replies || []).map((r: any) => r.id === replyId ? { ...r, dislikes: reply.dislikes, likes: wasLiked ? r.likes - 1 : r.likes } : r) } : c))
-    saveVideoComments(videoCommentsData)
+    allCommentsData[activeVideoId] = videoComments; saveAllComments(allCommentsData)
   }
 
   const handleReplyNested = (commentId: string, replyId: string, text: string) => {
     const nr = { id: `nr${Date.now()}`, user: "You", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "Just now", content: text, likes: 0, dislikes: 0, parentId: replyId }
-    setComments(prev => prev.map(c => c.id === commentId ? { ...c, replies: [...(c.replies || []), nr] } : c))
-    const src = videoCommentsData.find((c: any) => c.id === commentId)
-    if (src) { if (!src.replies) src.replies = []; src.replies.push(nr); saveVideoComments(videoCommentsData) }
+    setComments(prev => {
+      const updated = prev.map(c => c.id === commentId ? { ...c, replies: [...(c.replies || []), nr] } : c)
+      setTotalCommentCount(calculateCommentCount(updated))
+      return updated
+    })
+    const videoComments = allCommentsData[activeVideoId] || []
+    const src = videoComments.find((c: any) => c.id === commentId)
+    if (src) { if (!src.replies) src.replies = []; src.replies.push(nr); allCommentsData[activeVideoId] = videoComments; saveAllComments(allCommentsData) }
   }
 
   const handleAddComment = () => {
     if (!commentText.trim()) return
     const nc = { id: `c${Date.now()}`, user: "You", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "Just now", content: commentText.trim(), likes: 0, dislikes: 0, replies: [] }
-    setComments(prev => [nc, ...prev]); setCommentText("")
-    videoCommentsData.unshift(nc); saveVideoComments(videoCommentsData)
+    setComments(prev => {
+      const updated = [nc, ...prev]
+      setTotalCommentCount(calculateCommentCount(updated))
+      return updated
+    })
+    setCommentText("")
+    if (!allCommentsData[activeVideoId]) allCommentsData[activeVideoId] = []
+    allCommentsData[activeVideoId].unshift(nc); saveAllComments(allCommentsData)
   }
 
-  // Format the comment count for display
   const formatCommentCount = (count: number) => {
     if (count >= 1000000) return `${(count/1000000).toFixed(1)}M`
     if (count >= 1000) return `${(count/1000).toFixed(1)}K`
@@ -468,13 +514,27 @@ export default function VideoPlayPage() {
                     </div>
                   </div>
                   <div id="comments-section">
-                    {comments.slice(0, showAllComments ? comments.length : 3).map((comment) => (
-                      <CommentItem key={comment.id} comment={comment} onLike={handleLikeComment} onDislike={handleDislikeComment} onReply={handleReplyComment} onLikeReply={handleLikeReply} onDislikeReply={handleDislikeReply} onReplyNested={handleReplyNested} isLiked={localLikedIds.includes(comment.id)} isDisliked={localDislikedIds.includes(comment.id)} />
-                    ))}
-                    {comments.length > 3 && !showAllComments && (
-                      <button onClick={() => { setShowAllComments(true); setTimeout(() => document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100) }} className="flex items-center gap-2 mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium">
-                        <ChevronDown className="h-4 w-4" />Show {comments.length - 3} more comments
-                      </button>
+                    {commentsLoading ? (
+                      <>
+                        <CommentSkeleton />
+                        <CommentSkeleton />
+                        <CommentSkeleton />
+                        <CommentSkeleton />
+                        <CommentSkeleton />
+                      </>
+                    ) : comments.length > 0 ? (
+                      <>
+                        {comments.slice(0, showAllComments ? comments.length : 3).map((comment) => (
+                          <CommentItem key={comment.id} comment={comment} onLike={handleLikeComment} onDislike={handleDislikeComment} onReply={handleReplyComment} onLikeReply={handleLikeReply} onDislikeReply={handleDislikeReply} onReplyNested={handleReplyNested} isLiked={localLikedIds.includes(comment.id)} isDisliked={localDislikedIds.includes(comment.id)} />
+                        ))}
+                        {comments.length > 3 && !showAllComments && (
+                          <button onClick={() => { setShowAllComments(true); setTimeout(() => document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100) }} className="flex items-center gap-2 mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                            <ChevronDown className="h-4 w-4" />Show {comments.length - 3} more comments
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground text-sm">No comments yet. Be the first to comment!</div>
                     )}
                   </div>
                 </div>
