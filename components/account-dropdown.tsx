@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
 import {
   ChevronRight,
   LogOut,
@@ -20,6 +21,7 @@ import {
   User,
   Monitor,
   Sun,
+  Check,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -43,12 +45,12 @@ function getInitials(name: string): string {
     .substring(0, 2)
 }
 
-type ThemeMode = "device" | "light" | "dark"
+type ThemeMode = "system" | "light" | "dark"
 
 export default function AccountDropdown() {
   const router = useRouter()
+  const { theme, setTheme, resolvedTheme } = useTheme()
   const [open, setOpen] = useState(false)
-  const [theme, setTheme] = useState<ThemeMode>("device")
   const [userData, setUserData] = useState({
     name: "Tamzid Muhammad",
     email: "muhammad.tamzid@sun-asterisk.com",
@@ -69,15 +71,12 @@ export default function AccountDropdown() {
           initials: parsed.initials || getInitials(parsed.name || "Tamzid Muhammad"),
         })
       }
-      const storedTheme = localStorage.getItem("deeni-theme") as ThemeMode
-      if (storedTheme) setTheme(storedTheme)
     } catch {}
     isMounted.current = true
   }, [])
 
   const handleThemeChange = (newTheme: ThemeMode) => {
     setTheme(newTheme)
-    localStorage.setItem("deeni-theme", newTheme)
   }
 
   const handleSignOut = () => {
@@ -112,6 +111,9 @@ export default function AccountDropdown() {
     }
   }
 
+  // Avoid hydration mismatch
+  if (!isMounted.current) return null
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger asChild>
@@ -140,7 +142,7 @@ export default function AccountDropdown() {
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{userData.name}</p>
             <p className="text-xs text-muted-foreground truncate">{userData.email}</p>
-            <Link href="#" className="text-sm text-blue-600 hover:underline">
+            <Link href="#" className="text-sm text-primary hover:underline">
               Manage your Google Account
             </Link>
           </div>
@@ -193,10 +195,10 @@ export default function AccountDropdown() {
               <span className="ml-3">Appearance: {getThemeLabel()}</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="w-48">
-              <DropdownMenuItem onClick={() => handleThemeChange("device")} className="py-2.5 cursor-pointer">
+              <DropdownMenuItem onClick={() => handleThemeChange("system")} className="py-2.5 cursor-pointer">
                 <Monitor className="mr-3 h-5 w-5" />
                 <span>Device theme</span>
-                {theme === "device" && <Check className="ml-auto h-4 w-4" />}
+                {theme === "system" && <Check className="ml-auto h-4 w-4" />}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleThemeChange("light")} className="py-2.5 cursor-pointer">
                 <Sun className="mr-3 h-5 w-5" />
@@ -253,6 +255,3 @@ export default function AccountDropdown() {
     </DropdownMenu>
   )
 }
-
-// Need to import Check in account-dropdown
-import { Check } from "lucide-react"

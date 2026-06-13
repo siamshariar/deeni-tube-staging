@@ -83,15 +83,18 @@ function VideoSkeleton() {
   )
 }
 
-function VideoSkeletonHorizontal() {
+// Mobile video skeleton (horizontal, matches final video list)
+function MobileVideoSkeleton() {
   return (
     <div className="flex gap-3 py-3">
       <Skeleton className="w-40 aspect-video rounded-lg flex-shrink-0" />
       <div className="flex-1 min-w-0 space-y-2">
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-3 w-32" />
+        <div className="flex items-center gap-2 mt-2">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3 w-20" />
+        </div>
       </div>
     </div>
   )
@@ -132,64 +135,101 @@ export default function ScholarDetailPage() {
 
         <div className="flex-1 md:pl-[240px] md:pt-[80px] pb-nav-safe">
           {isLoading ? (
-            <div className="max-w-[1096px] mx-auto px-4 md:px-6 py-6">
-              <div className="flex flex-col md:flex-row md:items-start gap-4 border-b pb-6">
-                <Skeleton className="h-20 w-20 md:h-24 md:w-24 rounded-full flex-shrink-0 mx-auto md:mx-0" />
-                <div className="flex-1 space-y-2 text-center md:text-left">
-                  <Skeleton className="h-7 w-48 mx-auto md:mx-0" />
-                  <Skeleton className="h-4 w-32 mx-auto md:mx-0" />
-                  <Skeleton className="h-4 w-full max-w-md" />
-                  <Skeleton className="h-4 w-full max-w-sm" />
+            <div className="max-w-[1096px] mx-auto">
+              {/* Skeleton for scholar info (matches final layout) */}
+              <div className="px-4 md:px-6 pt-20 pb-4 border-b">
+                <div className="flex flex-col md:flex-row md:items-start gap-4">
+                  {/* Avatar skeleton */}
+                  <div className="flex-shrink-0">
+                    <Skeleton className="h-20 w-20 md:h-24 md:w-24 rounded-full" />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-3">
+                    <Skeleton className="h-6 w-40 md:w-48" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-full max-w-md" />
+                    <Skeleton className="h-4 w-full max-w-sm" />
+                    <div className="flex gap-2 mt-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
-                {Array.from({ length: 6 }).map((_, i) => <VideoSkeleton key={i} />)}
+
+              {/* Language tabs skeleton */}
+              <div className="border-b px-4 md:px-6 py-3">
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-16 rounded-full" />
+                  <Skeleton className="h-8 w-16 rounded-full" />
+                  <Skeleton className="h-8 w-16 rounded-full" />
+                  <Skeleton className="h-8 w-16 rounded-full" />
+                </div>
+              </div>
+
+              {/* Videos count skeleton */}
+              <div className="px-4 md:px-6 py-3">
+                <Skeleton className="h-4 w-32" />
+              </div>
+
+              {/* Desktop video grid skeleton (only visible on md+) */}
+              <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4 md:px-6 pb-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <VideoSkeleton key={i} />
+                ))}
+              </div>
+
+              {/* Mobile video list skeleton (only visible on mobile) */}
+              <div className="flex flex-col md:hidden px-4 pb-6">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <MobileVideoSkeleton key={i} />
+                ))}
               </div>
             </div>
           ) : (
             <div className="max-w-[1096px] mx-auto">
-              {/* Scholar Info - Mobile: stacked, Desktop: side by side */}
-              <div className="px-8 md:px-6 pt-20 pb-4 md:py-6 border-b">
-                {/* Mobile: Avatar on top, info below */}
-                <div className="flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4">
+              {/* Scholar Info - Mobile: left-aligned, desktop: side by side */}
+              <div className="px-4 md:px-6 pt-8 md:pt-6 pb-4 border-b">
+                <div className="flex flex-col md:flex-row md:items-start mt-10 gap-4">
                   <Avatar className="h-20 w-20 md:h-24 md:w-24 flex-shrink-0 ring-2 ring-muted">
                     <AvatarImage src={scholar.image} alt={scholar.name} />
                     <AvatarFallback className="text-xl">{scholar.name.charAt(0)}</AvatarFallback>
                   </Avatar>
 
-                  <div className="flex-1 min-w-0 w-full">
-                    <div className="flex items-center justify-center md:justify-start gap-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-1">
                       <h1 className="text-xl md:text-2xl font-bold">{scholar.name}</h1>
                     </div>
-                    <p className="text-sm text-muted-foreground">{scholar.designation}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{scholar.designation}</p>
 
-                    <p className="text-sm text-muted-foreground mt-2 text-center md:text-left">
-                      {showFullDescription ? (
-                        <>
-                          {scholar.description}
-                          <button onClick={() => setShowFullDescription(false)} className="text-primary ml-1 hover:underline font-medium">Show less</button>
-                        </>
-                      ) : (
-                        <>
-                          {scholar.description.length > 120 ? scholar.description.substring(0, 120) + "..." : scholar.description}
-                          {scholar.description.length > 120 && (
-                            <button onClick={() => setShowFullDescription(true)} className="text-primary ml-1 hover:underline font-medium">...more</button>
-                          )}
-                        </>
-                      )}
-                    </p>
+                    <div className="mt-2">
+                      <p className="text-sm text-muted-foreground">
+                        {showFullDescription ? (
+                          <>
+                            {scholar.description}
+                            <button onClick={() => setShowFullDescription(false)} className="text-primary ml-1 hover:underline font-medium">Show less</button>
+                          </>
+                        ) : (
+                          <>
+                            {scholar.description.slice(0, 120)}
+                            {scholar.description.length > 120 && (
+                              <button onClick={() => setShowFullDescription(true)} className="text-primary ml-1 hover:underline font-medium">...more</button>
+                            )}
+                          </>
+                        )}
+                      </p>
+                    </div>
 
                     {/* Links */}
                     {scholar.website && (
                       <div className="mt-2 space-y-1">
-                        <Link href={`https://${scholar.website}`} className="text-sm text-primary hover:underline flex items-center gap-1 justify-center md:justify-start">
+                        <Link href={`https://${scholar.website}`} target="_blank" className="text-sm text-primary hover:underline flex items-center gap-1">
                           <Globe className="h-3 w-3" />{scholar.website}
                         </Link>
                         {showAllLinks ? (
                           <>
-                            {scholar.facebook && <Link href={`https://${scholar.facebook}`} className="text-sm text-primary hover:underline block">Facebook</Link>}
-                            {scholar.twitter && <Link href={`https://${scholar.twitter}`} className="text-sm text-primary hover:underline block">Twitter</Link>}
-                            {scholar.youtube && <Link href={`https://${scholar.youtube}`} className="text-sm text-primary hover:underline block">YouTube</Link>}
+                            {scholar.facebook && <Link href={`https://${scholar.facebook}`} target="_blank" className="text-sm text-primary hover:underline block">Facebook</Link>}
+                            {scholar.twitter && <Link href={`https://${scholar.twitter}`} target="_blank" className="text-sm text-primary hover:underline block">Twitter</Link>}
+                            {scholar.youtube && <Link href={`https://${scholar.youtube}`} target="_blank" className="text-sm text-primary hover:underline block">YouTube</Link>}
                             <button onClick={() => setShowAllLinks(false)} className="text-xs text-primary hover:underline font-medium">Show less</button>
                           </>
                         ) : (

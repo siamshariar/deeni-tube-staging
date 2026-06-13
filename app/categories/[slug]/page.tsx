@@ -14,22 +14,30 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
-const categoryData: Record<string, { name: string; description: string }> = {
-  "aqeedah": { name: "Aqeedah", description: "Islamic Creed and Belief" },
-  "fiqh": { name: "Fiqh", description: "Islamic Jurisprudence" },
-  "hadith": { name: "Hadith", description: "Prophetic Traditions" },
-  "tafsir": { name: "Tafsir", description: "Quranic Exegesis" },
-  "seerah": { name: "Seerah", description: "Prophetic Biography" },
-  "dawah": { name: "Dawah", description: "Islamic Propagation" },
-  "family": { name: "Family", description: "Marriage and Family Life" },
-  "finance": { name: "Finance", description: "Islamic Finance" },
-  "youth": { name: "Youth", description: "Youth Development" },
-  "spirituality": { name: "Spirituality", description: "Tazkiyah and Purification" },
-  "quran": { name: "Quran", description: "Quran Recitation and Memorization" },
-  "salah": { name: "Salah", description: "Prayer and Worship" },
+// Mock category data (would come from API)
+const categoryData: Record<string, { name: string; description: string; videoCount: number }> = {
+  "aqeedah": { name: "Aqeedah", description: "Islamic Creed and Belief", videoCount: 245 },
+  "fiqh": { name: "Fiqh", description: "Islamic Jurisprudence", videoCount: 189 },
+  "hadith": { name: "Hadith", description: "Prophetic Traditions", videoCount: 312 },
+  "tafsir": { name: "Tafsir", description: "Quranic Exegesis", videoCount: 278 },
+  "seerah": { name: "Seerah", description: "Prophetic Biography", videoCount: 156 },
+  "dawah": { name: "Dawah", description: "Islamic Propagation", videoCount: 198 },
+  "family": { name: "Family", description: "Marriage and Family Life", videoCount: 134 },
+  "finance": { name: "Finance", description: "Islamic Finance", videoCount: 87 },
+  "youth": { name: "Youth", description: "Youth Development", videoCount: 112 },
+  "spirituality": { name: "Spirituality", description: "Tazkiyah and Purification", videoCount: 203 },
+  "quran": { name: "Quran", description: "Quran Recitation and Memorization", videoCount: 345 },
+  "salah": { name: "Salah", description: "Prayer and Worship", videoCount: 167 },
+  "zakat": { name: "Zakat", description: "Charity and Alms", videoCount: 56 },
+  "hajj": { name: "Hajj", description: "Pilgrimage", videoCount: 78 },
+  "fasting": { name: "Fasting", description: "Sawm and Ramadan", videoCount: 145 },
+  "dhikr": { name: "Dhikr", description: "Remembrance of Allah", videoCount: 92 },
 }
 
-const videos = [
+const defaultCategory = { name: "Category", description: "", videoCount: 0 }
+
+// Mock videos (would be filtered by category in real API)
+const allVideos = [
   { id: "v1", title: "The Importance of Aqeedah in Islam", channel: "Islamic Guidance", channelAvatar: "/placeholder.svg?height=36&width=36", views: "150K views", timeAgo: "3 days ago", duration: "25:15", thumbnail: "/placeholder.svg?height=480&width=854" },
   { id: "v2", title: "Understanding Tawheed - Core Beliefs", channel: "Daily Dawah", channelAvatar: "/placeholder.svg?height=36&width=36", views: "208K views", timeAgo: "6 days ago", duration: "18:28", thumbnail: "/placeholder.svg?height=480&width=854" },
   { id: "v3", title: "Correct Islamic Creed - Aqeedah Series", channel: "Digital Mimbar", channelAvatar: "/placeholder.svg?height=36&width=36", views: "500K views", timeAgo: "1 week ago", duration: "35:10", thumbnail: "/placeholder.svg?height=480&width=854" },
@@ -76,21 +84,24 @@ export default function CategoryVideosPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
 
-  const category = categoryData[slug] || { name: slug?.replace(/-/g, ' ') || "Category", description: "" }
+  const category = categoryData[slug] || { ...defaultCategory, name: slug?.replace(/-/g, ' ') || "Category" }
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600)
     return () => clearTimeout(timer)
   }, [slug])
 
-  const filteredVideos = videos.filter(v =>
-    !searchQuery || v.title.toLowerCase().includes(searchQuery.toLowerCase()) || v.channel.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredVideos = allVideos.filter(v =>
+    !searchQuery ||
+    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    v.channel.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
 
+      {/* Mobile sticky header */}
       <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
         <button onClick={() => router.back()} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors">
           <ArrowLeft className="h-5 w-5" />
@@ -111,25 +122,28 @@ export default function CategoryVideosPage() {
                 <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {Array.from({ length: 6 }).map((_, i) => <VideoSkeleton key={i} />)}
                 </div>
+                <div className="flex flex-col md:hidden">
+                  {Array.from({ length: 4 }).map((_, i) => <VideoSkeletonHorizontal key={i} />)}
+                </div>
               </div>
             ) : (
               <>
                 {/* Header */}
-                <div className="px-4 md:px-6 py-4 md:py-6">
-                  <div className="hidden md:block mb-2">
+                <div className="px-4 md:px-6 pt-14 pb-3 md:py-6 border-b">
+                  <div className="hidden md:block">
                     <h1 className="text-2xl font-bold">{category.name}</h1>
                     <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
                   </div>
 
                   {/* Search */}
-                  <div className="relative">
+                  <div className="relative mt-3 md:mt-4">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder={`Search ${category.name} videos...`}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-10 h-10 text-sm rounded-full bg-muted/50"
+                      className="pl-10 pr-10 h-10 text-sm rounded-full bg-muted/50 focus:bg-muted transition-colors"
                     />
                     {searchQuery && (
                       <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -138,10 +152,10 @@ export default function CategoryVideosPage() {
                     )}
                   </div>
 
-                  {/* Video Count */}
-                  <p className="text-xs md:text-sm text-muted-foreground mt-3 md:mt-4">
+                  {/* Video count */}
+                  {/* <p className="text-xs md:text-sm text-muted-foreground mt-3">
                     {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''} in {category.name}
-                  </p>
+                  </p> */}
                 </div>
 
                 {/* Desktop Grid */}

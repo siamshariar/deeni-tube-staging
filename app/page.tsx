@@ -27,7 +27,6 @@ export default function Home() {
   const chipContainerRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   
-  // Drag state
   const isDragging = useRef(false)
   const startX = useRef(0)
   const scrollLeftStart = useRef(0)
@@ -46,16 +45,20 @@ export default function Home() {
   const { preferredLanguages, hasSelected, isGuest, savePreferences, skipForNow } = useLanguage()
   const { getIgnoredChannels, getFollowedChannels } = useChannelPreferences()
 
+  // Enhanced mock API – generates rich video objects (used only for length / demo)
   const fetchVideos = useCallback(async (pageNum: number) => {
     await new Promise((resolve) => setTimeout(resolve, 1500))
-    const newVideos = Array.from({ length: 8 }).map((_, i) => ({
-      id: `video-${pageNum}-${i}`,
-      title: `Video Title ${pageNum * 8 + i}`,
-      channel: `Channel ${pageNum * 8 + i}`,
-      views: `${Math.floor(Math.random() * 1000)}K views`,
-      timestamp: `${Math.floor(Math.random() * 12) + 1} days ago`,
-      duration: `${Math.floor(Math.random() * 10) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, "0")}`,
-    }))
+    const newVideos = Array.from({ length: 8 }).map((_, i) => {
+      const globalIndex = (pageNum - 1) * 8 + i
+      return {
+        id: `video-${globalIndex}`,
+        title: `Islamic Video Title ${globalIndex}`,
+        channel: `Channel ${globalIndex}`,
+        views: `${Math.floor(Math.random() * 1000)}K views`,
+        timestamp: `${Math.floor(Math.random() * 12) + 1} days ago`,
+        duration: `${Math.floor(Math.random() * 10) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, "0")}`,
+      }
+    })
     if (pageNum >= 5) setHasMore(false)
     return newVideos
   }, [])
@@ -113,30 +116,20 @@ export default function Home() {
   const updateArrows = useCallback(() => {
     const el = scrollContainerRef.current
     if (!el) return
-    
     const scrollLeft = el.scrollLeft
     const scrollWidth = el.scrollWidth
     const clientWidth = el.clientWidth
     const maxScroll = scrollWidth - clientWidth
-    
-    // Show left arrow if scrolled more than 10px
     setShowLeftArrow(scrollLeft > 10)
-    // Show right arrow if not scrolled to end (with 10px tolerance)
     setShowRightArrow(scrollLeft < maxScroll - 10)
   }, [])
 
   useEffect(() => {
     const el = scrollContainerRef.current
     if (!el) return
-    
     el.addEventListener("scroll", updateArrows, { passive: true })
     window.addEventListener("resize", updateArrows)
-    
-    // Check arrows after delays to ensure content is rendered
-    const timeouts = [0, 100, 300, 500, 1000].map(delay => 
-      setTimeout(updateArrows, delay)
-    )
-    
+    const timeouts = [0, 100, 300, 500, 1000].map(delay => setTimeout(updateArrows, delay))
     return () => {
       el.removeEventListener("scroll", updateArrows)
       window.removeEventListener("resize", updateArrows)
@@ -147,9 +140,7 @@ export default function Home() {
   const scrollChips = (direction: "left" | "right") => {
     const el = scrollContainerRef.current
     if (!el) return
-    
     const scrollAmount = el.clientWidth * 0.8
-    
     if (direction === "left") {
       el.scrollBy({ left: -scrollAmount, behavior: "smooth" })
     } else {
@@ -157,53 +148,40 @@ export default function Home() {
     }
   }
 
-  // Mouse drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Only initiate drag on the container, not buttons
     const target = e.target as HTMLElement
     if (target.tagName === "BUTTON" || target.closest("button")) return
-    
     isDragging.current = true
     hasDragged.current = false
     startX.current = e.clientX
     scrollLeftStart.current = scrollContainerRef.current?.scrollLeft || 0
-    
     if (scrollContainerRef.current) {
       scrollContainerRef.current.style.cursor = "grabbing"
       scrollContainerRef.current.style.userSelect = "none"
       scrollContainerRef.current.style.scrollBehavior = "auto"
     }
-    
     e.preventDefault()
   }
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging.current || !scrollContainerRef.current) return
-      
       const dx = e.clientX - startX.current
-      
-      if (Math.abs(dx) > dragThreshold) {
-        hasDragged.current = true
-      }
-      
+      if (Math.abs(dx) > dragThreshold) hasDragged.current = true
       if (hasDragged.current) {
         e.preventDefault()
         scrollContainerRef.current.scrollLeft = scrollLeftStart.current - dx
       }
     }
 
-    const handleMouseUp = (e: MouseEvent) => {
+    const handleMouseUp = () => {
       if (!isDragging.current) return
-      
       isDragging.current = false
-      
       if (scrollContainerRef.current) {
         scrollContainerRef.current.style.cursor = ""
         scrollContainerRef.current.style.userSelect = ""
         scrollContainerRef.current.style.scrollBehavior = "smooth"
       }
-      
       if (hasDragged.current) {
         const handleClick = (e: Event) => {
           e.stopPropagation()
@@ -211,16 +189,12 @@ export default function Home() {
           document.removeEventListener("click", handleClick, true)
         }
         document.addEventListener("click", handleClick, true)
-        
-        setTimeout(() => {
-          document.removeEventListener("click", handleClick, true)
-        }, 0)
+        setTimeout(() => document.removeEventListener("click", handleClick, true), 0)
       }
     }
 
     window.addEventListener("mousemove", handleMouseMove)
     window.addEventListener("mouseup", handleMouseUp)
-    
     return () => {
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
@@ -246,29 +220,21 @@ export default function Home() {
             </div>
           )}
 
-          {/* Chip Bar - YouTube Style with Fixed Padding */}
+          {/* Chip Bar */}
           <div
             className={`sticky top-[56px] md:top-[32px] z-10 bg-background border-b ${
               visible ? "" : "-translate-y-full"
             } transition-transform duration-300`}
           >
             <div className="relative h-12">
-              {/* Scrollable Chip Container - Always same padding */}
               <div
                 ref={scrollContainerRef}
                 className="h-full overflow-x-auto scrollbar-none px-[0.75rem] mr-4"
-                style={{ 
-                  scrollbarWidth: "none", 
-                  msOverflowStyle: "none",
-                  WebkitOverflowScrolling: "touch",
-                }}
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
                 onMouseDown={handleMouseDown}
                 onScroll={updateArrows}
               >
-                <div 
-                  ref={chipContainerRef}
-                  className="flex gap-2 py-2 w-max items-center h-full"
-                >
+                <div ref={chipContainerRef} className="flex gap-2 py-2 w-max items-center h-full">
                   {chipItems.map((chip) => (
                     <button
                       key={chip}
@@ -286,11 +252,9 @@ export default function Home() {
               </div>
 
               {/* Left Arrow Overlay */}
-              <div 
-                className={`absolute left-0 top-0 bottom-0 z-20 flex items-center transition-opacity duration-200 ${
-                  showLeftArrow ? "opacity-100" : "opacity-0 pointer-events-none"
-                }`}
-              >
+              <div className={`absolute left-0 top-0 bottom-0 z-20 flex items-center transition-opacity duration-200 ${
+                showLeftArrow ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}>
                 <div className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-background via-background to-transparent" />
                 <button
                   className="relative ml-2 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg"
@@ -302,11 +266,9 @@ export default function Home() {
               </div>
 
               {/* Right Arrow Overlay */}
-              <div 
-                className={`absolute right-0 top-0 bottom-0 z-20 flex items-center justify-end transition-opacity duration-200 ${
-                  showRightArrow ? "opacity-100" : "opacity-0 pointer-events-none"
-                }`}
-              >
+              <div className={`absolute right-0 top-0 bottom-0 z-20 flex items-center justify-end transition-opacity duration-200 ${
+                showRightArrow ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}>
                 <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-background via-background to-transparent" />
                 <button
                   className="relative mr-3 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg"
@@ -319,7 +281,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Content */}
+          {/* Desktop Grid Loading */}
           {initialLoading && (
             <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -327,13 +289,16 @@ export default function Home() {
                   <Skeleton className="aspect-video w-full rounded-lg" />
                   <div className="flex mt-2 gap-2">
                     <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* Mobile Loading */}
           {initialLoading && (
             <div className="flex flex-col md:hidden">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -341,48 +306,62 @@ export default function Home() {
                   <Skeleton className="aspect-video w-full rounded-lg" />
                   <div className="flex mt-3 gap-3">
                     <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* Desktop Grid */}
           {!initialLoading && (
             <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-              {videos.map((video) => <VideoCard key={video.id} isHorizontal={false} />)}
+              {videos.map((video) => (
+                <VideoCard key={video.id} videoId={video.id} isHorizontal={false} />
+              ))}
               {loadingMore && Array.from({ length: 4 }).map((_, i) => (
                 <div key={`ldsk-${i}`} className="flex flex-col">
                   <Skeleton className="aspect-video w-full rounded-lg" />
                   <div className="flex mt-2 gap-2">
                     <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* Mobile vertical feed (one card per row) */}
           {!initialLoading && (
             <div className="flex flex-col md:hidden">
-              {videos.map((video) => <VideoCard key={video.id} isHorizontal={true} />)}
+              {videos.map((video) => (
+                <VideoCard key={video.id} videoId={video.id} isHorizontal={true} />
+              ))}
               {loadingMore && Array.from({ length: 2 }).map((_, i) => (
                 <div key={`lmsk-${i}`} className="flex flex-col p-3">
                   <Skeleton className="aspect-video w-full rounded-lg" />
                   <div className="flex mt-3 gap-3">
                     <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* Infinite scroll trigger */}
           {hasMore && !initialLoading && (
             <div ref={loadingRef} className="flex justify-center p-4">
               {loadingMore && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  Loading...
                 </div>
               )}
             </div>

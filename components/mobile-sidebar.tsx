@@ -42,9 +42,11 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={onClose} />
+      {/* Overlay – covers whole screen, closes sidebar when clicked */}
+      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
-      <div className="fixed top-0 left-0 bottom-0 w-[280px] bg-background z-50 md:hidden overflow-y-auto">
+      {/* Sidebar drawer – now visible on all screen sizes (removed md:hidden) */}
+      <div className="fixed top-0 left-0 bottom-0 w-[280px] bg-background z-50 overflow-y-auto shadow-xl">
         <div className="flex items-center px-4 py-3 border-b sticky top-0 bg-background">
           <Link href="/" onClick={onClose}>
             <Image 

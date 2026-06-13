@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 // ============ DATA & STORAGE ============
 
@@ -67,7 +68,7 @@ function saveIds(key: string, ids: string[]) {
 }
 
 // Persistent data
-const commentsByVideo = loadComments()
+let commentsByVideo = loadComments()
 
 const descriptionsByVideo: Record<string, { title: string; views: string; timeAgo: string; description: string; hashtags: string[] }> = {
   s1: { title: "Surah Al Baqarah - Beautiful Recitation", views: "15,234", timeAgo: "2 weeks ago", description: "Experience the beautiful recitation of Surah Al Baqarah.", hashtags: ["#quran", "#surahalbaqarah"] },
@@ -89,6 +90,7 @@ function MoreIcon({ className }: { className?: string }) {
   return <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" className={className}><path d="M12 4a2 2 0 100 4 2 2 0 000-4Zm0 6a2 2 0 100 4 2 2 0 000-4Zm0 6a2 2 0 100 4 2 2 0 000-4Z" fill="currentColor" /></svg>
 }
 
+// CC Off – outline, adapts to current text color
 function CCIconOff({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" className={className}>
@@ -97,6 +99,7 @@ function CCIconOff({ className }: { className?: string }) {
   )
 }
 
+// CC On – white background, black text (high contrast)
 function CCIconOn({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" className={className}>
@@ -106,7 +109,6 @@ function CCIconOn({ className }: { className?: string }) {
   )
 }
 
-
 function FullscreenIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" className={className}>
@@ -114,12 +116,55 @@ function FullscreenIcon({ className }: { className?: string }) {
     </svg>
   )
 }
+
+// ============ SKELETONS (theme-adaptive) ============
+
 function CommentSkeleton() {
-  return <div className="flex gap-3 py-3"><Skeleton className="h-8 w-8 rounded-full bg-gray-700 flex-shrink-0" /><div className="flex-1 min-w-0 space-y-2"><div className="flex items-center gap-2"><Skeleton className="h-3 w-24 bg-gray-700 rounded" /><Skeleton className="h-3 w-14 bg-gray-700 rounded" /></div><Skeleton className="h-4 w-full bg-gray-700 rounded" /><Skeleton className="h-4 w-3/4 bg-gray-700 rounded" /><div className="flex items-center gap-2 mt-2"><Skeleton className="h-7 w-14 rounded-full bg-gray-700" /><Skeleton className="h-7 w-7 rounded-full bg-gray-700" /><Skeleton className="h-7 w-16 rounded-full bg-gray-700" /></div></div></div>
+  return (
+    <div className="flex gap-3 py-3">
+      <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
+      <div className="flex-1 min-w-0 space-y-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-14" />
+        </div>
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+        <div className="flex items-center gap-2 mt-2">
+          <Skeleton className="h-7 w-14 rounded-full" />
+          <Skeleton className="h-7 w-7 rounded-full" />
+          <Skeleton className="h-7 w-16 rounded-full" />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function DescriptionSkeleton() {
-  return <div className="flex-1 overflow-y-auto scrollbar-thin"><div className="px-4 py-3 space-y-2"><Skeleton className="h-4 w-full bg-gray-700 rounded" /><Skeleton className="h-4 w-3/4 bg-gray-700 rounded" /></div><div className="px-4 pb-3 flex items-center gap-4"><Skeleton className="h-4 w-24 bg-gray-700 rounded" /><Skeleton className="h-4 w-20 bg-gray-700 rounded" /></div><div className="px-4 pb-4 space-y-2"><Skeleton className="h-4 w-full bg-gray-700 rounded" /><Skeleton className="h-4 w-full bg-gray-700 rounded" /><Skeleton className="h-4 w-5/6 bg-gray-700 rounded" /><Skeleton className="h-4 w-2/3 bg-gray-700 rounded" /></div><div className="px-4 pb-4 flex flex-wrap gap-2"><Skeleton className="h-5 w-16 bg-gray-700 rounded" /><Skeleton className="h-5 w-20 bg-gray-700 rounded" /><Skeleton className="h-5 w-14 bg-gray-700 rounded" /><Skeleton className="h-5 w-24 bg-gray-700 rounded" /></div></div>
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-thin">
+      <div className="px-4 py-3 space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+      <div className="px-4 pb-3 flex items-center gap-4">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-20" />
+      </div>
+      <div className="px-4 pb-4 space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+      <div className="px-4 pb-4 flex flex-wrap gap-2">
+        <Skeleton className="h-5 w-16 rounded-full" />
+        <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="h-5 w-14 rounded-full" />
+        <Skeleton className="h-5 w-24 rounded-full" />
+      </div>
+    </div>
+  )
 }
 
 // ============ REPLY ITEM ============
@@ -146,31 +191,54 @@ function ReplyItem({ reply, onLike, onDislike, onReplyNested }: {
   return (
     <div className="ml-10 mt-2">
       <div className="flex gap-2.5">
-        <Avatar className="h-7 w-7 flex-shrink-0"><AvatarImage src={reply.avatar} /><AvatarFallback className="bg-gray-700 text-white text-[10px]">{reply.user.charAt(0)}</AvatarFallback></Avatar>
+        <Avatar className="h-7 w-7 flex-shrink-0"><AvatarImage src={reply.avatar} /><AvatarFallback className="bg-muted text-foreground text-[10px]">{reply.user.charAt(0)}</AvatarFallback></Avatar>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2"><span className="text-xs font-medium text-white">@{reply.user.split(' ')[0]}</span><span className="text-[10px] text-gray-400">{reply.timeAgo}</span></div>
-          <p className="text-sm text-gray-200 mt-0.5">{reply.content}</p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-foreground">@{reply.user.split(' ')[0]}</span>
+            <span className="text-[10px] text-muted-foreground">{reply.timeAgo}</span>
+          </div>
+          <p className="text-sm text-foreground mt-0.5">{reply.content}</p>
           <div className="flex items-center gap-2 mt-1.5">
-            <button onClick={() => onLike(reply.parentId || '', reply.id)} className={`flex items-center gap-1.5 hover:bg-white/10 rounded-full px-2.5 py-1 transition-colors ${isLiked ? 'text-blue-400' : 'text-gray-400'}`}>
-              <ThumbsUp className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+            <button onClick={() => onLike(reply.parentId || '', reply.id)} className={cn("flex items-center gap-1.5 hover:bg-muted rounded-full px-2.5 py-1 transition-colors", isLiked ? "text-primary" : "text-muted-foreground")}>
+              <ThumbsUp className={cn("h-4 w-4", isLiked && "fill-current")} />
               <span className="text-xs">{formatCount(reply.likes)}</span>
             </button>
-            <button onClick={() => onDislike(reply.parentId || '', reply.id)} className={`hover:bg-white/10 rounded-full p-1 transition-colors ${isDisliked ? 'text-red-400' : 'text-gray-400'}`}>
-              <ThumbsDown className={`h-4 w-4 ${isDisliked ? 'fill-current' : ''}`} />
+            <button onClick={() => onDislike(reply.parentId || '', reply.id)} className={cn("hover:bg-muted rounded-full p-1 transition-colors", isDisliked ? "text-destructive" : "text-muted-foreground")}>
+              <ThumbsDown className={cn("h-4 w-4", isDisliked && "fill-current")} />
             </button>
-            <button onClick={() => setShowReplyInput(!showReplyInput)} className="text-xs text-gray-400 hover:bg-white/10 rounded-full px-2.5 py-1 transition-colors">Reply</button>
+            <button onClick={() => setShowReplyInput(!showReplyInput)} className="text-xs text-muted-foreground hover:bg-muted rounded-full px-2.5 py-1 transition-colors">Reply</button>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild><button className="hover:bg-white/10 rounded-full p-1 transition-colors text-gray-400 ml-auto"><MoreVertical className="h-3.5 w-3.5" /></button></DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-[#212121] border-gray-700 text-white rounded-xl py-2"><DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/10 text-white"><Flag className="h-5 w-5" /><span>Report</span></DropdownMenuItem></DropdownMenuContent>
+              <DropdownMenuTrigger asChild>
+                <button className="hover:bg-muted rounded-full p-1 transition-colors text-muted-foreground ml-auto">
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                  <Flag className="h-5 w-5" /><span>Report</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenu>
           </div>
           {showReplyInput && (
             <div className="mt-2 flex gap-2">
-              <Avatar className="h-6 w-6 flex-shrink-0"><AvatarFallback className="bg-gray-700 text-white text-[10px]">Y</AvatarFallback></Avatar>
+              <Avatar className="h-6 w-6 flex-shrink-0"><AvatarFallback className="bg-muted text-foreground text-[10px]">Y</AvatarFallback></Avatar>
               <div className="flex-1 flex items-center gap-1.5">
-                <input type="text" placeholder="Add a reply..." value={replyText} onChange={(e) => setReplyText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleReplySubmit() }} className="flex-1 bg-transparent border-b border-gray-600 pb-1 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors" autoFocus />
-                <button onClick={handleReplySubmit} disabled={!replyText.trim()} className="text-blue-400 hover:text-blue-300 disabled:opacity-30"><Send className="h-3.5 w-3.5" /></button>
-                <button onClick={() => setShowReplyInput(false)} className="text-gray-400 hover:text-white"><X className="h-3.5 w-3.5" /></button>
+                <input
+                  type="text"
+                  placeholder="Add a reply..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleReplySubmit() }}
+                  className="flex-1 bg-transparent border-b border-border pb-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+                  autoFocus
+                />
+                <button onClick={handleReplySubmit} disabled={!replyText.trim()} className="text-primary hover:text-primary/80 disabled:opacity-30">
+                  <Send className="h-3.5 w-3.5" />
+                </button>
+                <button onClick={() => setShowReplyInput(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </div>
             </div>
           )}
@@ -209,36 +277,59 @@ function CommentItem({ comment, onLikeComment, onDislikeComment, onReplyComment,
   return (
     <div className="py-3">
       <div className="flex gap-3">
-        <Avatar className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0"><AvatarImage src={comment.avatar} /><AvatarFallback className="bg-gray-700 text-white text-xs">{comment.user.charAt(0)}</AvatarFallback></Avatar>
+        <Avatar className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0"><AvatarImage src={comment.avatar} /><AvatarFallback className="bg-muted text-foreground text-xs">{comment.user.charAt(0)}</AvatarFallback></Avatar>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2"><span className="text-[13px] font-medium text-white">@{comment.user.split(' ')[0]}</span><span className="text-xs text-gray-400">{comment.timeAgo}</span></div>
-          <p className="text-sm text-gray-200 mt-1">{comment.content}</p>
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-medium text-foreground">@{comment.user.split(' ')[0]}</span>
+            <span className="text-xs text-muted-foreground">{comment.timeAgo}</span>
+          </div>
+          <p className="text-sm text-foreground mt-1">{comment.content}</p>
           <div className="flex items-center gap-2 mt-2">
-            <button onClick={() => onLikeComment(comment.id)} className={`flex items-center gap-1.5 hover:bg-white/10 rounded-full px-3 py-1.5 transition-colors ${isLiked ? 'text-blue-400' : 'text-gray-400'}`}>
-              <ThumbsUp className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+            <button onClick={() => onLikeComment(comment.id)} className={cn("flex items-center gap-1.5 hover:bg-muted rounded-full px-3 py-1.5 transition-colors", isLiked ? "text-primary" : "text-muted-foreground")}>
+              <ThumbsUp className={cn("h-5 w-5", isLiked && "fill-current")} />
               <span className="text-xs">{formatCount(comment.likes)}</span>
             </button>
-            <button onClick={() => onDislikeComment(comment.id)} className={`hover:bg-white/10 rounded-full p-1.5 transition-colors ${isDisliked ? 'text-red-400' : 'text-gray-400'}`}>
-              <ThumbsDown className={`h-5 w-5 ${isDisliked ? 'fill-current' : ''}`} />
+            <button onClick={() => onDislikeComment(comment.id)} className={cn("hover:bg-muted rounded-full p-1.5 transition-colors", isDisliked ? "text-destructive" : "text-muted-foreground")}>
+              <ThumbsDown className={cn("h-5 w-5", isDisliked && "fill-current")} />
             </button>
-            <button onClick={() => setShowReplyInput(!showReplyInput)} className="text-xs text-gray-400 hover:bg-white/10 rounded-full px-3 py-1.5 transition-colors">Reply</button>
+            <button onClick={() => setShowReplyInput(!showReplyInput)} className="text-xs text-muted-foreground hover:bg-muted rounded-full px-3 py-1.5 transition-colors">Reply</button>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild><button className="hover:bg-white/10 rounded-full p-1.5 transition-colors text-gray-400 ml-auto"><MoreVertical className="h-4 w-4" /></button></DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-[#212121] border-gray-700 text-white rounded-xl py-2"><DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/10 text-white"><Flag className="h-5 w-5" /><span>Report</span></DropdownMenuItem></DropdownMenuContent>
+              <DropdownMenuTrigger asChild>
+                <button className="hover:bg-muted rounded-full p-1.5 transition-colors text-muted-foreground ml-auto">
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                  <Flag className="h-5 w-5" /><span>Report</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenu>
           </div>
           {showReplyInput && (
             <div className="mt-3 flex gap-2">
-              <Avatar className="h-7 w-7 flex-shrink-0"><AvatarFallback className="bg-gray-700 text-white text-[10px]">Y</AvatarFallback></Avatar>
+              <Avatar className="h-7 w-7 flex-shrink-0"><AvatarFallback className="bg-muted text-foreground text-[10px]">Y</AvatarFallback></Avatar>
               <div className="flex-1 flex items-center gap-2">
-                <input type="text" placeholder="Add a reply..." value={replyText} onChange={(e) => setReplyText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleReplySubmit() }} className="flex-1 bg-transparent border-b border-gray-600 pb-1 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors" autoFocus />
-                <button onClick={handleReplySubmit} disabled={!replyText.trim()} className="text-blue-400 hover:text-blue-300 disabled:opacity-30"><Send className="h-4 w-4" /></button>
-                <button onClick={() => setShowReplyInput(false)} className="text-gray-400 hover:text-white"><X className="h-4 w-4" /></button>
+                <input
+                  type="text"
+                  placeholder="Add a reply..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleReplySubmit() }}
+                  className="flex-1 bg-transparent border-b border-border pb-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+                  autoFocus
+                />
+                <button onClick={handleReplySubmit} disabled={!replyText.trim()} className="text-primary hover:text-primary/80 disabled:opacity-30">
+                  <Send className="h-4 w-4" />
+                </button>
+                <button onClick={() => setShowReplyInput(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
               </div>
             </div>
           )}
           {comment.replies && comment.replies.length > 0 && (
-            <button onClick={() => setShowReplies(!showReplies)} className="flex items-center gap-1.5 mt-2 text-sm text-blue-400 hover:text-blue-300 font-medium">
+            <button onClick={() => setShowReplies(!showReplies)} className="flex items-center gap-1.5 mt-2 text-sm text-primary hover:text-primary/80 font-medium">
               <ChevronDown className={`h-4 w-4 transition-transform ${showReplies ? 'rotate-180' : ''}`} />
               {showReplies ? 'Hide' : comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
             </button>
@@ -252,7 +343,7 @@ function CommentItem({ comment, onLikeComment, onDislikeComment, onReplyComment,
   )
 }
 
-// ============ SHARE MODAL (unchanged) ============
+// ============ SHARE MODAL ============
 
 const sharePlatforms = [
   { name: "Facebook", icon: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><linearGradient id="fb5" x1="9.993%" x2="89.993%" y1="0%" y2="100%"><stop offset="0%" stopColor="#18B5FE"/><stop offset="100%" stopColor="#1277F2"/></linearGradient><path fill="url(#fb5)" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z"/><path fill="#fff" d="M26.707 36.301V25.5h3.613l.543-4.215h-4.156v-2.699c0-1.227.336-2.054 2.082-2.054h2.227V12.66c-.387-.047-1.707-.16-3.25-.16-3.207 0-5.41 1.957-5.41 5.559v3.102H19v4.215h3.656V36.3h4.051z"/></svg>) },
@@ -274,16 +365,16 @@ function ShareModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-[#212121] rounded-2xl w-[90vw] max-w-[540px] max-h-[85vh] overflow-hidden shadow-2xl animate-fade-in-left">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700"><h2 className="text-white text-lg font-semibold">Share</h2><button onClick={onClose} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10"><X className="h-5 w-5" /></button></div>
+      <div className="relative bg-card rounded-2xl w-[90vw] max-w-[540px] max-h-[85vh] overflow-hidden shadow-2xl animate-fade-in-left">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border"><h2 className="text-foreground text-lg font-semibold">Share</h2><button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted"><X className="h-5 w-5" /></button></div>
         <div className="relative px-5 py-5">
-          {showLeftArrow && <button onClick={() => scrollShare('left')} className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white shadow-lg"><ChevronLeft className="h-5 w-5" /></button>}
-          {showRightArrow && <button onClick={() => scrollShare('right')} className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white shadow-lg"><ChevronRight className="h-5 w-5" /></button>}
+          {showLeftArrow && <button onClick={() => scrollShare('left')} className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/80 hover:bg-background flex items-center justify-center text-foreground shadow-lg"><ChevronLeft className="h-5 w-5" /></button>}
+          {showRightArrow && <button onClick={() => scrollShare('right')} className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/80 hover:bg-background flex items-center justify-center text-foreground shadow-lg"><ChevronRight className="h-5 w-5" /></button>}
           <div ref={shareContainerRef} className="flex gap-4 overflow-x-auto scrollbar-none py-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {sharePlatforms.map((p) => (<button key={p.name} className="flex flex-col items-center gap-2 flex-shrink-0 w-[72px] group"><div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform duration-200">{p.icon}</div><span className="text-xs text-gray-400 group-hover:text-white text-center leading-tight truncate w-full">{p.name}</span></button>))}
+            {sharePlatforms.map((p) => (<button key={p.name} className="flex flex-col items-center gap-2 flex-shrink-0 w-[72px] group"><div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform duration-200">{p.icon}</div><span className="text-xs text-muted-foreground group-hover:text-foreground text-center leading-tight truncate w-full">{p.name}</span></button>))}
           </div>
         </div>
-        <div className="px-5 pb-5"><div className="flex items-center gap-3 bg-[#121212] rounded-xl p-3 border border-gray-700"><input type="text" value={videoUrl} readOnly className="flex-1 bg-transparent text-sm text-gray-300 outline-none truncate" /><button onClick={handleCopy} className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${copied ? 'bg-green-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}>{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{copied ? 'Copied' : 'Copy'}</button></div></div>
+        <div className="px-5 pb-5"><div className="flex items-center gap-3 bg-muted rounded-xl p-3 border border-border"><input type="text" value={videoUrl} readOnly className="flex-1 bg-transparent text-sm text-foreground outline-none truncate" /><button onClick={handleCopy} className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${copied ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{copied ? 'Copied' : 'Copy'}</button></div></div>
       </div>
     </div>
   )
@@ -326,7 +417,7 @@ export default function ShortsPage() {
 
   const currentShort = shortsData[currentIndex]
 
-  // Sync liked/disliked to localStorage whenever they change
+  // Sync liked/disliked to localStorage
   useEffect(() => { saveIds(STORAGE_LIKED, likedIds) }, [likedIds])
   useEffect(() => { saveIds(STORAGE_DISLIKED, dislikedIds) }, [dislikedIds])
 
@@ -399,10 +490,8 @@ export default function ShortsPage() {
   const toggleFullscreen = () => { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); setIsFullscreen(true) } else { document.exitFullscreen().catch(() => {}); setIsFullscreen(false) } }
   const handleTogglePlay = (e: React.MouseEvent) => { e.stopPropagation(); setIsPlaying(!isPlaying); setShowCenterPlayPause(true); if (centerPlayTimeout.current) clearTimeout(centerPlayTimeout.current); centerPlayTimeout.current = setTimeout(() => setShowCenterPlayPause(false), 600) }
 
-  // ---- STORAGE HELPERS ----
-  const persistComments = () => saveComments(commentsByVideo)
-
   // ---- COMMENT ACTIONS ----
+  const persistComments = () => saveComments(commentsByVideo)
 
   const handleAddComment = () => {
     if (!commentText.trim()) return
@@ -419,15 +508,12 @@ export default function ShortsPage() {
     const wasLiked = likedIds.includes(commentId)
     const wasDisliked = dislikedIds.includes(commentId)
 
-    // Update count in source
     if (wasLiked) src.likes--
     else { src.likes++; if (wasDisliked) { src.dislikes--; setDislikedIds(p => p.filter(id => id !== commentId)) } }
 
-    // Update liked set
     if (wasLiked) setLikedIds(p => p.filter(id => id !== commentId))
     else setLikedIds(p => [...p, commentId])
 
-    // Update UI
     setComments(p => p.map(c => c.id === commentId ? { ...c, likes: src.likes, _isLiked: !wasLiked, _isDisliked: false, dislikes: wasDisliked ? c.dislikes - 1 : c.dislikes } : c))
     persistComments()
   }
@@ -511,7 +597,7 @@ export default function ShortsPage() {
   const currentDesc = descriptionsByVideo[currentShort?.id]
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <style>{`
         @keyframes fadeInLeft { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -519,7 +605,7 @@ export default function ShortsPage() {
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
         .scrollbar-thin::-webkit-scrollbar { width: 6px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 3px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 3px; }
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
@@ -527,18 +613,89 @@ export default function ShortsPage() {
       <div className="relative z-50"><AppHeader /></div>
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} />
 
-      <div className="hidden md:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 flex-col gap-1 bg-white/10 backdrop-blur-sm rounded-full p-1.5">
-        <button onClick={() => scrollToVideo(currentIndex - 1)} disabled={currentIndex === 0} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronUp className="h-6 w-6" /></button>
-        <button onClick={() => scrollToVideo(currentIndex + 1)} disabled={currentIndex === shortsData.length - 1} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronDown className="h-6 w-6" /></button>
+      <div className="hidden md:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 flex-col gap-1 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md">
+        <button onClick={() => scrollToVideo(currentIndex - 1)} disabled={currentIndex === 0} className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronUp className="h-6 w-6" /></button>
+        <button onClick={() => scrollToVideo(currentIndex + 1)} disabled={currentIndex === shortsData.length - 1} className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronDown className="h-6 w-6" /></button>
       </div>
 
       {/* Desktop Panel */}
       {activePanel && (
         <div className="hidden md:flex fixed top-[56px] bottom-0 z-40 items-center" style={{ right: `${panelRight}px` }}>
-          <div className="bg-[#212121] rounded-2xl overflow-hidden flex flex-col shadow-2xl animate-fade-in-left h-[85vh]" style={{ width: `${panelWidth}px` }}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 flex-shrink-0"><div className="flex items-center gap-2"><h3 className="text-white font-semibold">{panelTitle}</h3>{activePanel === "comments" && <span className="text-gray-400 text-sm">{totalCommentsCount}</span>}</div><button onClick={() => setActivePanel(null)} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10"><X className="h-5 w-5" /></button></div>
-            {activePanel === "comments" && (<><div className="flex-1 overflow-y-auto px-4 scrollbar-thin">{commentsLoading ? <><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /></> : comments.length > 0 ? comments.map((c) => <CommentItem key={c.id} comment={c} onLikeComment={handleLikeComment} onDislikeComment={handleDislikeComment} onReplyComment={handleReplyComment} onLikeReply={handleLikeReply} onDislikeReply={handleDislikeReply} onReplyNested={handleReplyNested} />) : <div className="flex items-center justify-center h-full"><p className="text-gray-400 text-sm">No comments yet</p></div>}</div><div className="border-t border-gray-700 px-4 py-3 flex-shrink-0"><div className="flex items-center gap-3"><Avatar className="h-8 w-8 flex-shrink-0"><AvatarFallback className="bg-gray-700 text-white text-xs">Y</AvatarFallback></Avatar><div className="flex-1 flex items-center gap-2"><input ref={commentInputRef} type="text" placeholder="Add a comment..." value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={handleKeyPress} className="flex-1 bg-transparent border-b border-gray-600 pb-1 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors" /><button onClick={handleAddComment} disabled={!commentText.trim()} className="text-blue-400 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed p-1"><Send className="h-5 w-5" /></button></div></div></div></>)}
-            {activePanel === "description" && (<>{descLoading ? <DescriptionSkeleton /> : currentDesc ? <div className="flex-1 overflow-y-auto scrollbar-thin"><div className="px-4 py-3"><h4 className="text-white text-sm font-medium leading-relaxed">{currentDesc.title}</h4></div><div className="px-4 pb-3 flex items-center gap-4"><div className="flex items-center gap-1.5 text-gray-400 text-xs"><Eye className="h-4 w-4" /><span>{currentDesc.views} views</span></div><div className="flex items-center gap-1.5 text-gray-400 text-xs"><Clock className="h-4 w-4" /><span>{currentDesc.timeAgo}</span></div></div><div className="px-4 pb-4"><div className={`text-sm text-gray-200 whitespace-pre-wrap leading-relaxed ${!descExpanded ? 'line-clamp-4' : ''}`}>{currentDesc.description}</div>{currentDesc.description.length > 200 && <button onClick={() => setDescExpanded(!descExpanded)} className="text-gray-400 hover:text-white text-xs mt-1 font-medium">{descExpanded ? 'Show less' : '...more'}</button>}</div><div className="px-4 pb-4 flex flex-wrap gap-2">{currentDesc.hashtags.map((tag: string) => <span key={tag} className="text-blue-400 text-xs hover:text-blue-300 cursor-pointer">{tag}</span>)}</div></div> : <div className="flex items-center justify-center h-full"><p className="text-gray-400 text-sm">No description available</p></div>}</>)}
+          <div className="bg-card rounded-2xl overflow-hidden flex flex-col shadow-2xl animate-fade-in-left h-[85vh]" style={{ width: `${panelWidth}px` }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-foreground font-semibold">{panelTitle}</h3>
+                {activePanel === "comments" && <span className="text-muted-foreground text-sm">{totalCommentsCount}</span>}
+              </div>
+              <button onClick={() => setActivePanel(null)} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {activePanel === "comments" && (
+              <>
+                <div className="flex-1 overflow-y-auto px-4 scrollbar-thin">
+                  {commentsLoading ? (
+                    <><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /></>
+                  ) : comments.length > 0 ? (
+                    comments.map((c) => (
+                      <CommentItem
+                        key={c.id}
+                        comment={c}
+                        onLikeComment={handleLikeComment}
+                        onDislikeComment={handleDislikeComment}
+                        onReplyComment={handleReplyComment}
+                        onLikeReply={handleLikeReply}
+                        onDislikeReply={handleDislikeReply}
+                        onReplyNested={handleReplyNested}
+                      />
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-center h-full"><p className="text-muted-foreground text-sm">No comments yet</p></div>
+                  )}
+                </div>
+                <div className="border-t border-border px-4 py-3 flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8 flex-shrink-0"><AvatarFallback className="bg-muted text-foreground text-xs">Y</AvatarFallback></Avatar>
+                    <div className="flex-1 flex items-center gap-2">
+                      <input
+                        ref={commentInputRef}
+                        type="text"
+                        placeholder="Add a comment..."
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        className="flex-1 bg-transparent border-b border-border pb-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+                      />
+                      <button onClick={handleAddComment} disabled={!commentText.trim()} className="text-primary hover:text-primary/80 disabled:opacity-30 disabled:cursor-not-allowed p-1">
+                        <Send className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            {activePanel === "description" && (
+              <>
+                {descLoading ? (
+                  <DescriptionSkeleton />
+                ) : currentDesc ? (
+                  <div className="flex-1 overflow-y-auto scrollbar-thin">
+                    <div className="px-4 py-3"><h4 className="text-foreground text-sm font-medium leading-relaxed">{currentDesc.title}</h4></div>
+                    <div className="px-4 pb-3 flex items-center gap-4">
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Eye className="h-4 w-4" /><span>{currentDesc.views} views</span></div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="h-4 w-4" /><span>{currentDesc.timeAgo}</span></div>
+                    </div>
+                    <div className="px-4 pb-4">
+                      <div className={`text-sm text-foreground whitespace-pre-wrap leading-relaxed ${!descExpanded ? 'line-clamp-4' : ''}`}>{currentDesc.description}</div>
+                      {currentDesc.description.length > 200 && <button onClick={() => setDescExpanded(!descExpanded)} className="text-muted-foreground hover:text-foreground text-xs mt-1 font-medium">{descExpanded ? 'Show less' : '...more'}</button>}
+                    </div>
+                    <div className="px-4 pb-4 flex flex-wrap gap-2">{currentDesc.hashtags.map((tag: string) => <span key={tag} className="text-primary text-xs hover:text-primary/80 cursor-pointer">{tag}</span>)}</div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full"><p className="text-muted-foreground text-sm">No description available</p></div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -547,55 +704,231 @@ export default function ShortsPage() {
       {activePanel && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60" onClick={() => setActivePanel(null)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-[#212121] rounded-t-2xl max-h-[70vh] flex flex-col animate-slide-up">
-            <div className="w-10 h-1 bg-white/30 rounded-full mx-auto mt-3 mb-2 flex-shrink-0" />
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700 flex-shrink-0"><div className="flex items-center gap-2"><h3 className="text-white font-semibold">{panelTitle}</h3>{activePanel === "comments" && <span className="text-gray-400 text-sm">{totalCommentsCount}</span>}</div><button onClick={() => setActivePanel(null)} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10"><X className="h-5 w-5" /></button></div>
-            {activePanel === "comments" && (<><div className="flex-1 overflow-y-auto px-4 scrollbar-thin">{commentsLoading ? <><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /></> : comments.length > 0 ? comments.map((c) => <CommentItem key={c.id} comment={c} onLikeComment={handleLikeComment} onDislikeComment={handleDislikeComment} onReplyComment={handleReplyComment} onLikeReply={handleLikeReply} onDislikeReply={handleDislikeReply} onReplyNested={handleReplyNested} />) : <div className="flex items-center justify-center h-32"><p className="text-gray-400 text-sm">No comments yet</p></div>}</div><div className="border-t border-gray-700 px-4 py-3 flex-shrink-0"><div className="flex items-center gap-3"><Avatar className="h-8 w-8 flex-shrink-0"><AvatarFallback className="bg-gray-700 text-white text-xs">Y</AvatarFallback></Avatar><div className="flex-1 flex items-center gap-2"><input type="text" placeholder="Add a comment..." value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={handleKeyPress} className="flex-1 bg-transparent border-b border-gray-600 pb-1 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors" /><button onClick={handleAddComment} disabled={!commentText.trim()} className="text-blue-400 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed p-1"><Send className="h-5 w-5" /></button></div></div></div></>)}
-            {activePanel === "description" && (<>{descLoading ? <DescriptionSkeleton /> : currentDesc ? <div className="flex-1 overflow-y-auto scrollbar-thin"><div className="px-4 py-3"><h4 className="text-white text-sm font-medium leading-relaxed">{currentDesc.title}</h4></div><div className="px-4 pb-3 flex items-center gap-4"><div className="flex items-center gap-1.5 text-gray-400 text-xs"><Eye className="h-4 w-4" /><span>{currentDesc.views} views</span></div><div className="flex items-center gap-1.5 text-gray-400 text-xs"><Clock className="h-4 w-4" /><span>{currentDesc.timeAgo}</span></div></div><div className="px-4 pb-4"><div className={`text-sm text-gray-200 whitespace-pre-wrap leading-relaxed ${!descExpanded ? 'line-clamp-4' : ''}`}>{currentDesc.description}</div>{currentDesc.description.length > 200 && <button onClick={() => setDescExpanded(!descExpanded)} className="text-gray-400 hover:text-white text-xs mt-1 font-medium">{descExpanded ? 'Show less' : '...more'}</button>}</div><div className="px-4 pb-4 flex flex-wrap gap-2">{currentDesc.hashtags.map((tag: string) => <span key={tag} className="text-blue-400 text-xs hover:text-blue-300 cursor-pointer">{tag}</span>)}</div></div> : <div className="flex items-center justify-center h-32"><p className="text-gray-400 text-sm">No description available</p></div>}</>)}
+          <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl max-h-[70vh] flex flex-col animate-slide-up">
+            <div className="w-10 h-1 bg-muted rounded-full mx-auto mt-3 mb-2 flex-shrink-0" />
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border flex-shrink-0">
+              <div className="flex items-center gap-2"><h3 className="text-foreground font-semibold">{panelTitle}</h3>{activePanel === "comments" && <span className="text-muted-foreground text-sm">{totalCommentsCount}</span>}</div>
+              <button onClick={() => setActivePanel(null)} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted"><X className="h-5 w-5" /></button>
+            </div>
+            {activePanel === "comments" && (
+              <>
+                <div className="flex-1 overflow-y-auto px-4 scrollbar-thin">
+                  {commentsLoading ? (
+                    <><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /></>
+                  ) : comments.length > 0 ? (
+                    comments.map((c) => (
+                      <CommentItem
+                        key={c.id}
+                        comment={c}
+                        onLikeComment={handleLikeComment}
+                        onDislikeComment={handleDislikeComment}
+                        onReplyComment={handleReplyComment}
+                        onLikeReply={handleLikeReply}
+                        onDislikeReply={handleDislikeReply}
+                        onReplyNested={handleReplyNested}
+                      />
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-center h-32"><p className="text-muted-foreground text-sm">No comments yet</p></div>
+                  )}
+                </div>
+                <div className="border-t border-border px-4 py-3 flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8 flex-shrink-0"><AvatarFallback className="bg-muted text-foreground text-xs">Y</AvatarFallback></Avatar>
+                    <div className="flex-1 flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Add a comment..."
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        className="flex-1 bg-transparent border-b border-border pb-1 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+                      />
+                      <button onClick={handleAddComment} disabled={!commentText.trim()} className="text-primary hover:text-primary/80 disabled:opacity-30 disabled:cursor-not-allowed p-1">
+                        <Send className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            {activePanel === "description" && (
+              <>
+                {descLoading ? (
+                  <DescriptionSkeleton />
+                ) : currentDesc ? (
+                  <div className="flex-1 overflow-y-auto scrollbar-thin">
+                    <div className="px-4 py-3"><h4 className="text-foreground text-sm font-medium leading-relaxed">{currentDesc.title}</h4></div>
+                    <div className="px-4 pb-3 flex items-center gap-4">
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Eye className="h-4 w-4" /><span>{currentDesc.views} views</span></div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="h-4 w-4" /><span>{currentDesc.timeAgo}</span></div>
+                    </div>
+                    <div className="px-4 pb-4">
+                      <div className={`text-sm text-foreground whitespace-pre-wrap leading-relaxed ${!descExpanded ? 'line-clamp-4' : ''}`}>{currentDesc.description}</div>
+                      {currentDesc.description.length > 200 && <button onClick={() => setDescExpanded(!descExpanded)} className="text-muted-foreground hover:text-foreground text-xs mt-1 font-medium">{descExpanded ? 'Show less' : '...more'}</button>}
+                    </div>
+                    <div className="px-4 pb-4 flex flex-wrap gap-2">{currentDesc.hashtags.map((tag: string) => <span key={tag} className="text-primary text-xs hover:text-primary/80 cursor-pointer">{tag}</span>)}</div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-32"><p className="text-muted-foreground text-sm">No description available</p></div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
 
       {/* Main Shorts Content */}
-      <div ref={containerRef} className="fixed inset-0 top-[56px] overflow-y-auto snap-y snap-mandatory scrollbar-none transition-all duration-300 ease-in-out" style={{ scrollSnapType: "y mandatory", right: typeof window !== 'undefined' && window.innerWidth >= 768 && activePanel ? `${iframeShiftRight}px` : "0px" }}>
+      <div
+        ref={containerRef}
+        className="fixed inset-0 top-[56px] overflow-y-auto snap-y snap-mandatory scrollbar-none transition-all duration-300 ease-in-out"
+        style={{ scrollSnapType: "y mandatory", right: typeof window !== 'undefined' && window.innerWidth >= 768 && activePanel ? `${iframeShiftRight}px` : "0px" }}
+      >
         {shortsData.map((short, index) => {
           const isActive = index === currentIndex
           const isHovered = hoveredVideoId === short.id
           return (
-            <section key={short.id} className="relative h-[calc(100vh-56px)] w-full snap-start snap-always flex items-center justify-center bg-black">
-              <div className="relative w-full h-full md:w-[400px] md:h-[85vh] md:rounded-2xl overflow-hidden mx-auto" onMouseEnter={() => setHoveredVideoId(short.id)} onMouseLeave={() => { setHoveredVideoId(null); setShowVolumeSlider(false); setShowMoreMenu(false) }}>
-                <div className="w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center cursor-pointer" onClick={handleTogglePlay}><div className="text-center text-white/20"><svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" className="mx-auto mb-4 opacity-30"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg><p className="text-sm opacity-40">Short Video</p></div></div>
-                <div className={`absolute inset-0 flex items-center justify-center z-25 pointer-events-none transition-opacity duration-200 ${showCenterPlayPause ? "opacity-100" : "opacity-0"}`}><div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">{isPlaying ? <Pause className="h-8 w-8 text-white fill-white" /> : <Play className="h-8 w-8 text-white fill-white ml-1" />}</div></div>
-                <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
-                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 via-black/20 to-transparent pointer-events-none" />
+            <section key={short.id} className="relative h-[calc(95vh-56px)] w-full snap-start snap-always flex items-center justify-center bg-background">
+              <div
+                className="relative w-full h-full md:w-[400px] md:h-[85vh] md:rounded-2xl overflow-hidden mx-auto bg-muted"
+                onMouseEnter={() => setHoveredVideoId(short.id)}
+                onMouseLeave={() => { setHoveredVideoId(null); setShowVolumeSlider(false); setShowMoreMenu(false) }}
+              >
+                {/* Video placeholder */}
+                <div className="w-full h-full bg-gradient-to-br from-muted via-muted/80 to-muted flex items-center justify-center cursor-pointer" onClick={handleTogglePlay}>
+                  <div className="text-center text-muted-foreground/30">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" className="mx-auto mb-4 opacity-40">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+                    </svg>
+                    <p className="text-sm opacity-50">Short Video</p>
+                  </div>
+                </div>
+
+                {/* Center play/pause overlay */}
+                <div className={`absolute inset-0 flex items-center justify-center z-25 pointer-events-none transition-opacity duration-200 ${showCenterPlayPause ? "opacity-100" : "opacity-0"}`}>
+                  <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                    {isPlaying ? <Pause className="h-8 w-8 text-white fill-white" /> : <Play className="h-8 w-8 text-white fill-white ml-1" />}
+                  </div>
+                </div>
+
+                {/* Gradient overlays */}
+                <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-background/90 via-background/50 to-transparent pointer-events-none" />
+                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/60 via-background/20 to-transparent pointer-events-none" />
+
+                {/* Top controls (hover only) – icons use text-foreground, no hover colour change */}
                 <div className={`absolute top-0 left-0 right-0 z-30 px-4 pt-4 pb-16 transition-opacity duration-200 ${isHovered && !isScrolling && !isTransitioning ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button onClick={handleTogglePlay} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors">{isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>
+                      <button onClick={handleTogglePlay} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors">
+                        {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                      </button>
                       <div className="relative flex items-center" onMouseEnter={() => setShowVolumeSlider(true)} onMouseLeave={() => setShowVolumeSlider(false)}>
-                        <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors">{isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</button>
-                        {showVolumeSlider && <div className="hidden md:flex items-center bg-black/60 backdrop-blur-sm rounded-full px-3 py-2 ml-1"><input type="range" min="0" max="100" value={isMuted ? 0 : volume} onChange={(e) => { setVolume(Number(e.target.value)); setIsMuted(false) }} className="w-20 h-1 accent-white cursor-pointer" /></div>}
+                        <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors">
+                          {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                        </button>
+                        {showVolumeSlider && (
+                          <div className="hidden md:flex items-center bg-black/60 backdrop-blur-sm rounded-full px-3 py-2 ml-1">
+                            <input type="range" min="0" max="100" value={isMuted ? 0 : volume} onChange={(e) => { setVolume(Number(e.target.value)); setIsMuted(false) }} className="w-20 h-1 accent-white cursor-pointer" />
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setCaptionsEnabled(!captionsEnabled)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors" title={captionsEnabled ? "CC on" : "CC off"} aria-pressed={captionsEnabled}>{captionsEnabled ? <CCIconOn className="h-5 w-5" /> : <CCIconOff className="h-5 w-5 text-white" />}</button>
-                      <button onClick={toggleFullscreen} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"><FullscreenIcon className="h-5 w-5" /></button>
-                      <div className="relative"><button onClick={() => setShowMoreMenu(!showMoreMenu)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"><MoreIcon className="h-5 w-5" /></button>
-                        {showMoreMenu && (<><div className="fixed inset-0 z-40 md:hidden" onClick={() => setShowMoreMenu(false)} /><div className="fixed bottom-0 left-0 right-0 z-50 bg-[#212121] rounded-t-2xl py-2 shadow-2xl md:absolute md:top-full md:bottom-auto md:left-auto md:right-0 md:mt-2 md:rounded-xl md:w-[280px]"><div className="w-10 h-1 bg-white/30 rounded-full mx-auto my-3 md:hidden" /><button className="w-full flex items-center gap-4 px-4 py-3 text-white text-sm hover:bg-white/10 transition-colors" onClick={() => { openPanel("description"); setShowMoreMenu(false) }}><List className="h-5 w-5" /> Description</button><button className="w-full flex items-center gap-4 px-4 py-3 text-white text-sm hover:bg-white/10 transition-colors" onClick={() => setShowMoreMenu(false)}><Bookmark className="h-5 w-5" /> Save to playlist</button><button className="w-full flex items-center justify-between px-4 py-3 text-white text-sm hover:bg-white/10 transition-colors" onClick={() => { setCaptionsEnabled(!captionsEnabled); setShowMoreMenu(false) }}><div className="flex items-center gap-4">{captionsEnabled ? <CCIconOn className="h-5 w-5" /> : <CCIconOff className="h-5 w-5 text-white" />} Captions</div><span className="text-white/60 text-xs">{captionsEnabled ? "On" : "Off"}</span></button><button className="w-full flex items-center gap-4 px-4 py-3 text-white text-sm hover:bg-white/10 transition-colors" onClick={() => setShowMoreMenu(false)}><Ban className="h-5 w-5" /> Don't recommend this channel</button><button className="w-full flex items-center gap-4 px-4 py-3 text-white text-sm hover:bg-white/10 transition-colors" onClick={() => setShowMoreMenu(false)}><Flag className="h-5 w-5" /> Report</button><button className="w-full flex items-center gap-4 px-4 py-3 text-white text-sm hover:bg-white/10 transition-colors" onClick={() => setShowMoreMenu(false)}><MessageSquare className="h-5 w-5" /> Send feedback</button><div className="h-4 md:hidden" /></div></>)}
+                      <button onClick={() => setCaptionsEnabled(!captionsEnabled)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors" title={captionsEnabled ? "CC on" : "CC off"} aria-pressed={captionsEnabled}>
+                        {captionsEnabled ? <CCIconOn className="h-5 w-5" /> : <CCIconOff className="h-5 w-5" />}
+                      </button>
+                      <button onClick={toggleFullscreen} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors">
+                        <FullscreenIcon className="h-5 w-5" />
+                      </button>
+                      <div className="relative">
+                        <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors">
+                          <MoreIcon className="h-5 w-5" />
+                        </button>
+                        {showMoreMenu && (
+                          <>
+                            <div className="fixed inset-0 z-40 md:hidden" onClick={() => setShowMoreMenu(false)} />
+                            <div className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl py-2 shadow-2xl md:absolute md:top-full md:bottom-auto md:left-auto md:right-0 md:mt-2 md:rounded-xl md:w-[280px]">
+                              <div className="w-10 h-1 bg-muted rounded-full mx-auto my-3 md:hidden" />
+                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => { openPanel("description"); setShowMoreMenu(false) }}>
+                                <List className="h-5 w-5" /> Description
+                              </button>
+                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => setShowMoreMenu(false)}>
+                                <Bookmark className="h-5 w-5" /> Save to playlist
+                              </button>
+                              <button className="w-full flex items-center justify-between px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => { setCaptionsEnabled(!captionsEnabled); setShowMoreMenu(false) }}>
+                                <div className="flex items-center gap-4">{captionsEnabled ? <CCIconOn className="h-5 w-5" /> : <CCIconOff className="h-5 w-5" />} Captions</div>
+                                <span className="text-muted-foreground text-xs">{captionsEnabled ? "On" : "Off"}</span>
+                              </button>
+                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => setShowMoreMenu(false)}>
+                                <Ban className="h-5 w-5" /> Don't recommend this channel
+                              </button>
+                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => setShowMoreMenu(false)}>
+                                <Flag className="h-5 w-5" /> Report
+                              </button>
+                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => setShowMoreMenu(false)}>
+                                <MessageSquare className="h-5 w-5" /> Send feedback
+                              </button>
+                              <div className="h-4 md:hidden" />
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Bottom info & actions */}
                 <div className={`absolute bottom-6 left-4 right-20 z-20 transition-all duration-500 ${isActive && !isScrolling && !isTransitioning ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
-                  <div className="flex items-center gap-3 mb-3"><Avatar className="h-10 w-10 border-2 border-white/20 flex-shrink-0"><AvatarImage src={short.channelAvatar} /><AvatarFallback className="bg-gray-700 text-white text-xs">{short.channel.charAt(0)}</AvatarFallback></Avatar><span className="text-white font-semibold text-sm truncate">{short.channel}</span><Button size="sm" className={`rounded-full h-8 text-xs px-4 flex-shrink-0 ${subscribeState[short.id] ? "bg-white/10 text-white hover:bg-white/20 border border-white/20" : "bg-white text-black hover:bg-gray-200"}`} onClick={() => toggleSubscribe(short.id)}>{subscribeState[short.id] ? "Subscribed" : "Subscribe"}</Button></div>
-                  <button onClick={() => openPanel("description")} className="text-left w-full"><p className="text-white/90 text-sm leading-relaxed line-clamp-2 hover:text-white transition-colors">{short.title}</p></button>
+                  <div className="flex items-center gap-3 mb-3">
+                    <Avatar className="h-10 w-10 border-2 border-white/20 flex-shrink-0">
+                      <AvatarImage src={short.channelAvatar} />
+                      <AvatarFallback className="bg-muted text-foreground text-xs">{short.channel.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-foreground font-semibold text-sm truncate">{short.channel}</span>
+                    <Button
+                      size="sm"
+                      className={cn("rounded-full h-8 text-xs px-4 flex-shrink-0", subscribeState[short.id] ? "bg-muted text-foreground hover:bg-muted/80 border border-border" : "bg-primary text-primary-foreground hover:bg-primary/90")}
+                      onClick={() => toggleSubscribe(short.id)}
+                    >
+                      {subscribeState[short.id] ? "Subscribed" : "Subscribe"}
+                    </Button>
+                  </div>
+                  <button onClick={() => openPanel("description")} className="text-left w-full">
+                    <p className="text-foreground/90 text-sm leading-relaxed line-clamp-2 hover:text-foreground transition-colors">{short.title}</p>
+                  </button>
                 </div>
+
                 <div className={`absolute right-3 bottom-28 flex flex-col gap-6 items-center z-20 transition-all duration-500 ${isActive && !isScrolling && !isTransitioning ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"}`}>
-                  <button onClick={() => toggleLike(short.id)} className="flex flex-col items-center gap-1 group"><div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isLiked[short.id] ? "bg-white/20 scale-110" : "bg-white/10"} group-hover:bg-white/20 group-active:scale-95`}><Heart className={`h-6 w-6 ${isLiked[short.id] ? "text-red-500 fill-red-500" : "text-white"}`} /></div><span className="text-white text-xs font-medium">{short.likes}</span></button>
-                  <button onClick={() => openPanel("comments")} className="flex flex-col items-center gap-1 group"><div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all group-active:scale-95"><MessageCircle className="h-6 w-6 text-white" /></div><span className="text-white text-xs font-medium">{short.comments}</span></button>
-                  <button onClick={() => setShowShareModal(true)} className="flex flex-col items-center gap-1 group"><div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all group-active:scale-95"><Share2 className="h-6 w-6 text-white" /></div><span className="text-white text-xs font-medium">Share</span></button>
-                  <button className="flex flex-col items-center gap-1 group"><div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all group-active:scale-95"><Bookmark className="h-6 w-6 text-white" /></div><span className="text-white text-xs font-medium">Save</span></button>
-                  <button className="flex flex-col items-center gap-1 group"><div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all group-active:scale-95"><Flag className="h-6 w-6 text-white" /></div><span className="text-white text-xs font-medium">Report</span></button>
+                  <button onClick={() => toggleLike(short.id)} className="flex flex-col items-center gap-1 group">
+                    <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all", isLiked[short.id] ? "bg-primary/20 scale-110" : "bg-background/10", "group-hover:bg-background/20 group-active:scale-95")}>
+                      <Heart className={cn("h-6 w-6", isLiked[short.id] ? "text-red-500 fill-red-500" : "text-foreground")} />
+                    </div>
+                    <span className="text-foreground text-xs font-medium">{short.likes}</span>
+                  </button>
+                  <button onClick={() => openPanel("comments")} className="flex flex-col items-center gap-1 group">
+                    <div className="w-12 h-12 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-background/20 transition-all group-active:scale-95">
+                      <MessageCircle className="h-6 w-6 text-foreground" />
+                    </div>
+                    <span className="text-foreground text-xs font-medium">{short.comments}</span>
+                  </button>
+                  <button onClick={() => setShowShareModal(true)} className="flex flex-col items-center gap-1 group">
+                    <div className="w-12 h-12 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-background/20 transition-all group-active:scale-95">
+                      <Share2 className="h-6 w-6 text-foreground" />
+                    </div>
+                    <span className="text-foreground text-xs font-medium">Share</span>
+                  </button>
+                  <button className="flex flex-col items-center gap-1 group">
+                    <div className="w-12 h-12 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-background/20 transition-all group-active:scale-95">
+                      <Bookmark className="h-6 w-6 text-foreground" />
+                    </div>
+                    <span className="text-foreground text-xs font-medium">Save</span>
+                  </button>
+                  <button className="flex flex-col items-center gap-1 group">
+                    <div className="w-12 h-12 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-background/20 transition-all group-active:scale-95">
+                      <Flag className="h-6 w-6 text-foreground" />
+                    </div>
+                    <span className="text-foreground text-xs font-medium">Report</span>
+                  </button>
                 </div>
               </div>
             </section>
