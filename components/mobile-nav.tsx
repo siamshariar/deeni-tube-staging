@@ -1,12 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { Home, Users, GraduationCap, BookOpen, PlaySquare } from "lucide-react"
+import { Home, Users, GraduationCap, BookOpen, PlaySquare, FolderOpen } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
   { href: "/channels", icon: Users, label: "Channels" },
+  { href: "/categories", icon: FolderOpen, label: "Categories" },
   { href: "/scholars", icon: GraduationCap, label: "Scholars" },
   { href: "/playlists", icon: BookOpen, label: "Playlists" },
 ]
