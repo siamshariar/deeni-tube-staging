@@ -48,7 +48,7 @@ export default function DesktopSidebar({ className }: DesktopSidebarProps) {
         <div className="py-2">
           <SidebarItem href="/" icon={<Home className="h-5 w-5" />} label="Home" active={pathname === "/"} />
           <SidebarItem href="/shorts" icon={<PlaySquare className="h-5 w-5" />} label="Shorts" active={pathname === "/shorts"} />
-          <SidebarItem href="/subscriptions-new" icon={<BookOpen className="h-5 w-5" />} label="Subscriptions" active={pathname === "/subscriptions"} />
+          {/* <SidebarItem href="/subscriptions-new" icon={<BookOpen className="h-5 w-5" />} label="Subscriptions" active={pathname === "/subscriptions"} /> */}
         </div>
 
         <div className="border-t py-2">
@@ -62,10 +62,10 @@ export default function DesktopSidebar({ className }: DesktopSidebarProps) {
         <div className="border-t py-2">
           <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Explore</h3>
           <SidebarItem href="/search-new" icon={<Search className="h-5 w-5" />} label="Search" active={pathname === "/search-new"} />
-          <SidebarItem href="/trending" icon={<Flame className="h-5 w-5" />} label="Trending" />
+          {/* <SidebarItem href="/trending" icon={<Flame className="h-5 w-5" />} label="Trending" />
           <SidebarItem href="/music" icon={<Music className="h-5 w-5" />} label="Music" />
           <SidebarItem href="/gaming" icon={<Gamepad2 className="h-5 w-5" />} label="Gaming" />
-          <SidebarItem href="/sports" icon={<Trophy className="h-5 w-5" />} label="Sports" />
+          <SidebarItem href="/sports" icon={<Trophy className="h-5 w-5" />} label="Sports" /> */}
         </div>
 
         <div className="border-t py-2">
