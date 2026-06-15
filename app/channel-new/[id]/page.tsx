@@ -25,18 +25,25 @@ import MobileNav from "@/components/mobile-nav";
 import { useLanguage } from "@/hooks/use-language";
 import { useFeedPreferences } from "@/hooks/useFeedPreferences";
 import { allChannels } from "@/lib/channels";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { toast } from "sonner";
 
 // Helper to get channel by slug
 const getChannelBySlug = (slug: string) => {
   const channel = allChannels.find(ch => ch.slug === slug);
   if (!channel) {
-    // Fallback to first channel
     return { ...allChannels[0], slug, id: allChannels[0].id };
   }
   return channel;
 };
 
-// Mock videos per channel (replace with real API later)
+// Mock videos per channel
 const getVideosForChannel = (channelId: string) => {
   if (channelId === "ch1") {
     return [
@@ -75,7 +82,7 @@ export default function ChannelPage() {
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { isGuest } = useLanguage();
-  const { followedChannels, toggleFollowChannel } = useFeedPreferences();
+  const { followedChannels, setChannelFeed } = useFeedPreferences();
 
   const [activeTab, setActiveTab] = useState("videos");
   const [showSearch, setShowSearch] = useState(false);
@@ -87,6 +94,7 @@ export default function ChannelPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [showSignInDialog, setShowSignInDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<"subscribe" | null>(null);
+  const [descriptionDrawerOpen, setDescriptionDrawerOpen] = useState(false);
 
   const [loadingVideos, setLoadingVideos] = useState(true);
   const [videosList, setVideosList] = useState<any[]>([]);
@@ -98,7 +106,13 @@ export default function ChannelPage() {
 
   const channelSlug = params.id as string;
   const channel = getChannelBySlug(channelSlug);
-  const isSubscribed = followedChannels.includes(channel.id); // ON/OFF status
+
+  // Local state for instant UI update (single click works)
+  const [localOn, setLocalOn] = useState(followedChannels.includes(channel.id));
+
+  useEffect(() => {
+    setLocalOn(followedChannels.includes(channel.id));
+  }, [followedChannels, channel.id]);
 
   const fetchVideos = useCallback(async (pageNum: number, sort: typeof videoSort) => {
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -147,13 +161,34 @@ export default function ChannelPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleToggleFeed = () => {
+  const handleToggleFeed = (checked: boolean) => {
     if (isGuest) {
       setPendingAction("subscribe");
       setShowSignInDialog(true);
       return;
     }
-    toggleFollowChannel(channel.id);
+    setLocalOn(checked);                     // update UI instantly
+    setChannelFeed(channel.id, checked);     // sync shared state
+  };
+
+  const handleDontRecommend = () => {
+    if (isGuest) {
+      setPendingAction("subscribe");
+      setShowSignInDialog(true);
+      return;
+    }
+    setLocalOn(false);
+    setChannelFeed(channel.id, false);
+    toast("We won't recommend videos from this channel to you again", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          setLocalOn(true);
+          setChannelFeed(channel.id, true);
+        },
+      },
+      duration: 5000,
+    });
   };
 
   const handleShare = async () => {
@@ -171,11 +206,13 @@ export default function ChannelPage() {
   const getVideoCardProps = (video: any) => ({
     videoId: video.id,
     title: video.title,
-    channelName: channel.name,
+    channel: channel.name,
+    channelId: channel.id,
     channelAvatar: channel.avatar,
     views: formatNumber(video.views) + " views",
     timestamp: video.timeAgo,
     duration: video.duration,
+    thumbnail: video.thumbnail,
     isHorizontal: false,
   });
 
@@ -217,16 +254,42 @@ export default function ChannelPage() {
                 </div>
                 <p className="text-sm text-muted-foreground">{channel.handle || `@${channel.slug}`}</p>
                 <p className="text-sm text-muted-foreground">{formatNumber(channel.subscribers)} subscribers • {formatNumber(channel.videosCount)} videos</p>
+                {/* Description */}
                 <div className="mt-2 max-w-2xl">
-                  <p className="text-sm text-muted-foreground">
-                    {showFullDescription ? channel.description : channel.description.slice(0, 150)}
-                    {channel.description.length > 150 && (
-                      <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-blue-600 ml-1 hover:underline">
-                        {showFullDescription ? "Show less" : "...more"}
-                      </button>
-                    )}
-                  </p>
+                  {!isMobile ? (
+                    <p className="text-sm text-muted-foreground">
+                      {showFullDescription ? (
+                        <>
+                          {channel.description}
+                          <button onClick={() => setShowFullDescription(false)} className="text-primary ml-1 hover:underline font-medium">Show less</button>
+                        </>
+                      ) : (
+                        <>
+                          {channel.description.slice(0, 150)}
+                          {channel.description.length > 150 && (
+                            <button onClick={() => setShowFullDescription(true)} className="text-primary ml-1 hover:underline font-medium">...more</button>
+                          )}
+                        </>
+                      )}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{channel.description}</p>
+                      <button onClick={() => setDescriptionDrawerOpen(true)} className="text-sm text-primary hover:underline font-medium mt-1">Read more</button>
+                    </>
+                  )}
                 </div>
+                {/* Mobile Description Drawer */}
+                <Drawer open={descriptionDrawerOpen} onOpenChange={setDescriptionDrawerOpen}>
+                  <DrawerContent className="max-h-[80vh]">
+                    <DrawerHeader>
+                      <DrawerTitle className="text-lg">About {channel.name}</DrawerTitle>
+                    </DrawerHeader>
+                    <div className="p-4 overflow-y-auto">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{channel.description}</p>
+                    </div>
+                  </DrawerContent>
+                </Drawer>
                 <div className="mt-2 space-y-1">
                   {channel.website && (
                     <Link href={`https://${channel.website}`} target="_blank" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
@@ -248,8 +311,11 @@ export default function ChannelPage() {
                 </div>
                 <div className="flex items-center gap-2 mt-4 flex-wrap">
                   <div className="flex items-center gap-2 bg-muted rounded-full px-3 py-1.5">
-                    <span className="text-sm font-medium">{isSubscribed ? "On" : "Off"}</span>
-                    <Switch checked={isSubscribed} onCheckedChange={handleToggleFeed} />
+                    <span className="text-sm font-medium">{localOn ? "On" : "Off"}</span>
+                    <Switch
+                      checked={localOn}
+                      onCheckedChange={(checked) => handleToggleFeed(checked)}
+                    />
                     <span className="text-xs text-muted-foreground">Feed preference</span>
                   </div>
                   <Button variant="outline" className="rounded-full h-9 flex-shrink-0" onClick={handleShare}>
@@ -263,8 +329,12 @@ export default function ChannelPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem className="cursor-pointer"><Flag className="h-4 w-4 mr-3" /> Report</DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer"><Ban className="h-4 w-4 mr-3" /> Don't recommend channel</DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer">
+                        <Flag className="h-4 w-4 mr-3" /> Report
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={handleDontRecommend}>
+                        <Ban className="h-4 w-4 mr-3" /> Don't recommend channel
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

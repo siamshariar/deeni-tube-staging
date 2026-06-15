@@ -13,12 +13,28 @@ import { useLanguage } from "@/hooks/use-language";
 import { useFeedPreferences } from "@/hooks/useFeedPreferences";
 import { allChannels } from "@/lib/channels";
 
-// Generate mock videos for each channel (8 videos per channel)
+const chipItems = [
+  "All", "Mawlana", "Dawah", "Podcasts", "News", "Tarawih", "Live",
+  "Recitation", "Quran", "Fatwa", "Islamic Studies", "Ramadan", "Eid",
+  "Nasheed", "Series", "Lectures", "Recently uploaded", "Watched", "New to you",
+];
+
+// Helper to assign a category to each video (stable)
+const getCategoryForVideo = (channelIndex: number, videoIndex: number): string => {
+  const categories = [
+    "Mawlana", "Dawah", "Podcasts", "News", "Tarawih", "Live",
+    "Recitation", "Quran", "Fatwa", "Islamic Studies", "Ramadan",
+    "Nasheed", "Series", "Lectures"
+  ];
+  const idx = (channelIndex * 7 + videoIndex) % categories.length;
+  return categories[idx];
+};
+
 const generateVideos = () => {
-  const allVideos: any[] = [];
-  allChannels.forEach(ch => {
+  const videos: any[] = [];
+  allChannels.forEach((ch, channelIndex) => {
     for (let i = 1; i <= 8; i++) {
-      allVideos.push({
+      videos.push({
         id: `${ch.id}-v${i}`,
         title: `${ch.name} - Video ${i}`,
         channel: ch.name,
@@ -29,17 +45,12 @@ const generateVideos = () => {
         timestamp: `${Math.floor(Math.random() * 12) + 1} days ago`,
         duration: `${Math.floor(Math.random() * 10) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, "0")}`,
         language: ch.language,
+        category: getCategoryForVideo(channelIndex, i),   // added category
       });
     }
   });
-  return allVideos;
+  return videos;
 };
-
-const chipItems = [
-  "All", "Mawlana", "Dawah", "Podcasts", "News", "Tarawih", "Live",
-  "Recitation", "Quran", "Fatwa", "Islamic Studies", "Ramadan", "Eid",
-  "Nasheed", "Series", "Lectures", "Recently uploaded", "Watched", "New to you",
-];
 
 export default function Home() {
   const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -68,17 +79,31 @@ export default function Home() {
   const { preferredLanguages, hasSelected, isGuest, savePreferences, skipForNow } = useLanguage();
   const { followedChannels } = useFeedPreferences();
 
-  // Filter videos: by language AND by followed channels (ONLY show channels that are ON)
-  // If followedChannels is empty, no videos will be shown.
+  // Filtering effect (language, channel, category)
   useEffect(() => {
     let filtered = allVideos;
+
     // 1. Language filter
-    filtered = filtered.filter(v => preferredLanguages.includes(v.language));
-    // 2. Channel filter: only include videos from channels that are ON (in followedChannels)
-    //    This automatically results in an empty array if followedChannels is empty.
-    filtered = filtered.filter(v => followedChannels.includes(v.channelId));
+    if (preferredLanguages.length > 0) {
+      filtered = filtered.filter(v => preferredLanguages.includes(v.language));
+    }
+
+    // 2. Channel filter (logged-in users)
+    if (!isGuest) {
+      if (followedChannels.length > 0) {
+        filtered = filtered.filter(v => followedChannels.includes(v.channelId));
+      } else {
+        filtered = []; // no followed channels → empty feed
+      }
+    }
+
+    // 3. Category filter (active chip)
+    if (activeChip !== "All") {
+      filtered = filtered.filter(v => v.category === activeChip);
+    }
+
     setDisplayedVideos(filtered);
-  }, [allVideos, preferredLanguages, followedChannels]);
+  }, [allVideos, preferredLanguages, followedChannels, isGuest, activeChip]);
 
   const fetchVideos = useCallback(async (pageNum: number) => {
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -95,9 +120,10 @@ export default function Home() {
       if (mounted) { setAllVideos(videos); setInitialLoading(false); }
     };
     loadInitial();
-    return () => { mounted = false; };
+    return () => { mounted = false };
   }, [fetchVideos]);
 
+  // Infinite scroll observer
   useEffect(() => {
     if (initialLoading) return;
     const handleObserver = (entries: IntersectionObserverEntry[]) => {
@@ -111,7 +137,7 @@ export default function Home() {
       if (observerRef.current && currentLoadingRef) observerRef.current.unobserve(currentLoadingRef);
       observerRef.current?.disconnect();
     };
-  }, [initialLoading]);
+  }, [initialLoading, hasMore]);
 
   useEffect(() => {
     if (page === 1) return;
@@ -126,7 +152,7 @@ export default function Home() {
     loadMore();
   }, [page, fetchVideos]);
 
-  // Scroll handling
+  // Scroll handling (header hide)
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
@@ -139,6 +165,7 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [prevScrollPos]);
 
+  // Chip bar arrows
   const updateArrows = useCallback(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -166,6 +193,7 @@ export default function Home() {
     el.scrollBy({ left: dir === "left" ? -amt : amt, behavior: "smooth" });
   };
 
+  // Drag to scroll (chip bar)
   const handleMouseDown = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.tagName === "BUTTON" || target.closest("button")) return;
@@ -241,14 +269,22 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <div className={`absolute left-0 top-0 bottom-0 z-20 flex items-center transition-opacity duration-200 ${showLeftArrow ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-                <div className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-background via-background to-transparent" />
-                <button className="relative ml-2 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg" onClick={() => scrollChips("left")}><ChevronLeft className="h-5 w-5 text-white" /></button>
-              </div>
-              <div className={`absolute right-0 top-0 bottom-0 z-20 flex items-center justify-end transition-opacity duration-200 ${showRightArrow ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-                <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-background via-background to-transparent" />
-                <button className="relative mr-3 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg" onClick={() => scrollChips("right")}><ChevronRight className="h-5 w-5 text-white" /></button>
-              </div>
+              {showLeftArrow && (
+                <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center">
+                  <div className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-background via-background to-transparent" />
+                  <button className="relative ml-2 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg" onClick={() => scrollChips("left")}>
+                    <ChevronLeft className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              )}
+              {showRightArrow && (
+                <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center justify-end">
+                  <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-background via-background to-transparent" />
+                  <button className="relative mr-3 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg" onClick={() => scrollChips("right")}>
+                    <ChevronRight className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -259,7 +295,10 @@ export default function Home() {
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div key={`dsk-${i}`} className="flex flex-col">
                     <Skeleton className="aspect-video w-full rounded-lg" />
-                    <div className="flex mt-2 gap-2"><Skeleton className="h-9 w-9 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div></div>
+                    <div className="flex mt-2 gap-2">
+                      <Skeleton className="h-9 w-9 rounded-full" />
+                      <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -267,42 +306,90 @@ export default function Home() {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={`msk-${i}`} className="flex flex-col p-3">
                     <Skeleton className="aspect-video w-full rounded-lg" />
-                    <div className="flex mt-3 gap-3"><Skeleton className="h-9 w-9 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div></div>
+                    <div className="flex mt-3 gap-3">
+                      <Skeleton className="h-9 w-9 rounded-full" />
+                      <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                    </div>
                   </div>
                 ))}
               </div>
             </>
           )}
 
-          {/* Desktop grid – filtered videos (ONLY followed channels) */}
+          {/* Desktop grid */}
           {!initialLoading && (
             <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-              {displayedVideos.map(video => <VideoCard key={video.id} videoId={video.id} isHorizontal={false} />)}
+              {displayedVideos.map(video => (
+                <VideoCard
+                  key={video.id}
+                  videoId={video.id}
+                  title={video.title}
+                  channel={video.channel}
+                  channelId={video.channelId}
+                  channelAvatar={video.channelAvatar}
+                  views={video.views}
+                  timestamp={video.timestamp}
+                  duration={video.duration}
+                  thumbnail={video.thumbnail}
+                  isHorizontal={false}
+                />
+              ))}
               {loadingMore && Array.from({ length: 4 }).map((_, i) => (
                 <div key={`ldsk-${i}`} className="flex flex-col">
                   <Skeleton className="aspect-video w-full rounded-lg" />
-                  <div className="flex mt-2 gap-2"><Skeleton className="h-9 w-9 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div></div>
+                  <div className="flex mt-2 gap-2">
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                  </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Mobile list – filtered videos (ONLY followed channels) */}
+          {/* Mobile list */}
           {!initialLoading && (
             <div className="flex flex-col md:hidden">
-              {displayedVideos.map(video => <VideoCard key={video.id} videoId={video.id} isHorizontal={true} />)}
+              {displayedVideos.map(video => (
+                <VideoCard
+                  key={video.id}
+                  videoId={video.id}
+                  title={video.title}
+                  channel={video.channel}
+                  channelId={video.channelId}
+                  channelAvatar={video.channelAvatar}
+                  views={video.views}
+                  timestamp={video.timestamp}
+                  duration={video.duration}
+                  thumbnail={video.thumbnail}
+                  isHorizontal={true}
+                />
+              ))}
               {loadingMore && Array.from({ length: 2 }).map((_, i) => (
                 <div key={`lmsk-${i}`} className="flex flex-col p-3">
                   <Skeleton className="aspect-video w-full rounded-lg" />
-                  <div className="flex mt-3 gap-3"><Skeleton className="h-9 w-9 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div></div>
+                  <div className="flex mt-3 gap-3">
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                    <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                  </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Infinite scroll trigger */}
-          {hasMore && !initialLoading && <div ref={loadingRef} className="flex justify-center p-4">{loadingMore && <div className="flex items-center gap-2 text-sm text-muted-foreground"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />Loading...</div>}</div>}
-          {!hasMore && !initialLoading && displayedVideos.length > 0 && <div className="text-center p-4 text-muted-foreground text-sm">You've reached the end</div>}
+          {hasMore && !initialLoading && (
+            <div ref={loadingRef} className="flex justify-center p-4">
+              {loadingMore && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  Loading...
+                </div>
+              )}
+            </div>
+          )}
+
+          {!hasMore && !initialLoading && displayedVideos.length > 0 && (
+            <div className="text-center p-4 text-muted-foreground text-sm">You've reached the end</div>
+          )}
         </main>
       </div>
       <MobileNav />

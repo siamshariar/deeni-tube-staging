@@ -7,8 +7,11 @@ import Link from "next/link"
 import {
   ArrowLeft, MoreVertical, Share, Clock, Bookmark, Ban, UserX, Flag,
   ListPlus, ThumbsUp, ThumbsDown, ChevronDown, MessageCircle,
-  Send, SortDesc, MoreHorizontal, X, Pencil, Trash2, Check, Reply
+  Send, SortDesc, MoreHorizontal, X, Pencil, Trash2, Check, Reply,
+  EyeOff
 } from "lucide-react"
+import { AddToPlaylistDialog } from "@/components/add-to-playlist-dialog";
+import { ReportDialog } from "@/components/report-dialog";   // <-- added
 import AppHeader from "@/components/app-header"
 import MobileNav from "@/components/mobile-nav"
 import DesktopSidebar from "@/components/desktop-sidebar"
@@ -25,12 +28,18 @@ import {
 } from "@/components/ui/drawer"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@/lib/utils"
+import { useWatchLater } from "@/hooks/useWatchLater"
+import { useFeedPreferences } from "@/hooks/useFeedPreferences"
+import { usePlaylists } from "@/hooks/usePlaylists"
+import { useLikedVideos } from "@/hooks/useLikedVideos"
+import { toast } from "sonner"
+import { ShareModal } from "@/components/share-modal";
 
-// ============= Mock Data (with createdAt for sorting) =============
+// ============= Mock Data =============
 const videoData = {
   id: "v1",
   title: "The Purpose of Life - Powerful Islamic Reminder",
-  description: "A powerful reminder about the true purpose of life from an Islamic perspective. This lecture covers the fundamental questions that every human being asks: Why are we here? What is our purpose? Where are we going? Sheikh explains these concepts with references from the Quran and Sunnah.",
+  description: "...",
   channel: "Daily Dawah",
   channelAvatar: "/placeholder.svg?height=36&width=36",
   subscribers: "780K subscribers",
@@ -40,8 +49,9 @@ const videoData = {
   dislikes: "342",
   duration: "18:28",
   videoUrl: "https://www.youtube.com/embed/5qap5aO4i9A",
+  thumbnail: "/placeholder.svg?height=480&width=854",
   isSubscribed: true,
-}
+};
 
 const relatedVideos = [
   { id: "r1", title: "What Happens After Death? Islamic Perspective", channel: "Daily Dawah", views: "180K views", timeAgo: "1 week ago", duration: "22:15", thumbnail: "/placeholder.svg?height=480&width=854", videoUrl: "https://www.youtube.com/embed/5qap5aO4i9A" },
@@ -187,9 +197,8 @@ const getAvatarChar = (displayName: string): string => {
   return displayName.charAt(0)
 }
 
-// Component to render content with @mention styling (only the mention part is highlighted)
+// Component to render content with @mention styling
 const FormattedContent = ({ text }: { text: string }) => {
-  // Split by mentions that may contain a second word (e.g., @Aisha Begum)
   const parts = text.split(/(@\w+(?:\s\w+)?)/g)
   return (
     <span className="text-sm mt-0.5">
@@ -586,7 +595,6 @@ export default function VideoPlayPage() {
   const [isLiked, setIsLiked] = useState(false)
   const [isDisliked, setIsDisliked] = useState(false)
   const [commentText, setCommentText] = useState("")
-  const [isSubscribed, setIsSubscribed] = useState(true)
   const [comments, setComments] = useState<any[]>([])
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [localLikedIds, setLocalLikedIds] = useState<string[]>(() => loadIds(VID_LIKED_KEY))
@@ -595,9 +603,57 @@ export default function VideoPlayPage() {
   const [commentsDrawerOpen, setCommentsDrawerOpen] = useState(false)
   const [allCommentsData, setAllCommentsData] = useState<Record<string, any[]>>(() => loadAllComments())
   const [sortMode, setSortMode] = useState<'top' | 'newest'>('top')
+  const [descriptionDrawerOpen, setDescriptionDrawerOpen] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [hidden, setHidden] = useState(false);
+
+  // New hooks for extended functionality
+  const { addToWatchLater } = useWatchLater()
+  const { toggleFollowChannel, isFollowed } = useFeedPreferences()
+  const { playlists, addVideoToPlaylist } = usePlaylists()
+  const { isLiked: isVideoLiked, addLike, removeLike } = useLikedVideos()
 
   const [currentVideo, setCurrentVideo] = useState({ ...videoData, videoUrl: videoData.videoUrl, comments: "1,234" })
   const [activeVideoId, setActiveVideoId] = useState("v1")
+  const [videoLiked, setVideoLiked] = useState(false)
+
+  // Sync liked state when video changes
+  useEffect(() => {
+    setVideoLiked(isVideoLiked(currentVideo.id));
+    setIsLiked(isVideoLiked(currentVideo.id));
+  }, [currentVideo.id, isVideoLiked]);
+
+  const getCurrentChannelId = () => {
+    if (currentVideo.channel === "Daily Dawah") return "ch2"
+    if (currentVideo.channel === "Islamic Guidance") return "ch1"
+    return "ch1"
+  }
+
+  const handleAddToWatchLater = () => {
+    addToWatchLater({
+      id: currentVideo.id,
+      title: currentVideo.title,
+      channel: currentVideo.channel,
+      channelAvatar: currentVideo.channelAvatar,
+      thumbnail: currentVideo.thumbnail,
+      views: currentVideo.views,
+      timeAgo: currentVideo.publishedAt,
+      duration: currentVideo.duration,
+      addedAt: Date.now(),
+    })
+    toast.success("Added to Watch Later")
+  }
+
+  const handleDontRecommendChannel = () => {
+    const channelId = getCurrentChannelId()
+    toggleFollowChannel(channelId)
+    toast.success(`Channel ${isFollowed(channelId) ? "removed from" : "added to"} feed`)
+  }
+
+  const handleAddToPlaylist = (playlistId: string) => {
+    addVideoToPlaylist(playlistId, { id: currentVideo.id, title: currentVideo.title, channel: currentVideo.channel })
+    toast.success("Added to playlist")
+  }
 
   useEffect(() => { saveIds(VID_LIKED_KEY, localLikedIds) }, [localLikedIds])
   useEffect(() => { saveIds(VID_DISLIKED_KEY, localDislikedIds) }, [localDislikedIds])
@@ -641,14 +697,23 @@ export default function VideoPlayPage() {
   const handleRelatedVideoClick = (video: any) => {
     saveWatchProgress(currentVideo.id, { watchedPercent: 50, watchedTimestamp: 0 })
     setCurrentVideo({
-      id: video.id, title: video.title, channel: video.channel, channelAvatar: "/placeholder.svg?height=36&width=36",
-      subscribers: `${Math.floor(Math.random() * 900) + 100}K subscribers`, views: video.views, publishedAt: video.timeAgo,
-      description: `Description for ${video.title}.`, videoUrl: video.videoUrl, isSubscribed: false,
-      likes: `${Math.floor(Math.random() * 20) + 1}K`, dislikes: `${Math.floor(Math.random() * 500) + 10}`,
-      comments: `${Math.floor(Math.random() * 2000) + 100}`, duration: video.duration || "0:00",
-    })
+      id: video.id, 
+      title: video.title, 
+      channel: video.channel, 
+      channelAvatar: "/placeholder.svg?height=36&width=36",
+      subscribers: `${Math.floor(Math.random() * 900) + 100}K subscribers`, 
+      views: video.views, 
+      publishedAt: video.timeAgo,
+      description: `Description for ${video.title}.`, 
+      videoUrl: video.videoUrl, 
+      isSubscribed: false,
+      likes: `${Math.floor(Math.random() * 20) + 1}K`, 
+      dislikes: `${Math.floor(Math.random() * 500) + 10}`,
+      comments: `${Math.floor(Math.random() * 2000) + 100}`, 
+      duration: video.duration || "0:00",
+      thumbnail: video.thumbnail,
+    });
     setActiveVideoId(video.id)
-    setIsSubscribed(false)
     setShowFullDescription(false)
     setCommentText("")
     setIsLiked(false)
@@ -771,6 +836,19 @@ export default function VideoPlayPage() {
     setAllCommentsData(prev => ({ ...prev, [activeVideoId]: updatedVideoComments }))
   }
 
+    const handleNotInterested = () => {
+    toast("Video removed", {
+      description: "We won't show this video again",
+      action: {
+        label: "Undo",
+        onClick: () => {}, // undo does nothing on detail page
+      },
+      duration: 5000,
+    });
+    // Optionally navigate back after a short delay
+    setTimeout(() => router.back(), 1000);
+  };
+
   const handleAddTopLevelComment = () => {
     if (!commentText.trim()) return
     const newComment = {
@@ -885,7 +963,6 @@ export default function VideoPlayPage() {
 
   const CommentsContentMobile = () => (
     <div className="flex flex-col h-full focus:outline-none ring-0">
-      {/* Sticky header with count and sort */}
       <div className="sticky top-0 bg-background z-10 pb-2 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -895,8 +972,6 @@ export default function VideoPlayPage() {
           <SortDropdown />
         </div>
       </div>
-
-      {/* Scrollable comments list */}
       <div className="flex-1 overflow-y-auto py-4 space-y-2" id="comments-list-mobile">
         {commentsLoading ? (
           <><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /><CommentSkeleton /></>
@@ -920,8 +995,6 @@ export default function VideoPlayPage() {
           <div className="text-center py-8 text-muted-foreground text-sm">No comments yet. Be the first to comment!</div>
         )}
       </div>
-
-      {/* Sticky input at bottom */}
       <div className="sticky bottom-0 bg-background pt-3 pb-2 border-t">
         <div className="flex gap-3">
           <Avatar className="h-8 w-8 flex-shrink-0"><AvatarFallback>Y</AvatarFallback></Avatar>
@@ -981,41 +1054,123 @@ export default function VideoPlayPage() {
                       <Avatar className="h-9 w-9 md:h-10 md:w-10"><AvatarImage src={currentVideo.channelAvatar} /><AvatarFallback>{currentVideo.channel.charAt(0)}</AvatarFallback></Avatar>
                       <div><p className="text-sm font-medium group-hover:text-primary">{currentVideo.channel}</p><p className="text-xs text-muted-foreground">{currentVideo.subscribers}</p></div>
                     </Link>
-                    <Button onClick={() => setIsSubscribed(!isSubscribed)} className={`rounded-full h-9 text-sm px-4 font-medium ${isSubscribed ? 'bg-muted hover:bg-muted/80 text-foreground' : 'bg-foreground text-background hover:bg-foreground/90'}`}>
-                      {isSubscribed ? 'Subscribed' : 'Subscribe'}
-                    </Button>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center bg-muted rounded-full overflow-hidden">
-                      <button onClick={() => { setIsLiked(!isLiked); if (isDisliked) setIsDisliked(false) }} className={`flex items-center gap-2 px-4 py-2 hover:bg-muted/80 transition-colors border-r border-border ${isLiked ? 'text-foreground' : ''}`}>
+                      <button 
+                        onClick={() => {
+                          if (videoLiked) {
+                            removeLike(currentVideo.id);
+                            setVideoLiked(false);
+                          } else {
+                            addLike({
+                              id: currentVideo.id,
+                              title: currentVideo.title,
+                              channel: currentVideo.channel,
+                              channelAvatar: currentVideo.channelAvatar,
+                              thumbnail: currentVideo.thumbnail,
+                              views: currentVideo.views,
+                              timeAgo: currentVideo.publishedAt,
+                              duration: currentVideo.duration,
+                              likedAt: Date.now(),
+                            });
+                            setVideoLiked(true);
+                          }
+                          setIsLiked(!isLiked);
+                          if (isDisliked) setIsDisliked(false);
+                        }}
+                        className={`flex items-center gap-2 px-4 py-2 hover:bg-muted/80 transition-colors border-r border-border ${isLiked ? 'text-foreground' : ''}`}
+                      >
                         <ThumbsUp className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} /><span className="text-sm font-medium">{currentVideo.likes}</span>
                       </button>
                       <button onClick={() => { setIsDisliked(!isDisliked); if (isLiked) setIsLiked(false) }} className={`px-4 py-2 hover:bg-muted/80 transition-colors ${isDisliked ? 'text-foreground' : ''}`}>
                         <ThumbsDown className={`h-5 w-5 ${isDisliked ? 'fill-current' : ''}`} />
                       </button>
                     </div>
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted"><Share className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted" onClick={() => setShowShareModal(true)}>
+                      <Share className="h-5 w-5" />
+                    </Button>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="rounded-full"><MoreHorizontal className="h-5 w-5" /></Button></DropdownMenuTrigger>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="rounded-full"><MoreHorizontal className="h-5 w-5" /></Button>
+                      </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-72 rounded-xl py-2">
-                        <DropdownMenuItem><ListPlus className="mr-2 h-5 w-5" />Add to queue</DropdownMenuItem>
-                        <DropdownMenuItem><Clock className="mr-2 h-5 w-5" />Save to Watch later</DropdownMenuItem>
-                        <DropdownMenuItem><Bookmark className="mr-2 h-5 w-5" />Save to playlist</DropdownMenuItem>
-                        <DropdownMenuItem><Share className="mr-2 h-5 w-5" />Share</DropdownMenuItem>
-                        <DropdownMenuItem><Ban className="mr-2 h-5 w-5" />Not interested</DropdownMenuItem>
-                        <DropdownMenuItem><UserX className="mr-2 h-5 w-5" />Don't recommend channel</DropdownMenuItem>
-                        <DropdownMenuItem><Flag className="mr-2 h-5 w-5" />Report</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleAddToWatchLater} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                          <Clock className="h-5 w-5" />
+                          <span>Save to Watch later</span>
+                        </DropdownMenuItem>
+                        <AddToPlaylistDialog
+                          video={{ id: currentVideo.id, title: currentVideo.title, channel: currentVideo.channel }}
+                          onAdded={() => toast.success("Added to playlist")}
+                        >
+                          <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
+                            <Bookmark className="h-5 w-5" />
+                            <span>Save to playlist</span>
+                          </div>
+                        </AddToPlaylistDialog>
+                        <DropdownMenuItem onClick={handleDontRecommendChannel} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                          <UserX className="h-5 w-5" />
+                          <span>Don't recommend channel</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleNotInterested} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                          <EyeOff className="h-5 w-5" />
+                          <span>Not interested</span>
+                        </DropdownMenuItem>
+                        <ReportDialog videoTitle={currentVideo.title} videoId={currentVideo.id}>
+                          <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
+                            <Flag className="h-5 w-5" />
+                            <span>Report</span>
+                          </div>
+                        </ReportDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                 </div>
-                <div onClick={() => setShowFullDescription(!showFullDescription)} className="mt-3 bg-muted/40 hover:bg-muted/60 rounded-xl p-3 md:p-4 cursor-pointer transition-colors">
-                  <div className="flex items-center gap-2 text-sm"><span className="font-medium">{currentVideo.views}</span><span className="text-muted-foreground">•</span><span className="text-muted-foreground">{currentVideo.publishedAt}</span></div>
-                  <div className={`text-sm mt-1 whitespace-pre-wrap ${showFullDescription ? '' : 'line-clamp-2'}`}>{currentVideo.description}</div>
-                  <span className="text-sm font-medium text-foreground/70 mt-1 inline-block">{showFullDescription ? 'Show less' : '...more'}</span>
+
+                {/* Description with mobile drawer */}
+                <div className="mt-3 bg-muted/40 hover:bg-muted/60 rounded-xl p-3 md:p-4 transition-colors">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium">{currentVideo.views}</span>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground">{currentVideo.publishedAt}</span>
+                  </div>
+                  {!isMobile ? (
+                    <div className="text-sm mt-1 whitespace-pre-wrap">
+                      {showFullDescription ? (
+                        <>
+                          {currentVideo.description}
+                          <button onClick={() => setShowFullDescription(false)} className="text-primary ml-1 hover:underline font-medium">Show less</button>
+                        </>
+                      ) : (
+                        <>
+                          {currentVideo.description.slice(0, 150)}
+                          {currentVideo.description.length > 150 && (
+                            <button onClick={() => setShowFullDescription(true)} className="text-primary ml-1 hover:underline font-medium">...more</button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm mt-1 line-clamp-2">{currentVideo.description}</p>
+                      <button onClick={() => setDescriptionDrawerOpen(true)} className="text-sm text-primary hover:underline font-medium mt-1">Read more</button>
+                    </>
+                  )}
                 </div>
 
-                {/* Comments: inline on desktop, drawer on mobile */}
+                {/* Mobile Description Drawer */}
+                <Drawer open={descriptionDrawerOpen} onOpenChange={setDescriptionDrawerOpen}>
+                  <DrawerContent className="max-h-[80vh]">
+                    <DrawerHeader>
+                      <DrawerTitle className="text-lg">About this video</DrawerTitle>
+                    </DrawerHeader>
+                    <div className="p-4 overflow-y-auto">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{currentVideo.description}</p>
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+
+                {/* Comments */}
                 {!isMobile ? (
                   <div className="mt-6">
                     <CommentsContentDesktop />
@@ -1091,6 +1246,11 @@ export default function VideoPlayPage() {
           )}
         </div>
       </div>
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        videoUrl={typeof window !== 'undefined' ? window.location.href : ''}
+      />
       <MobileNav />
     </div>
   )

@@ -73,7 +73,7 @@ export default function DesktopSidebar({ className }: DesktopSidebarProps) {
           <SidebarItem href="/channels" icon={<Users className="h-5 w-5" />} label="Channels" active={pathname === "/channels"} />
           <SidebarItem href="/scholars" icon={<GraduationCap className="h-5 w-5" />} label="Scholars" active={pathname === "/scholars"} />
           <SidebarItem href="/categories" icon={<FolderOpen className="h-5 w-5" />} label="Categories" active={pathname === "/categories"} />
-          <SidebarItem href="/quran-translations" icon={<BookOpen className="h-5 w-5" />} label="Quran Translations" active={pathname === "/quran-translations"} />
+          {/* <SidebarItem href="/quran-translations" icon={<BookOpen className="h-5 w-5" />} label="Quran Translations" active={pathname === "/quran-translations"} /> */}
           {/* <SidebarItem href="/ruqyah" icon={<Heart className="h-5 w-5" />} label="Ruqyah" active={pathname === "/ruqyah"} /> */}
         </div>
 

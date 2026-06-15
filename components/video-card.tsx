@@ -1,140 +1,197 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { MoreVertical, ListPlus, Clock, Bookmark, Download, Share, Ban, UserX, Flag } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { useState } from "react"
-
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useMediaQuery } from "@/hooks/use-media-query"
+import { MoreVertical, Clock, Bookmark, Share, UserX, Ban, Flag, BookmarkCheck, EyeOff } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useWatchLater } from "@/hooks/useWatchLater";
+import { useFeedPreferences } from "@/hooks/useFeedPreferences";
+import { useLanguage } from "@/hooks/use-language";
+import { AddToPlaylistDialog } from "@/components/add-to-playlist-dialog";
+import { ShareModal } from "@/components/share-modal";
+import { ReportDialog } from "@/components/report-dialog";
+import { toast } from "sonner";
 
 interface VideoCardProps {
-  isHorizontal?: boolean
-  videoId?: string
-  videoTitle?: string
-  channelName?: string
-  views?: string
-  timeAgo?: string
-  duration?: string
+  isHorizontal?: boolean;
+  videoId: string;
+  title: string;
+  channel: string;
+  channelId: string;
+  channelAvatar: string;
+  views: string;
+  timestamp: string;
+  duration: string;
+  thumbnail: string;
 }
 
-export default function VideoCard({ isHorizontal = false, videoId, videoTitle, channelName, views, timeAgo, duration }: VideoCardProps) {
-  const [open, setOpen] = useState(false)
-  const isDesktop = useMediaQuery("(min-width: 768px)")
+export default function VideoCard({
+  isHorizontal = false,
+  videoId,
+  title,
+  channel,
+  channelId,
+  channelAvatar,
+  views,
+  timestamp,
+  duration,
+  thumbnail,
+}: VideoCardProps) {
+  const [open, setOpen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [hidden, setHidden] = useState(false); // for "Not interested"
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const { addToWatchLater, removeFromWatchLater, isInWatchLater } = useWatchLater();
+  const { toggleFollowChannel, isFollowed } = useFeedPreferences();
+  const { isGuest } = useLanguage();
 
-  const handleMoreClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!isDesktop) {
-      setOpen(true)
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSaved(isInWatchLater(videoId));
+  }, [videoId, isInWatchLater]);
+
+  const handleWatchLaterToggle = () => {
+    if (saved) {
+      removeFromWatchLater(videoId);
+      toast.success("Removed from Watch Later");
+      setSaved(false);
+    } else {
+      addToWatchLater({
+        id: videoId,
+        title,
+        channel,
+        channelAvatar,
+        thumbnail,
+        views,
+        timeAgo: timestamp,
+        duration,
+        addedAt: Date.now(),
+      });
+      toast.success("Added to Watch Later");
+      setSaved(true);
     }
-  }
+  };
 
-  const videoUrl = `/videos/${videoId || "video-1"}/${videoId || "video-1"}`
+  const handleDontRecommend = () => {
+    if (isGuest) {
+      toast.error("Please sign in to manage channel feed", {
+        action: {
+          label: "Sign in",
+          onClick: () => window.location.href = "/signin",
+        },
+      });
+      return;
+    }
+    toggleFollowChannel(channelId);
+    toast.success(`Channel ${isFollowed(channelId) ? "removed from" : "added to"} feed`);
+  };
+
+  const handleNotInterested = () => {
+    setHidden(true);
+    toast("Video removed", {
+      description: "We won't show this video again",
+      action: {
+        label: "Undo",
+        onClick: () => setHidden(false),
+      },
+      duration: 5000,
+    });
+  };
+
+  const videoUrl = `${window.location.origin}/videos/${channel}/${videoId}`;
+
+  if (hidden) return null; // don't render if hidden
 
   const menuItems = (
     <>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
-        <ListPlus className="h-5 w-5" />
-        <span>{isDesktop ? "Add to queue" : "Play next in queue"}</span>
-      </div>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
-        <Clock className="h-5 w-5" />
-        <span>Save to Watch later</span>
-      </div>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
-        <Bookmark className="h-5 w-5" />
-        <span>Save to playlist</span>
-      </div>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
-        <Download className="h-5 w-5" />
-        <span>Download{isDesktop ? "" : " video"}</span>
-      </div>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => setShowShareModal(true)}>
         <Share className="h-5 w-5" />
         <span>Share</span>
       </div>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
-        <Ban className="h-5 w-5" />
-        <span>Not interested</span>
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={handleWatchLaterToggle}>
+        {saved ? (
+          <>
+            <BookmarkCheck className="h-5 w-5 fill-current text-primary" />
+            <span className="text-primary">Saved</span>
+          </>
+        ) : (
+          <>
+            <Clock className="h-5 w-5" />
+            <span>Save to Watch later</span>
+          </>
+        )}
       </div>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
+      <AddToPlaylistDialog
+        video={{ id: videoId, title, channel }}
+        onAdded={() => toast.success("Added to playlist")}
+      >
+        <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
+          <Bookmark className="h-5 w-5" />
+          <span>Save to playlist</span>
+        </div>
+      </AddToPlaylistDialog>
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={handleDontRecommend}>
         <UserX className="h-5 w-5" />
         <span>Don't recommend channel</span>
       </div>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
-        <Flag className="h-5 w-5" />
-        <span>Report</span>
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={handleNotInterested}>
+        <EyeOff className="h-5 w-5" />
+        <span>Not interested</span>
       </div>
+      <ReportDialog videoTitle={title} videoId={videoId}>
+        <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
+          <Flag className="h-5 w-5" />
+          <span>Report</span>
+        </div>
+      </ReportDialog>
     </>
-  )
+  );
+
+  const videoLink = `/videos/${channel}/${videoId}`;
+  const channelLink = `/channel-new/${channelId}`;
 
   if (isHorizontal) {
     return (
       <div className="flex flex-col p-3">
-        <Link href={videoUrl} className="block">
+        <Link href={videoLink} className="block">
           <div className="relative aspect-video w-full">
-            <Image
-              src="/placeholder.svg?height=480&width=854"
-              alt="Thumbnail"
-              fill
-              className="object-cover rounded-lg"
-            />
-            <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1 py-0.5 rounded">
-              {duration || "18:28"}
-            </div>
+            <Image src={thumbnail} alt={title} fill className="object-cover rounded-lg" />
+            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 py-0.5 rounded">{duration}</div>
           </div>
         </Link>
         <div className="flex mt-3 gap-3">
-          <Link href={videoUrl} className="flex-shrink-0">
+          <Link href={channelLink} className="flex-shrink-0">
             <Avatar className="h-9 w-9">
-              <AvatarImage src="/placeholder.svg?height=36&width=36" />
-              <AvatarFallback>YT</AvatarFallback>
+              <AvatarImage src={channelAvatar} />
+              <AvatarFallback>{channel.charAt(0)}</AvatarFallback>
             </Avatar>
           </Link>
           <div className="flex-1 min-w-0">
-            <Link href={videoUrl} className="line-clamp-2 font-medium text-sm">
-              {videoTitle || "নাসিরুদ্দীন আলবানী (রাহিঃ) কি সারাবিশ্বে একই দিনে ঈদ পালন করার পক্ষে মত দিয়েছেন?"}
-            </Link>
-            <Link href={videoUrl} className="text-muted-foreground text-xs mt-1 block">
-              {channelName || "SOHIH ISLAMER POTHE"}
-            </Link>
+            <Link href={videoLink} className="line-clamp-2 font-medium text-sm">{title}</Link>
+            <Link href={channelLink} className="text-muted-foreground text-xs mt-1 block">{channel}</Link>
             <div className="text-muted-foreground text-xs flex items-center gap-1">
-              <span>{views || "33K views"}</span>
-              <span>•</span>
-              <span>{timeAgo || "8 days ago"}</span>
+              <span>{views}</span><span>•</span><span>{timestamp}</span>
             </div>
           </div>
           {isDesktop ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full self-start flex-shrink-0"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full self-start" onClick={e => e.stopPropagation()}>
                   <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[240px] p-0 rounded-xl">
-                {menuItems}
-              </DropdownMenuContent>
+              <DropdownMenuContent align="end" className="w-[240px] p-0 rounded-xl">{menuItems}</DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <Drawer open={open} onOpenChange={setOpen}>
               <DrawerTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full self-start flex-shrink-0"
-                  onClick={handleMoreClick}
-                >
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full self-start" onClick={e => { e.stopPropagation(); setOpen(true); }}>
                   <MoreVertical className="h-5 w-5" />
                 </Button>
               </DrawerTrigger>
@@ -144,65 +201,46 @@ export default function VideoCard({ isHorizontal = false, videoId, videoTitle, c
             </Drawer>
           )}
         </div>
+        <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} videoUrl={videoUrl} />
       </div>
-    )
+    );
   }
 
   return (
     <div className="flex flex-col">
-      <Link href={videoUrl} className="block">
+      <Link href={videoLink} className="block">
         <div className="relative aspect-video w-full">
-          <Image src="/placeholder.svg?height=480&width=854" alt="Thumbnail" fill className="object-cover rounded-lg" />
-          <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1 py-0.5 rounded">
-            {duration || "4:47"}
-          </div>
+          <Image src={thumbnail} alt={title} fill className="object-cover rounded-lg" />
+          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 py-0.5 rounded">{duration}</div>
         </div>
       </Link>
       <div className="flex mt-2 gap-2">
-        <Link href={videoUrl} className="flex-shrink-0">
+        <Link href={channelLink} className="flex-shrink-0">
           <Avatar className="h-9 w-9">
-            <AvatarImage src="/placeholder.svg?height=36&width=36" />
-            <AvatarFallback>YT</AvatarFallback>
+            <AvatarImage src={channelAvatar} />
+            <AvatarFallback>{channel.charAt(0)}</AvatarFallback>
           </Avatar>
         </Link>
         <div className="flex-1 min-w-0">
-          <Link href={videoUrl} className="line-clamp-2 font-medium text-sm">
-            {videoTitle || "Heated Debate: Dr. Zakir Naik Gets Angry at an Atheist"}
-          </Link>
-          <Link href={videoUrl} className="text-muted-foreground text-xs mt-1 block">
-            {channelName || "Daily Dawah"}
-          </Link>
+          <Link href={videoLink} className="line-clamp-2 font-medium text-sm">{title}</Link>
+          <Link href={channelLink} className="text-muted-foreground text-xs mt-1 block">{channel}</Link>
           <div className="text-muted-foreground text-xs">
-            <span>{views || "208K views"}</span>
-            <span> • </span>
-            <span>{timeAgo || "6 days ago"}</span>
+            <span>{views}</span><span> • </span><span>{timestamp}</span>
           </div>
         </div>
         {isDesktop ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full self-start flex-shrink-0"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full self-start" onClick={e => e.stopPropagation()}>
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[240px] p-0 rounded-xl">
-              {menuItems}
-            </DropdownMenuContent>
+            <DropdownMenuContent align="end" className="w-[240px] p-0 rounded-xl">{menuItems}</DropdownMenuContent>
           </DropdownMenu>
         ) : (
           <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full self-start flex-shrink-0"
-                onClick={handleMoreClick}
-              >
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full self-start" onClick={e => { e.stopPropagation(); setOpen(true); }}>
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DrawerTrigger>
@@ -212,6 +250,7 @@ export default function VideoCard({ isHorizontal = false, videoId, videoTitle, c
           </Drawer>
         )}
       </div>
+      <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} videoUrl={videoUrl} />
     </div>
-  )
+  );
 }

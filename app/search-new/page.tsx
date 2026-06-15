@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Search, X, ChevronDown, ArrowLeft, Filter, History, SlidersHorizontal,
-} from "lucide-react"
-import AppHeader from "@/components/app-header"
-import MobileNav from "@/components/mobile-nav"
-import DesktopSidebar from "@/components/desktop-sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import Image from "next/image"
-import Link from "next/link"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { cn } from "@/lib/utils"
+  Search, X, ChevronDown, ArrowLeft, History, SlidersHorizontal,
+} from "lucide-react";
+import AppHeader from "@/components/app-header";
+import MobileNav from "@/components/mobile-nav";
+import DesktopSidebar from "@/components/desktop-sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import Image from "next/image";
+import Link from "next/link";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-// ---------- CONSTANTS (unchanged) ----------
+// ---------- CONSTANTS ----------
 const languages = [
   { code: "en", label: "English" },
   { code: "ar", label: "Arabic" },
@@ -25,29 +25,30 @@ const languages = [
   { code: "bn", label: "Bengali" },
   { code: "ur", label: "Urdu" },
   { code: "tr", label: "Turkish" },
-]
+];
 
 const categoryOptions = [
   "Aqeedah", "Fiqh", "Hadith", "Tafsir", "Seerah",
   "Dawah", "Family", "Finance", "Youth", "Spirituality",
   "Quran", "Salah", "Zakat", "Hajj", "Fasting",
   "Dhikr", "Dua", "Islamic History", "Marriage", "Parenting",
-]
+];
 
 const scholarOptions = [
   "Sheikh Abdul Alim", "Dr. Bilal Philips", "Mufti Menk",
   "Sheikh Yasir Qadhi", "Nouman Ali Khan", "Omar Suleiman",
   "Dr. Zakir Naik", "Sheikh Assim Al Hakeem", "Sheikh Hamza Yusuf",
   "Sheikh Ibn Uthaymeen", "Sheikh Albani", "Imam Nawawi",
-]
+];
 
 const channelOptions = [
   "Islamic Guidance", "Merciful Servant", "Digital Mimbar",
   "Huda TV", "Peace TV", "One Islam Productions",
   "Daily Dawah", "The Deen Show", "IlmFeed", "Islam Channel",
   "Eman Channel", "Quran Weekly",
-]
+];
 
+// Base sample results (each video has a language code for filtering)
 const sampleResults = [
   {
     id: "1",
@@ -59,6 +60,7 @@ const sampleResults = [
     duration: "18:28",
     thumbnail: "/placeholder.svg?height=480&width=854",
     description: "A powerful reminder about the true purpose of life from an Islamic perspective.",
+    language: "en",
   },
   {
     id: "2",
@@ -70,6 +72,7 @@ const sampleResults = [
     duration: "25:15",
     thumbnail: "/placeholder.svg?height=480&width=854",
     description: "Complete tafsir of Surah Al-Fatiha by Sheikh Yasir Qadhi with detailed explanations.",
+    language: "en",
   },
   {
     id: "3",
@@ -81,6 +84,7 @@ const sampleResults = [
     duration: "12:40",
     thumbnail: "/placeholder.svg?height=480&width=854",
     description: "Learn how to pray salah correctly with this step by step guide for beginners.",
+    language: "en",
   },
   {
     id: "4",
@@ -92,6 +96,7 @@ const sampleResults = [
     duration: "32:10",
     thumbnail: "/placeholder.svg?height=480&width=854",
     description: "An in-depth look at the signs of the Day of Judgment from Islamic sources.",
+    language: "en",
   },
   {
     id: "5",
@@ -103,6 +108,7 @@ const sampleResults = [
     duration: "8:45",
     thumbnail: "/placeholder.svg?height=480&width=854",
     description: "A collection of powerful duas for protection from evil and guidance in life.",
+    language: "en",
   },
   {
     id: "6",
@@ -114,48 +120,61 @@ const sampleResults = [
     duration: "10:30",
     thumbnail: "/placeholder.svg?height=480&width=854",
     description: "Start your day with these Islamic morning practices and duas.",
+    language: "en",
   },
-]
+  {
+    id: "7",
+    title: "تفسير سورة الفاتحة - شرح مبسط",
+    channel: "Arabic Recitation",
+    channelAvatar: "/placeholder.svg?height=36&width=36",
+    views: "95K views",
+    timeAgo: "1 week ago",
+    duration: "22:10",
+    thumbnail: "/placeholder.svg?height=480&width=854",
+    description: "تفسير سورة الفاتحة باللغة العربية",
+    language: "ar",
+  },
+];
 
-// ---------- MULTI-SELECT COMPONENT (unchanged) ----------
+// ---------- MULTI-SELECT COMPONENT ----------
 function MultiSelect({ label, options, selected, onChange, searchable = false }: {
-  label: string
-  options: string[]
-  selected: string[]
-  onChange: (values: string[]) => void
-  searchable?: boolean
+  label: string;
+  options: string[];
+  selected: string[];
+  onChange: (values: string[]) => void;
+  searchable?: boolean;
 }) {
-  const [open, setOpen] = useState(false)
-  const [searchText, setSearchText] = useState("")
-  const ref = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-        setSearchText("")
+        setOpen(false);
+        setSearchText("");
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const toggle = (value: string) => {
     onChange(
       selected.includes(value)
         ? selected.filter((v) => v !== value)
         : [...selected, value]
-    )
-  }
+    );
+  };
 
   const remove = (value: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    onChange(selected.filter((v) => v !== value))
-  }
+    e.stopPropagation();
+    onChange(selected.filter((v) => v !== value));
+  };
 
   const filteredOptions = searchText
     ? options.filter((opt) => opt.toLowerCase().includes(searchText.toLowerCase()))
-    : options
+    : options;
 
   return (
     <div ref={ref} className="relative">
@@ -207,7 +226,7 @@ function MultiSelect({ label, options, selected, onChange, searchable = false }:
               <div className="px-4 py-3 text-sm text-muted-foreground text-center">No {label.toLowerCase()} found</div>
             ) : (
               filteredOptions.map((option) => {
-                const isSelected = selected.includes(option)
+                const isSelected = selected.includes(option);
                 return (
                   <button
                     key={option}
@@ -230,14 +249,14 @@ function MultiSelect({ label, options, selected, onChange, searchable = false }:
                     </span>
                     {option}
                   </button>
-                )
+                );
               })
             )}
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function VideoSkeleton() {
@@ -251,119 +270,144 @@ function VideoSkeleton() {
         <Skeleton className="h-3 w-32" />
       </div>
     </div>
-  )
+  );
 }
 
 // ---------- MAIN PAGE ----------
 export default function SearchNewPage() {
-  const router = useRouter()
-  const isMobile = useMediaQuery("(max-width: 768px)")
-  const searchInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Search state
-  const [query, setQuery] = useState("")
-  const [activeLangs, setActiveLangs] = useState<string[]>(["en"])
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [selectedScholars, setSelectedScholars] = useState<string[]>([])
-  const [selectedChannels, setSelectedChannels] = useState<string[]>([])
+  const [query, setQuery] = useState("");
+  const [activeLangs, setActiveLangs] = useState<string[]>(["en"]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedScholars, setSelectedScholars] = useState<string[]>([]);
+  const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
 
-  const [hasSearched, setHasSearched] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [results, setResults] = useState<typeof sampleResults>([])
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [results, setResults] = useState<typeof sampleResults>([]);
   const [recentSearchesList, setRecentSearchesList] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('recentSearches')
-      return stored ? JSON.parse(stored) : []
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("recentSearches");
+      return stored ? JSON.parse(stored) : [];
     }
-    return []
-  })
+    return [];
+  });
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  // Mobile filter sheet open state (controlled)
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
-
-  // Focus input on mount
   useEffect(() => {
-    searchInputRef.current?.focus()
-  }, [])
+    searchInputRef.current?.focus();
+  }, []);
 
-  // Helper: check if any filter is active
   const hasFilters = useCallback(() => {
     return (
       selectedCategories.length > 0 ||
       selectedScholars.length > 0 ||
       selectedChannels.length > 0 ||
       activeLangs.filter(l => l !== "en").length > 0
-    )
-  }, [selectedCategories, selectedScholars, selectedChannels, activeLangs])
+    );
+  }, [selectedCategories, selectedScholars, selectedChannels, activeLangs]);
 
-  // Toggle language (at least one must stay selected)
   const toggleLang = (code: string) => {
     setActiveLangs((prev) =>
       prev.includes(code)
         ? prev.length > 1 ? prev.filter((l) => l !== code) : prev
         : [...prev, code]
-    )
-  }
+    );
+  };
 
-  // Reset all filters and remove search results (go back to initial view)
   const resetAllFilters = () => {
-    setActiveLangs(["en"])
-    setSelectedCategories([])
-    setSelectedScholars([])
-    setSelectedChannels([])
-    // Clear search results and return to initial state
-    setHasSearched(false)
-    setResults([])
-  }
+    setActiveLangs(["en"]);
+    setSelectedCategories([]);
+    setSelectedScholars([]);
+    setSelectedChannels([]);
+    setHasSearched(false);
+    setResults([]);
+  };
 
-  // Perform search (simulate API)
   const performSearch = useCallback(() => {
-    if (!query.trim() && !hasFilters()) return
+    if (!query.trim() && !hasFilters()) return;
 
-    // Save to recent searches
     if (query.trim()) {
-      const updated = [query.trim(), ...recentSearchesList.filter(s => s !== query.trim())].slice(0, 8)
-      setRecentSearchesList(updated)
-      localStorage.setItem('recentSearches', JSON.stringify(updated))
+      const updated = [query.trim(), ...recentSearchesList.filter(s => s !== query.trim())].slice(0, 8);
+      setRecentSearchesList(updated);
+      localStorage.setItem("recentSearches", JSON.stringify(updated));
     }
 
-    setIsLoading(true)
-    setHasSearched(true)
-
-    // Close mobile filter sheet after search
-    if (isMobile) {
-      setMobileFilterOpen(false)
-    }
+    setIsLoading(true);
+    setHasSearched(true);
+    if (isMobile) setMobileFilterOpen(false);
 
     setTimeout(() => {
-      setResults(sampleResults) // mock
-      setIsLoading(false)
-    }, 800)
-  }, [query, hasFilters, recentSearchesList, isMobile])
+      let filtered = [...sampleResults];
 
-  // Clear recent searches
+      if (query.trim()) {
+        const lowerQuery = query.toLowerCase();
+        filtered = filtered.filter(v =>
+          v.title.toLowerCase().includes(lowerQuery) ||
+          v.channel.toLowerCase().includes(lowerQuery)
+        );
+      }
+
+      const nonEnglishLangs = activeLangs.filter(l => l !== "en");
+      if (nonEnglishLangs.length > 0) {
+        filtered = filtered.filter(v => nonEnglishLangs.includes(v.language));
+      }
+
+      if (selectedCategories.length > 0) {
+        filtered = filtered.filter(v =>
+          selectedCategories.some(cat =>
+            v.title.toLowerCase().includes(cat.toLowerCase()) ||
+            (v.description && v.description.toLowerCase().includes(cat.toLowerCase()))
+          )
+        );
+      }
+
+      if (selectedScholars.length > 0) {
+        filtered = filtered.filter(v =>
+          selectedScholars.some(sch =>
+            v.title.toLowerCase().includes(sch.toLowerCase()) ||
+            (v.description && v.description.toLowerCase().includes(sch.toLowerCase()))
+          )
+        );
+      }
+
+      if (selectedChannels.length > 0) {
+        filtered = filtered.filter(v =>
+          selectedChannels.some(ch =>
+            v.channel.toLowerCase().includes(ch.toLowerCase())
+          )
+        );
+      }
+
+      setResults(filtered);
+      setIsLoading(false);
+    }, 800);
+  }, [query, hasFilters, recentSearchesList, isMobile, activeLangs, selectedCategories, selectedScholars, selectedChannels]);
+
   const clearRecentSearches = () => {
-    setRecentSearchesList([])
-    localStorage.removeItem('recentSearches')
-  }
+    setRecentSearchesList([]);
+    localStorage.removeItem("recentSearches");
+  };
 
   const removeRecentSearch = (search: string) => {
-    const updated = recentSearchesList.filter(s => s !== search)
-    setRecentSearchesList(updated)
-    localStorage.setItem('recentSearches', JSON.stringify(updated))
-  }
+    const updated = recentSearchesList.filter(s => s !== search);
+    setRecentSearchesList(updated);
+    localStorage.setItem("recentSearches", JSON.stringify(updated));
+  };
 
   const handleRecentSearchClick = (search: string) => {
-    setQuery(search)
+    setQuery(search);
     setTimeout(() => {
-      const updated = [search, ...recentSearchesList.filter(s => s !== search)].slice(0, 8)
-      setRecentSearchesList(updated)
-      localStorage.setItem('recentSearches', JSON.stringify(updated))
-      performSearch()
-    }, 100)
-  }
+      const updated = [search, ...recentSearchesList.filter(s => s !== search)].slice(0, 8);
+      setRecentSearchesList(updated);
+      localStorage.setItem("recentSearches", JSON.stringify(updated));
+      performSearch();
+    }, 100);
+  };
 
-  // Filters panel content (shared between desktop sidebar and mobile sheet)
   const FiltersContent = () => (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -374,8 +418,6 @@ export default function SearchNewPage() {
           </button>
         )}
       </div>
-
-      {/* Languages */}
       <div>
         <p className="text-sm font-medium mb-2">Languages</p>
         <div className="flex flex-wrap gap-2">
@@ -395,108 +437,59 @@ export default function SearchNewPage() {
           ))}
         </div>
       </div>
-
-      {/* Categories */}
-      <MultiSelect
-        label="Categories"
-        options={categoryOptions}
-        selected={selectedCategories}
-        onChange={setSelectedCategories}
-        searchable
-      />
-
-      {/* Scholars */}
-      <MultiSelect
-        label="Scholars"
-        options={scholarOptions}
-        selected={selectedScholars}
-        onChange={setSelectedScholars}
-        searchable
-      />
-
-      {/* Channels */}
-      <MultiSelect
-        label="Channels"
-        options={channelOptions}
-        selected={selectedChannels}
-        onChange={setSelectedChannels}
-        searchable
-      />
-
+      <MultiSelect label="Categories" options={categoryOptions} selected={selectedCategories} onChange={setSelectedCategories} searchable />
+      <MultiSelect label="Scholars" options={scholarOptions} selected={selectedScholars} onChange={setSelectedScholars} searchable />
+      <MultiSelect label="Channels" options={channelOptions} selected={selectedChannels} onChange={setSelectedChannels} searchable />
       <Button onClick={performSearch} className="w-full rounded-full" disabled={!query.trim() && !hasFilters()}>
-        <Search className="h-4 w-4 mr-2" />
-        Search
+        <Search className="h-4 w-4 mr-2" /> Search
       </Button>
     </div>
-  )
+  );
 
-  // Active filter chips (displayed above results)
   const FilterChips = () => {
     const activeLanguageChips = activeLangs.filter(l => l !== "en").map(lang => ({
-      type: "lang",
       label: languages.find(l => l.code === lang)?.label || lang,
-      value: lang,
       onRemove: () => toggleLang(lang)
-    }))
-    const categoryChips = selectedCategories.map(cat => ({
-      type: "cat",
-      label: cat,
-      value: cat,
-      onRemove: () => setSelectedCategories(prev => prev.filter(c => c !== cat))
-    }))
-    const scholarChips = selectedScholars.map(s => ({
-      type: "scholar",
-      label: s,
-      value: s,
-      onRemove: () => setSelectedScholars(prev => prev.filter(sc => sc !== s))
-    }))
-    const channelChips = selectedChannels.map(ch => ({
-      type: "channel",
-      label: ch,
-      value: ch,
-      onRemove: () => setSelectedChannels(prev => prev.filter(c => c !== ch))
-    }))
-    const allChips = [...activeLanguageChips, ...categoryChips, ...scholarChips, ...channelChips]
-    if (allChips.length === 0) return null
+    }));
+    const categoryChips = selectedCategories.map(cat => ({ label: cat, onRemove: () => setSelectedCategories(prev => prev.filter(c => c !== cat)) }));
+    const scholarChips = selectedScholars.map(s => ({ label: s, onRemove: () => setSelectedScholars(prev => prev.filter(sc => sc !== s)) }));
+    const channelChips = selectedChannels.map(ch => ({ label: ch, onRemove: () => setSelectedChannels(prev => prev.filter(c => c !== ch)) }));
+    const allChips = [...activeLanguageChips, ...categoryChips, ...scholarChips, ...channelChips];
+    if (allChips.length === 0) return null;
     return (
       <div className="flex flex-wrap gap-2 mb-4">
         {allChips.map((chip, idx) => (
           <span key={idx} className="flex items-center gap-1 bg-primary/10 text-primary text-xs px-3 py-1 rounded-full font-medium">
             {chip.label}
-            <button onClick={chip.onRemove} className="hover:opacity-70">
-              <X className="h-3 w-3" />
-            </button>
+            <button onClick={chip.onRemove} className="hover:opacity-70"><X className="h-3 w-3" /></button>
           </span>
         ))}
-        <button onClick={resetAllFilters} className="text-xs text-muted-foreground hover:text-foreground">
-          Clear all
-        </button>
+        <button onClick={resetAllFilters} className="text-xs text-muted-foreground hover:text-foreground">Clear all</button>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-
       <div className="flex">
         <DesktopSidebar className="hidden md:block" />
-
         <div className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px]">
           <div className="max-w-[1400px] mx-auto pb-nav-safe md:pb-6">
-
-            {/* Mobile header with search input and filter button */}
+            {/* Mobile header */}
             <div className="md:hidden flex items-center gap-2 px-4 py-3 sticky top-[56px] bg-background z-10">
               <button
                 onClick={() => {
-                  if (hasSearched && (query || hasFilters())) {
-                    // Go back to filter view? Or just clear? We'll reset to filter view but keep state.
-                    setHasSearched(false)
+                  if (hasSearched) {
+                    // If we have search results, clear them and go back to filter view
+                    setHasSearched(false);
+                    setResults([]);
                   } else {
-                    router.back()
+                    // Otherwise, navigate back in history
+                    router.back();
                   }
                 }}
-                className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors"
+                className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted"
                 aria-label="Go back"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -508,7 +501,7 @@ export default function SearchNewPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search"
-                  className="w-full h-10 pl-10 pr-10 rounded-full bg-muted/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:bg-muted transition-colors"
+                  className="w-full h-10 pl-10 pr-10 rounded-full bg-muted/50 text-sm focus:bg-muted"
                   onKeyDown={(e) => e.key === "Enter" && performSearch()}
                 />
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -520,17 +513,13 @@ export default function SearchNewPage() {
               </div>
               <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-9 w-9 rounded-full flex-shrink-0">
+                  <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
                     <SlidersHorizontal className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>Filter search</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6">
-                    <FiltersContent />
-                  </div>
+                  <SheetHeader><SheetTitle>Filter search</SheetTitle></SheetHeader>
+                  <div className="mt-6"><FiltersContent /></div>
                 </SheetContent>
               </Sheet>
             </div>
@@ -545,7 +534,7 @@ export default function SearchNewPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search videos, scholars, channels..."
-                  className="w-full h-12 pl-12 pr-12 rounded-full bg-muted/50 text-base placeholder:text-muted-foreground focus:outline-none focus:bg-muted transition-colors"
+                  className="w-full h-12 pl-12 pr-12 rounded-full bg-muted/50 text-base focus:bg-muted"
                   onKeyDown={(e) => e.key === "Enter" && performSearch()}
                 />
                 {query && (
@@ -557,38 +546,26 @@ export default function SearchNewPage() {
             </div>
 
             <div className="flex flex-col md:flex-row gap-6 px-4 md:px-6">
-              {/* Desktop filters sidebar (sticky) */}
               <aside className="hidden md:block w-80 flex-shrink-0 sticky top-[80px] h-[calc(100vh-80px)] overflow-y-auto pb-8">
                 <FiltersContent />
               </aside>
-
-              {/* Main content: recent searches OR search results */}
               <div className="flex-1 min-w-0">
                 {!hasSearched ? (
-                  // -------- No search yet: show recent searches and a hint ----------
                   <div>
                     {recentSearchesList.length > 0 && (
                       <div className="mb-6">
                         <div className="flex items-center justify-between mb-3">
                           <h2 className="font-semibold text-sm">Recent searches</h2>
-                          <button onClick={clearRecentSearches} className="text-xs text-muted-foreground hover:text-foreground">
-                            Clear all
-                          </button>
+                          <button onClick={clearRecentSearches} className="text-xs text-muted-foreground hover:text-foreground">Clear all</button>
                         </div>
                         <div className="space-y-1">
                           {recentSearchesList.map((search) => (
                             <div key={search} className="flex items-center justify-between group">
-                              <button
-                                onClick={() => handleRecentSearchClick(search)}
-                                className="flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors flex-1 text-left"
-                              >
-                                <History className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <button onClick={() => handleRecentSearchClick(search)} className="flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-muted/50 flex-1 text-left">
+                                <History className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-sm">{search}</span>
                               </button>
-                              <button
-                                onClick={() => removeRecentSearch(search)}
-                                className="p-1.5 rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-                              >
+                              <button onClick={() => removeRecentSearch(search)} className="p-1.5 rounded-full hover:bg-muted opacity-0 group-hover:opacity-100">
                                 <X className="h-4 w-4 text-muted-foreground" />
                               </button>
                             </div>
@@ -602,15 +579,11 @@ export default function SearchNewPage() {
                     </div>
                   </div>
                 ) : (
-                  // -------- Search results ----------
                   <div>
-                    {/* Active filter chips */}
                     <FilterChips />
-
                     <p className="text-sm text-muted-foreground mb-4">
-                      {isLoading ? 'Searching...' : `${results.length} results for "${query || 'filtered search'}"`}
+                      {isLoading ? "Searching..." : `${results.length} results for "${query || "filtered search"}"`}
                     </p>
-
                     {isLoading ? (
                       <div className="space-y-4">
                         <VideoSkeleton /><VideoSkeleton /><VideoSkeleton /><VideoSkeleton />
@@ -629,9 +602,7 @@ export default function SearchNewPage() {
                           <Link key={video.id} href={`/videos/${video.channel}/${video.id}`} className="flex gap-3 md:gap-4 group">
                             <div className="relative w-40 md:w-56 aspect-video flex-shrink-0">
                               <Image src={video.thumbnail} alt={video.title} fill className="object-cover rounded-xl" />
-                              <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                                {video.duration}
-                              </div>
+                              <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">{video.duration}</div>
                               <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <div className="bg-black/60 rounded-full p-2">
                                   <svg viewBox="0 0 24 24" className="h-5 w-5 text-white fill-white"><path d="M8 5v14l11-7z"/></svg>
@@ -639,22 +610,13 @@ export default function SearchNewPage() {
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-sm md:text-base line-clamp-2 group-hover:text-primary transition-colors">
-                                {video.title}
-                              </h3>
+                              <h3 className="font-medium text-sm md:text-base line-clamp-2 group-hover:text-primary transition-colors">{video.title}</h3>
                               <div className="flex items-center gap-2 mt-1">
-                                <Avatar className="h-5 w-5">
-                                  <AvatarImage src={video.channelAvatar} />
-                                  <AvatarFallback className="text-[10px]">{video.channel.charAt(0)}</AvatarFallback>
-                                </Avatar>
+                                <Avatar className="h-5 w-5"><AvatarImage src={video.channelAvatar} /><AvatarFallback className="text-[10px]">{video.channel.charAt(0)}</AvatarFallback></Avatar>
                                 <span className="text-xs text-muted-foreground">{video.channel}</span>
                               </div>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {video.views} • {video.timeAgo}
-                              </p>
-                              {!isMobile && video.description && (
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{video.description}</p>
-                              )}
+                              <p className="text-xs text-muted-foreground mt-0.5">{video.views} • {video.timeAgo}</p>
+                              {!isMobile && video.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{video.description}</p>}
                             </div>
                           </Link>
                         ))}
@@ -667,8 +629,7 @@ export default function SearchNewPage() {
           </div>
         </div>
       </div>
-
       <MobileNav />
     </div>
-  )
+  );
 }

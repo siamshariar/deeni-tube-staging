@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 // Mock category data (would come from API)
@@ -46,6 +47,37 @@ const allVideos = [
   { id: "v6", title: "The Six Pillars of Faith", channel: "Peace TV", channelAvatar: "/placeholder.svg?height=36&width=36", views: "320K views", timeAgo: "1 month ago", duration: "22:30", thumbnail: "/placeholder.svg?height=480&width=854" },
 ]
 
+// Helper to parse view count (e.g., "150K" -> 150000)
+const parseViewCount = (viewStr: string): number => {
+  const str = viewStr.replace(" views", "");
+  if (str.endsWith("M")) return parseFloat(str) * 1_000_000;
+  if (str.endsWith("K")) return parseFloat(str) * 1_000;
+  return parseFloat(str);
+};
+
+// Helper to convert timeAgo to timestamp (rough)
+const parseTimeAgo = (timeAgo: string): number => {
+  const now = Date.now();
+  if (timeAgo.includes("hour")) {
+    const hours = parseInt(timeAgo);
+    return now - hours * 60 * 60 * 1000;
+  }
+  if (timeAgo.includes("day")) {
+    const days = parseInt(timeAgo);
+    return now - days * 24 * 60 * 60 * 1000;
+  }
+  if (timeAgo.includes("week")) {
+    const weeks = parseInt(timeAgo);
+    return now - weeks * 7 * 24 * 60 * 60 * 1000;
+  }
+  if (timeAgo.includes("month")) {
+    const months = parseInt(timeAgo);
+    return now - months * 30 * 24 * 60 * 60 * 1000;
+  }
+  return now;
+};
+
+// Improved skeleton to match final layout
 function VideoSkeleton() {
   return (
     <div className="flex flex-col">
@@ -83,6 +115,7 @@ export default function CategoryVideosPage() {
   const slug = params.slug as string
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const [sortMode, setSortMode] = useState<"priority" | "latest" | "popular">("priority")
 
   const category = categoryData[slug] || { ...defaultCategory, name: slug?.replace(/-/g, ' ') || "Category" }
 
@@ -91,11 +124,27 @@ export default function CategoryVideosPage() {
     return () => clearTimeout(timer)
   }, [slug])
 
+  // Filter videos by search query
   const filteredVideos = allVideos.filter(v =>
     !searchQuery ||
     v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     v.channel.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  // Sort videos based on sortMode
+  const sortedVideos = [...filteredVideos].sort((a, b) => {
+    if (sortMode === "priority") {
+      // For priority, keep original order (mock)
+      return 0;
+    }
+    if (sortMode === "latest") {
+      return parseTimeAgo(b.timeAgo) - parseTimeAgo(a.timeAgo);
+    }
+    if (sortMode === "popular") {
+      return parseViewCount(b.views) - parseViewCount(a.views);
+    }
+    return 0;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,15 +164,30 @@ export default function CategoryVideosPage() {
         <div className="flex-1 md:pl-[240px] md:pt-[80px] pb-nav-safe">
           <div className="max-w-[1096px] mx-auto">
             {isLoading ? (
+              // ---------- IMPROVED SKELETON ----------
               <div className="px-4 md:px-6 py-4 md:py-6">
-                <Skeleton className="h-7 w-36 mb-2" />
-                <Skeleton className="h-4 w-64 mb-4" />
-                <Skeleton className="h-10 w-full rounded-full mb-4" />
-                <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {Array.from({ length: 6 }).map((_, i) => <VideoSkeleton key={i} />)}
+                {/* Desktop header skeleton */}
+                <div className="hidden md:block mb-4">
+                  <Skeleton className="h-8 w-48 mb-2" />
+                  <Skeleton className="h-4 w-64" />
                 </div>
+                {/* Search bar skeleton */}
+                <Skeleton className="h-10 w-full rounded-full mb-4" />
+                {/* Sort dropdown skeleton */}
+                <div className="flex justify-end mb-4">
+                  <Skeleton className="h-8 w-28 rounded-full" />
+                </div>
+                {/* Desktop grid skeletons */}
+                <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <VideoSkeleton key={i} />
+                  ))}
+                </div>
+                {/* Mobile list skeletons */}
                 <div className="flex flex-col md:hidden">
-                  {Array.from({ length: 4 }).map((_, i) => <VideoSkeletonHorizontal key={i} />)}
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <VideoSkeletonHorizontal key={i} />
+                  ))}
                 </div>
               </div>
             ) : (
@@ -135,32 +199,49 @@ export default function CategoryVideosPage() {
                     <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
                   </div>
 
-                  {/* Search */}
-                  <div className="relative mt-3 md:mt-4">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder={`Search ${category.name} videos...`}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-10 h-10 text-sm rounded-full bg-muted/50 focus:bg-muted transition-colors"
-                    />
-                    {searchQuery && (
-                      <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
+                  {/* Search and Sort Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder={`Search ${category.name} videos...`}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 pr-10 h-10 text-sm rounded-full bg-muted/50 focus:bg-muted transition-colors"
+                      />
+                      {searchQuery && (
+                        <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
 
-                  {/* Video count */}
-                  {/* <p className="text-xs md:text-sm text-muted-foreground mt-3">
-                    {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''} in {category.name}
-                  </p> */}
+                    {/* Sort Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="rounded-full gap-2">
+                          Sort by: {sortMode === "priority" ? "Priority" : sortMode === "latest" ? "Latest" : "Popular"}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem onClick={() => setSortMode("priority")}>
+                          Priority
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortMode("latest")}>
+                          Latest
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortMode("popular")}>
+                          Popular
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
 
                 {/* Desktop Grid */}
                 <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4 md:px-6 pb-6">
-                  {filteredVideos.map((video) => (
+                  {sortedVideos.map((video) => (
                     <div key={video.id} className="flex flex-col group">
                       <Link href={`/videos/${video.channel}/${video.id}`} className="relative aspect-video w-full">
                         <Image src={video.thumbnail} alt={video.title} fill className="object-cover rounded-xl" />
@@ -195,7 +276,7 @@ export default function CategoryVideosPage() {
 
                 {/* Mobile List */}
                 <div className="flex flex-col md:hidden px-4 pb-6">
-                  {filteredVideos.map((video) => (
+                  {sortedVideos.map((video) => (
                     <div key={video.id} className="flex gap-3 py-3 border-b last:border-0 group">
                       <Link href={`/videos/${video.channel}/${video.id}`} className="relative w-40 aspect-video flex-shrink-0">
                         <Image src={video.thumbnail} alt={video.title} fill className="object-cover rounded-lg" />

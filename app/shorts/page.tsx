@@ -117,7 +117,7 @@ function FullscreenIcon({ className }: { className?: string }) {
   )
 }
 
-// ============ SKELETONS (theme-adaptive) ============
+// ============ SKELETONS ============
 
 function CommentSkeleton() {
   return (
@@ -390,7 +390,6 @@ export default function ShortsPage() {
   const [isMuted, setIsMuted] = useState(false)
   const [isPlaying, setIsPlaying] = useState(true)
   const [isLiked, setIsLiked] = useState<Record<string, boolean>>({})
-  const [subscribeState, setSubscribeState] = useState<Record<string, boolean>>({})
   const [showVolumeSlider, setShowVolumeSlider] = useState(false)
   const [volume, setVolume] = useState(75)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -486,7 +485,6 @@ export default function ShortsPage() {
   }, [currentIndex, activePanel, showShareModal])
 
   const toggleLike = (id: string) => setIsLiked(p => ({ ...p, [id]: !p[id] }))
-  const toggleSubscribe = (id: string) => setSubscribeState(p => ({ ...p, [id]: !p[id] }))
   const toggleFullscreen = () => { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); setIsFullscreen(true) } else { document.exitFullscreen().catch(() => {}); setIsFullscreen(false) } }
   const handleTogglePlay = (e: React.MouseEvent) => { e.stopPropagation(); setIsPlaying(!isPlaying); setShowCenterPlayPause(true); if (centerPlayTimeout.current) clearTimeout(centerPlayTimeout.current); centerPlayTimeout.current = setTimeout(() => setShowCenterPlayPause(false), 600) }
 
@@ -815,7 +813,7 @@ export default function ShortsPage() {
                 <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-background/90 via-background/50 to-transparent pointer-events-none" />
                 <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/60 via-background/20 to-transparent pointer-events-none" />
 
-                {/* Top controls (hover only) – icons use text-foreground, no hover colour change */}
+                {/* Top controls (hover only) */}
                 <div className={`absolute top-0 left-0 right-0 z-30 px-4 pt-4 pb-16 transition-opacity duration-200 ${isHovered && !isScrolling && !isTransitioning ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -877,7 +875,7 @@ export default function ShortsPage() {
                   </div>
                 </div>
 
-                {/* Bottom info & actions */}
+                {/* Bottom info & actions (Subscribe button removed) */}
                 <div className={`absolute bottom-6 left-4 right-20 z-20 transition-all duration-500 ${isActive && !isScrolling && !isTransitioning ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar className="h-10 w-10 border-2 border-white/20 flex-shrink-0">
@@ -885,13 +883,7 @@ export default function ShortsPage() {
                       <AvatarFallback className="bg-muted text-foreground text-xs">{short.channel.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <span className="text-foreground font-semibold text-sm truncate">{short.channel}</span>
-                    <Button
-                      size="sm"
-                      className={cn("rounded-full h-8 text-xs px-4 flex-shrink-0", subscribeState[short.id] ? "bg-muted text-foreground hover:bg-muted/80 border border-border" : "bg-primary text-primary-foreground hover:bg-primary/90")}
-                      onClick={() => toggleSubscribe(short.id)}
-                    >
-                      {subscribeState[short.id] ? "Subscribed" : "Subscribe"}
-                    </Button>
+                    {/* Subscribe button removed */}
                   </div>
                   <button onClick={() => openPanel("description")} className="text-left w-full">
                     <p className="text-foreground/90 text-sm leading-relaxed line-clamp-2 hover:text-foreground transition-colors">{short.title}</p>

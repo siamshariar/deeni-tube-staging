@@ -87,7 +87,7 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
           <MobileSidebarItem href="/channels" icon={<Users className="h-5 w-5" />} label="Channels" active={pathname === "/channels"} onClick={onClose} />
           <MobileSidebarItem href="/scholars" icon={<GraduationCap className="h-5 w-5" />} label="Scholars" active={pathname === "/scholars"} onClick={onClose} />
           <MobileSidebarItem href="/categories" icon={<FolderOpen className="h-5 w-5" />} label="Categories" active={pathname === "/categories"} onClick={onClose} />
-          <MobileSidebarItem href="/quran-translations" icon={<BookOpen className="h-5 w-5" />} label="Quran Translations" onClick={onClose} />
+          {/* <MobileSidebarItem href="/quran-translations" icon={<BookOpen className="h-5 w-5" />} label="Quran Translations" onClick={onClose} /> */}
         </div>
 
         <div className="border-t py-2">

@@ -13,17 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useMediaQuery } from "@/hooks/use-media-query"
 import Image from "next/image"
 import Link from "next/link"
-
-const sampleVideos = [
-  { id: "v1", title: "The Purpose of Life - Powerful Islamic Reminder", channel: "Daily Dawah", channelAvatar: "/placeholder.svg?height=32&width=32", views: "208K views", timeAgo: "6 days ago", duration: "18:28", thumbnail: "/placeholder.svg?height=480&width=854", isLiked: true },
-  { id: "v2", title: "Tafsir of Surah Al-Fatiha - Complete Explanation", channel: "Islamic Guidance", channelAvatar: "/placeholder.svg?height=32&width=32", views: "150K views", timeAgo: "3 days ago", duration: "25:15", thumbnail: "/placeholder.svg?height=480&width=854", isLiked: true },
-  { id: "v3", title: "How to Pray Salah - Step by Step Guide", channel: "Digital Mimbar", channelAvatar: "/placeholder.svg?height=32&width=32", views: "500K views", timeAgo: "1 week ago", duration: "12:40", thumbnail: "/placeholder.svg?height=480&width=854", isLiked: true },
-  { id: "v4", title: "Stories of the Prophets - Full Series", channel: "Merciful Servant", channelAvatar: "/placeholder.svg?height=32&width=32", views: "1.2M views", timeAgo: "2 weeks ago", duration: "45:00", thumbnail: "/placeholder.svg?height=480&width=854", isLiked: true },
-  { id: "v5", title: "Beautiful Quran Recitation - Emotional", channel: "Islamic Recitation", channelAvatar: "/placeholder.svg?height=32&width=32", views: "89K views", timeAgo: "3 weeks ago", duration: "15:20", thumbnail: "/placeholder.svg?height=480&width=854", isLiked: true },
-  { id: "v6", title: "The Day of Judgment - Signs and Events", channel: "Peace TV", channelAvatar: "/placeholder.svg?height=32&width=32", views: "350K views", timeAgo: "1 month ago", duration: "32:10", thumbnail: "/placeholder.svg?height=480&width=854", isLiked: true },
-  { id: "v7", title: "Powerful Dua for Protection and Guidance", channel: "Huda TV", channelAvatar: "/placeholder.svg?height=32&width=32", views: "420K views", timeAgo: "1 month ago", duration: "8:45", thumbnail: "/placeholder.svg?height=480&width=854", isLiked: true },
-  { id: "v8", title: "Islamic Morning Routine - Start Your Day Right", channel: "Daily Dawah", channelAvatar: "/placeholder.svg?height=32&width=32", views: "180K views", timeAgo: "2 months ago", duration: "10:30", thumbnail: "/placeholder.svg?height=480&width=854", isLiked: true },
-]
+import { useLikedVideos, LikedVideo } from "@/hooks/useLikedVideos"
 
 function VideoSkeleton() {
   return (
@@ -42,10 +32,10 @@ function VideoSkeleton() {
 export default function LikedVideosPage() {
   const router = useRouter()
   const isMobile = useMediaQuery("(max-width: 768px)")
-  const [videos, setVideos] = useState(sampleVideos)
+  const { videos, addLike, removeLike } = useLikedVideos()
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-  const [removedVideo, setRemovedVideo] = useState<{ video: typeof sampleVideos[0], originalIndex: number } | null>(null)
+  const [removedVideo, setRemovedVideo] = useState<LikedVideo | null>(null)
   const [undoTimer, setUndoTimer] = useState<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -56,53 +46,26 @@ export default function LikedVideosPage() {
     }
   }, [])
 
-  const handleUnlikeVideo = (videoId: string) => {
-    const videoIndex = videos.findIndex(v => v.id === videoId)
-    if (videoIndex === -1) return
-
-    const videoToRemove = videos[videoIndex]
-    
-    // Store the removed video and its original position
-    setRemovedVideo({ video: videoToRemove, originalIndex: videoIndex })
-    
-    // Remove from list
-    setVideos(prev => prev.filter(v => v.id !== videoId))
-
-    // Clear previous timer
+  const handleUnlike = (video: LikedVideo) => {
+    removeLike(video.id)
+    setRemovedVideo(video)
     if (undoTimer) clearTimeout(undoTimer)
-    
-    // Auto-dismiss after 5 seconds
-    const timer = setTimeout(() => {
-      setRemovedVideo(null)
-    }, 5000)
+    const timer = setTimeout(() => setRemovedVideo(null), 5000)
     setUndoTimer(timer)
   }
 
   const handleUndo = () => {
-    if (!removedVideo) return
-
-    // Restore video to its original position
-    setVideos(prev => {
-      const newVideos = [...prev]
-      // Insert at original position (or end if position is beyond current length)
-      const insertIndex = Math.min(removedVideo.originalIndex, newVideos.length)
-      newVideos.splice(insertIndex, 0, removedVideo.video)
-      return newVideos
-    })
-
-    // Clear removed state
-    setRemovedVideo(null)
-    if (undoTimer) clearTimeout(undoTimer)
+    if (removedVideo) {
+      addLike(removedVideo)
+      setRemovedVideo(null)
+      if (undoTimer) clearTimeout(undoTimer)
+    }
   }
 
-  const filteredVideos = videos.filter(video => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    return (
-      video.title.toLowerCase().includes(query) ||
-      video.channel.toLowerCase().includes(query)
-    )
-  })
+  const filteredVideos = videos.filter(v =>
+    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    v.channel.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,14 +75,13 @@ export default function LikedVideosPage() {
         <div className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px] pb-nav-safe md:pb-6">
           {/* Mobile Header */}
           <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-            <button onClick={() => router.back()} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors">
+            <button onClick={() => router.back()} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted">
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="font-semibold text-lg">Liked Videos</h1>
           </div>
 
           <div className="max-w-[1096px] mx-auto px-4 md:px-6">
-            {/* Header Section */}
             <div className="py-4 md:py-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -130,7 +92,7 @@ export default function LikedVideosPage() {
                       </div>
                       <div>
                         <h1 className="text-2xl font-bold">Liked Videos</h1>
-                        {!isLoading && videos.length > 0 && (
+                        {!isLoading && (
                           <p className="text-sm text-muted-foreground">
                             {videos.length} video{videos.length !== 1 ? 's' : ''}
                           </p>
@@ -138,7 +100,7 @@ export default function LikedVideosPage() {
                       </div>
                     </div>
                   )}
-                  {isMobile && !isLoading && videos.length > 0 && (
+                  {isMobile && !isLoading && (
                     <span className="text-sm text-muted-foreground">
                       {videos.length} video{videos.length !== 1 ? 's' : ''}
                     </span>
@@ -147,7 +109,6 @@ export default function LikedVideosPage() {
               </div>
             </div>
 
-            {/* Search */}
             {videos.length > 0 && (
               <div className="flex items-center gap-3 mb-6">
                 <div className="relative flex-1 max-w-md">
@@ -175,10 +136,7 @@ export default function LikedVideosPage() {
                 <button onClick={handleUndo} className="text-blue-400 hover:text-blue-300 font-medium">
                   Undo
                 </button>
-                <button onClick={() => {
-                  setRemovedVideo(null)
-                  if (undoTimer) clearTimeout(undoTimer)
-                }} className="text-white/60 hover:text-white">
+                <button onClick={() => { setRemovedVideo(null); if (undoTimer) clearTimeout(undoTimer) }} className="text-white/60 hover:text-white">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -187,11 +145,7 @@ export default function LikedVideosPage() {
             {/* Content */}
             {isLoading ? (
               <div className="space-y-4">
-                <VideoSkeleton />
-                <VideoSkeleton />
-                <VideoSkeleton />
-                <VideoSkeleton />
-                <VideoSkeleton />
+                <VideoSkeleton /><VideoSkeleton /><VideoSkeleton /><VideoSkeleton /><VideoSkeleton />
               </div>
             ) : filteredVideos.length === 0 ? (
               <div className="text-center py-16">
@@ -225,7 +179,6 @@ export default function LikedVideosPage() {
               <div className="space-y-4">
                 {filteredVideos.map((video) => (
                   <div key={video.id} className="flex gap-3 group">
-                    {/* Thumbnail */}
                     <Link href={`/videos/${video.channel}/${video.id}`} className="relative w-40 md:w-56 aspect-video flex-shrink-0">
                       <Image src={video.thumbnail} alt={video.title} fill className="object-cover rounded-xl" />
                       <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
@@ -237,8 +190,6 @@ export default function LikedVideosPage() {
                         </div>
                       </div>
                     </Link>
-
-                    {/* Video Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -248,7 +199,7 @@ export default function LikedVideosPage() {
                             </h3>
                           </Link>
                           <div className="flex items-center gap-2 mt-1">
-                            <Link href={`/channel/${video.channel}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                            <Link href={`/channel/${video.channel}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
                               <Avatar className="h-5 w-5">
                                 <AvatarImage src={video.channelAvatar} />
                                 <AvatarFallback className="text-[10px]">{video.channel.charAt(0)}</AvatarFallback>
@@ -256,18 +207,10 @@ export default function LikedVideosPage() {
                               <span>{video.channel}</span>
                             </Link>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {video.views} • {video.timeAgo}
-                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{video.views} • {video.timeAgo}</p>
                         </div>
-
-                        {/* Like Status & Menu - Always visible */}
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          <button
-                            onClick={() => handleUnlikeVideo(video.id)}
-                            className="p-2 rounded-full hover:bg-muted transition-colors"
-                            title="Unlike"
-                          >
+                          <button onClick={() => handleUnlike(video)} className="p-2 rounded-full hover:bg-muted transition-colors" title="Unlike">
                             <ThumbsUp className="h-5 w-5 fill-current text-primary" />
                           </button>
                           <DropdownMenu>
@@ -277,19 +220,11 @@ export default function LikedVideosPage() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem
-                                className="py-3 cursor-pointer flex items-center gap-3"
-                                onClick={() => router.push(`/videos/${video.channel}/${video.id}`)}
-                              >
-                                <Play className="h-4 w-4" />
-                                <span>Play now</span>
+                              <DropdownMenuItem onClick={() => router.push(`/videos/${video.channel}/${video.id}`)}>
+                                <Play className="h-4 w-4 mr-3" /> Play now
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="py-3 cursor-pointer flex items-center gap-3 text-destructive"
-                                onClick={() => handleUnlikeVideo(video.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span>Remove from Liked videos</span>
+                              <DropdownMenuItem onClick={() => handleUnlike(video)} className="text-destructive">
+                                <Trash2 className="h-4 w-4 mr-3" /> Remove from Liked videos
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
