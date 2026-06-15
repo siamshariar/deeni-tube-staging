@@ -62,7 +62,7 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         <div className="py-2">
           <MobileSidebarItem href="/" icon={<Home className="h-5 w-5" />} label="Home" active={pathname === "/"} onClick={onClose} />
           <MobileSidebarItem href="/shorts" icon={<PlaySquare className="h-5 w-5" />} label="Shorts" active={pathname === "/shorts"} onClick={onClose} />
-          <MobileSidebarItem href="/subscriptions-new" icon={<BookOpen className="h-5 w-5" />} label="Subscriptions" active={pathname === "/subscriptions-new"} onClick={onClose} />
+          {/* <MobileSidebarItem href="/subscriptions-new" icon={<BookOpen className="h-5 w-5" />} label="Subscriptions" active={pathname === "/subscriptions-new"} onClick={onClose} /> */}
         </div>
 
         <div className="border-t py-2">
@@ -76,10 +76,10 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         <div className="border-t py-2">
           <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Explore</h3>
           <MobileSidebarItem href="/search-new" icon={<Search className="h-5 w-5" />} label="Search" active={pathname === "/search-new"} onClick={onClose} />
-          <MobileSidebarItem href="/trending" icon={<Flame className="h-5 w-5" />} label="Trending" onClick={onClose} />
+          {/* <MobileSidebarItem href="/trending" icon={<Flame className="h-5 w-5" />} label="Trending" onClick={onClose} />
           <MobileSidebarItem href="/music" icon={<Music className="h-5 w-5" />} label="Music" onClick={onClose} />
           <MobileSidebarItem href="/gaming" icon={<Gamepad2 className="h-5 w-5" />} label="Gaming" onClick={onClose} />
-          <MobileSidebarItem href="/sports" icon={<Trophy className="h-5 w-5" />} label="Sports" onClick={onClose} />
+          <MobileSidebarItem href="/sports" icon={<Trophy className="h-5 w-5" />} label="Sports" onClick={onClose} /> */}
         </div>
 
         <div className="border-t py-2">
