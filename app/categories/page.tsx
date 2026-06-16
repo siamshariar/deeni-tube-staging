@@ -26,20 +26,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// Mock categories data
+// Mock categories data – now includes slug
 const allCategories = [
-  { id: "1", name: "Aqeedah", description: "Islamic belief system", videoCount: 234, languages: ["en", "ar"] },
-  { id: "2", name: "Fiqh", description: "Islamic jurisprudence", videoCount: 512, languages: ["en", "ar", "hi"] },
-  { id: "3", name: "Hadith", description: "Prophetic traditions", videoCount: 320, languages: ["en", "ar"] },
-  { id: "4", name: "Tafsir", description: "Quranic exegesis", videoCount: 198, languages: ["en", "ar", "bn"] },
-  { id: "5", name: "Seerah", description: "Prophet's biography", videoCount: 145, languages: ["en"] },
-  { id: "6", name: "Dawah", description: "Outreach and propagation", videoCount: 287, languages: ["en", "hi"] },
-  { id: "7", name: "Family", description: "Family matters in Islam", videoCount: 93, languages: ["en"] },
-  { id: "8", name: "Finance", description: "Islamic finance", videoCount: 76, languages: ["en", "ar"] },
-  { id: "9", name: "Youth", description: "Youth and modern challenges", videoCount: 112, languages: ["en"] },
-  { id: "10", name: "Spirituality", description: "Purification of the soul", videoCount: 345, languages: ["en", "ar"] },
-  { id: "11", name: "Quran", description: "Recitation and memorization", videoCount: 400, languages: ["en", "ar", "bn"] },
-  { id: "12", name: "Salah", description: "Prayer", videoCount: 250, languages: ["en", "hi"] },
+  { id: "1", slug: "aqeedah", name: "Aqeedah", description: "Islamic belief system", videoCount: 234, languages: ["en", "ar"] },
+  { id: "2", slug: "fiqh", name: "Fiqh", description: "Islamic jurisprudence", videoCount: 512, languages: ["en", "ar", "hi"] },
+  { id: "3", slug: "hadith", name: "Hadith", description: "Prophetic traditions", videoCount: 320, languages: ["en", "ar"] },
+  { id: "4", slug: "tafsir", name: "Tafsir", description: "Quranic exegesis", videoCount: 198, languages: ["en", "ar", "bn"] },
+  { id: "5", slug: "seerah", name: "Seerah", description: "Prophet's biography", videoCount: 145, languages: ["en"] },
+  { id: "6", slug: "dawah", name: "Dawah", description: "Outreach and propagation", videoCount: 287, languages: ["en", "hi"] },
+  { id: "7", slug: "family", name: "Family", description: "Family matters in Islam", videoCount: 93, languages: ["en"] },
+  { id: "8", slug: "finance", name: "Finance", description: "Islamic finance", videoCount: 76, languages: ["en", "ar"] },
+  { id: "9", slug: "youth", name: "Youth", description: "Youth and modern challenges", videoCount: 112, languages: ["en"] },
+  { id: "10", slug: "spirituality", name: "Spirituality", description: "Purification of the soul", videoCount: 345, languages: ["en", "ar"] },
+  { id: "11", slug: "quran", name: "Quran", description: "Recitation and memorization", videoCount: 400, languages: ["en", "ar", "bn"] },
+  { id: "12", slug: "salah", name: "Salah", description: "Prayer", videoCount: 250, languages: ["en", "hi"] },
 ];
 
 const languageOptions = [
@@ -202,7 +202,7 @@ export default function CategoriesPage() {
                 {filteredCategories.map((category) => (
                   <Link
                     key={category.id}
-                    href={`/category/${category.id}`}
+                    href={`/categories/${category.slug}`}   // <-- fixed: uses slug
                     className="p-5 border rounded-xl hover:bg-muted/50 transition-colors"
                   >
                     <h3 className="font-semibold text-base">{category.name}</h3>
