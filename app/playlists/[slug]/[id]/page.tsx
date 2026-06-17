@@ -30,8 +30,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ShareModal } from "@/components/share-modal";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { mockPlaylists, mockVideos } from "@/lib/mock-data";
+import { toast } from "sonner";
 
 function VideoSkeleton() {
   return (
@@ -57,19 +59,20 @@ export default function PlaylistDetailPage() {
   const [videos, setVideos] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
-    // Simulate loading
     const timer = setTimeout(() => {
       const found = mockPlaylists.find((p) => p.id === playlistId);
       if (found) {
         setPlaylist(found);
-        // Get videos from mockVideos that match videoIds
         const playlistVideos = mockVideos.filter((v) =>
           found.videoIds.includes(v.id)
         );
         setVideos(playlistVideos);
+        // Build share URL
+        setShareUrl(`${window.location.origin}/playlists/${found.slug}/${found.id}`);
       }
       setIsLoading(false);
     }, 600);
@@ -83,9 +86,9 @@ export default function PlaylistDetailPage() {
   );
 
   const handleShare = () => {
-    if (!playlist?.isPublic) return;
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (playlist?.isPublic) {
+      setShowShareModal(true);
+    }
   };
 
   if (isLoading) {
@@ -217,8 +220,7 @@ export default function PlaylistDetailPage() {
                       className="rounded-full gap-2"
                       onClick={handleShare}
                     >
-                      {copied ? <Check className="h-4 w-4" /> : <Share className="h-4 w-4" />}
-                      {copied ? "Copied!" : "Share"}
+                      <Share className="h-4 w-4" /> Share
                     </Button>
                   )}
                   <DropdownMenu>
@@ -230,13 +232,13 @@ export default function PlaylistDetailPage() {
                     <DropdownMenuContent align="end" className="w-48 rounded-xl">
                       <DropdownMenuItem
                         className="cursor-pointer"
-                        onClick={() => alert("Edit playlist (prototype)")}
+                        onClick={() => toast("Edit playlist (prototype)")}
                       >
                         <Edit className="h-4 w-4 mr-2" /> Edit playlist
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="cursor-pointer text-red-500 dark:text-red-400"
-                        onClick={() => alert("Delete playlist (prototype)")}
+                        onClick={() => toast("Delete playlist (prototype)")}
                       >
                         <Trash2 className="h-4 w-4 mr-2" /> Delete playlist
                       </DropdownMenuItem>
@@ -317,6 +319,7 @@ export default function PlaylistDetailPage() {
                           {video.views} • {video.timeAgo}
                         </p>
                       </div>
+                      {/* Three-dot menu always visible */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="p-1.5 rounded-full hover:bg-muted transition-colors flex-shrink-0">
@@ -334,7 +337,7 @@ export default function PlaylistDetailPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="cursor-pointer text-red-500 dark:text-red-400"
-                            onClick={() => alert("Remove from playlist (prototype)")}
+                            onClick={() => toast("Remove from playlist (prototype)")}
                           >
                             <Trash2 className="h-4 w-4 mr-3" /> Remove from playlist
                           </DropdownMenuItem>
@@ -349,6 +352,13 @@ export default function PlaylistDetailPage() {
         </div>
       </div>
       <MobileNav />
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        videoUrl={shareUrl}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Search, X, Tv, LogIn, ChevronDown } from "lucide-react";
+import { ArrowLeft, Search, X, Tv, ChevronDown } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import MobileNav from "@/components/mobile-nav";
 import DesktopSidebar from "@/components/desktop-sidebar";
@@ -11,43 +11,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useLanguage } from "@/hooks/use-language";
+import { mockCategories, mockLanguages } from "@/lib/mock-data";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-// Mock categories data – now includes slug
-const allCategories = [
-  { id: "1", slug: "aqeedah", name: "Aqeedah", description: "Islamic belief system", videoCount: 234, languages: ["en", "ar"] },
-  { id: "2", slug: "fiqh", name: "Fiqh", description: "Islamic jurisprudence", videoCount: 512, languages: ["en", "ar", "hi"] },
-  { id: "3", slug: "hadith", name: "Hadith", description: "Prophetic traditions", videoCount: 320, languages: ["en", "ar"] },
-  { id: "4", slug: "tafsir", name: "Tafsir", description: "Quranic exegesis", videoCount: 198, languages: ["en", "ar", "bn"] },
-  { id: "5", slug: "seerah", name: "Seerah", description: "Prophet's biography", videoCount: 145, languages: ["en"] },
-  { id: "6", slug: "dawah", name: "Dawah", description: "Outreach and propagation", videoCount: 287, languages: ["en", "hi"] },
-  { id: "7", slug: "family", name: "Family", description: "Family matters in Islam", videoCount: 93, languages: ["en"] },
-  { id: "8", slug: "finance", name: "Finance", description: "Islamic finance", videoCount: 76, languages: ["en", "ar"] },
-  { id: "9", slug: "youth", name: "Youth", description: "Youth and modern challenges", videoCount: 112, languages: ["en"] },
-  { id: "10", slug: "spirituality", name: "Spirituality", description: "Purification of the soul", videoCount: 345, languages: ["en", "ar"] },
-  { id: "11", slug: "quran", name: "Quran", description: "Recitation and memorization", videoCount: 400, languages: ["en", "ar", "bn"] },
-  { id: "12", slug: "salah", name: "Salah", description: "Prayer", videoCount: 250, languages: ["en", "hi"] },
-];
-
-const languageOptions = [
-  { code: "en", label: "English" },
-  { code: "ar", label: "Arabic" },
-  { code: "hi", label: "Hindi" },
-  { code: "bn", label: "Bengali" },
-];
 
 function CategorySkeleton() {
   return (
@@ -62,15 +32,10 @@ function CategorySkeleton() {
 export default function CategoriesPage() {
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { preferredLanguages } = useLanguage();
-
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
-    preferredLanguages.length ? preferredLanguages : ["en"]
-  );
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["en"]);
   const [sortMode, setSortMode] = useState<"recent" | "asc" | "desc">("recent");
-  const [showSignInDialog, setShowSignInDialog] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -80,12 +45,14 @@ export default function CategoriesPage() {
   const toggleLanguage = (code: string) => {
     setSelectedLanguages((prev) =>
       prev.includes(code)
-        ? prev.length > 1 ? prev.filter((l) => l !== code) : prev
+        ? prev.length > 1
+          ? prev.filter((l) => l !== code)
+          : prev
         : [...prev, code]
     );
   };
 
-  const filteredCategories = allCategories
+  const filteredCategories = mockCategories
     .filter((cat) => selectedLanguages.some((lang) => cat.languages.includes(lang)))
     .filter(
       (cat) =>
@@ -96,7 +63,6 @@ export default function CategoriesPage() {
     .sort((a, b) => {
       if (sortMode === "asc") return a.name.localeCompare(b.name);
       if (sortMode === "desc") return b.name.localeCompare(a.name);
-      // recent – sort by videoCount descending
       return b.videoCount - a.videoCount;
     });
 
@@ -116,7 +82,7 @@ export default function CategoriesPage() {
             <h1 className="font-semibold text-lg">Categories</h1>
           </div>
 
-          <div className="max-w-[1200px] mx-auto px-4 md:px-6">
+          <div className="max-w-[1096px] mx-auto px-4 md:px-6">
             <div className="py-4 md:py-6">
               {!isMobile && (
                 <div className="flex items-center gap-3 mb-6">
@@ -125,13 +91,15 @@ export default function CategoriesPage() {
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold">Categories</h1>
-                    <p className="text-sm text-muted-foreground">Browse videos by topic</p>
+                    <p className="text-sm text-muted-foreground">
+                      Browse videos by topic
+                    </p>
                   </div>
                 </div>
               )}
 
               <div className="flex flex-wrap gap-2 mb-4">
-                {languageOptions.map((lang) => (
+                {mockLanguages.slice(0, 4).map((lang) => (
                   <button
                     key={lang.code}
                     onClick={() => toggleLanguage(lang.code)}
@@ -142,7 +110,7 @@ export default function CategoriesPage() {
                         : "bg-muted hover:bg-muted/80 text-foreground"
                     )}
                   >
-                    {lang.label}
+                    {lang.name}
                   </button>
                 ))}
               </div>
@@ -168,15 +136,29 @@ export default function CategoriesPage() {
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="rounded-full gap-2 flex-shrink-0" size="sm">
-                      {sortMode === "recent" ? "Recent" : sortMode === "asc" ? "A-Z" : "Z-A"}
+                    <Button
+                      variant="outline"
+                      className="rounded-full gap-2 flex-shrink-0"
+                      size="sm"
+                    >
+                      {sortMode === "recent"
+                        ? "Recent"
+                        : sortMode === "asc"
+                        ? "A-Z"
+                        : "Z-A"}
                       <ChevronDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setSortMode("recent")}>Recent</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortMode("asc")}>A-Z</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortMode("desc")}>Z-A</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortMode("recent")}>
+                      Recent
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortMode("asc")}>
+                      A-Z
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortMode("desc")}>
+                      Z-A
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -195,19 +177,25 @@ export default function CategoriesPage() {
                   <Tv className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-medium mb-1">No categories found</h3>
-                <p className="text-muted-foreground">Try different language or search</p>
+                <p className="text-muted-foreground">
+                  Try different language or search
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {filteredCategories.map((category) => (
                   <Link
                     key={category.id}
-                    href={`/categories/${category.slug}`}   // <-- fixed: uses slug
+                    href={`/categories/${category.slug}`}
                     className="p-5 border rounded-xl hover:bg-muted/50 transition-colors"
                   >
                     <h3 className="font-semibold text-base">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
-                    <p className="text-xs text-muted-foreground mt-2">{category.videoCount} videos</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {category.description}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {category.videoCount} videos
+                    </p>
                   </Link>
                 ))}
               </div>

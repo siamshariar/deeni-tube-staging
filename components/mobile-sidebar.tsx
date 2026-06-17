@@ -1,13 +1,12 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import Image from "next/image"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   Home,
   Search,
   PlaySquare,
-  BookOpen,
   BookMarked,
   Clock,
   ThumbsUp,
@@ -18,51 +17,37 @@ import {
   Settings,
   Flag,
   HelpCircle,
-  Flame,
-  Music,
-  Gamepad2,
-  Trophy,
   Globe,
-  Heart,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useState } from "react"
-import ShortsModal from "./shorts-modal"
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+import ShortsModal from "./shorts-modal";
 
 interface MobileSidebarProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
-  const pathname = usePathname()
-  const [shortsModalOpen, setShortsModalOpen] = useState(false)
+  const pathname = usePathname();
+  const [shortsModalOpen, setShortsModalOpen] = useState(false);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <>
-      {/* Overlay – covers whole screen, closes sidebar when clicked */}
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
-      {/* Sidebar drawer – now visible on all screen sizes (removed md:hidden) */}
       <div className="fixed top-0 left-0 bottom-0 w-[280px] bg-background z-50 overflow-y-auto shadow-xl">
         <div className="flex items-center px-4 py-3 border-b sticky top-0 bg-background">
           <Link href="/" onClick={onClose}>
-            <Image 
-              src="/DeeniTubeLogo.png" 
-              alt="Deeni.tube" 
-              width={100} 
-              height={24} 
-              className="h-6 w-auto" 
-            />
+            <Image src="/DeeniTubeLogo.png" alt="Deeni.tube" width={100} height={24} className="h-6 w-auto" />
           </Link>
         </div>
 
         <div className="py-2">
           <MobileSidebarItem href="/" icon={<Home className="h-5 w-5" />} label="Home" active={pathname === "/"} onClick={onClose} />
           <MobileSidebarItem href="/shorts" icon={<PlaySquare className="h-5 w-5" />} label="Shorts" active={pathname === "/shorts"} onClick={onClose} />
-          {/* <MobileSidebarItem href="/subscriptions-new" icon={<BookOpen className="h-5 w-5" />} label="Subscriptions" active={pathname === "/subscriptions-new"} onClick={onClose} /> */}
         </div>
 
         <div className="border-t py-2">
@@ -76,10 +61,6 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         <div className="border-t py-2">
           <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Explore</h3>
           <MobileSidebarItem href="/search-new" icon={<Search className="h-5 w-5" />} label="Search" active={pathname === "/search-new"} onClick={onClose} />
-          {/* <MobileSidebarItem href="/trending" icon={<Flame className="h-5 w-5" />} label="Trending" onClick={onClose} />
-          <MobileSidebarItem href="/music" icon={<Music className="h-5 w-5" />} label="Music" onClick={onClose} />
-          <MobileSidebarItem href="/gaming" icon={<Gamepad2 className="h-5 w-5" />} label="Gaming" onClick={onClose} />
-          <MobileSidebarItem href="/sports" icon={<Trophy className="h-5 w-5" />} label="Sports" onClick={onClose} /> */}
         </div>
 
         <div className="border-t py-2">
@@ -87,7 +68,6 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
           <MobileSidebarItem href="/channels" icon={<Users className="h-5 w-5" />} label="Channels" active={pathname === "/channels"} onClick={onClose} />
           <MobileSidebarItem href="/scholars" icon={<GraduationCap className="h-5 w-5" />} label="Scholars" active={pathname === "/scholars"} onClick={onClose} />
           <MobileSidebarItem href="/categories" icon={<FolderOpen className="h-5 w-5" />} label="Categories" active={pathname === "/categories"} onClick={onClose} />
-          {/* <MobileSidebarItem href="/quran-translations" icon={<BookOpen className="h-5 w-5" />} label="Quran Translations" onClick={onClose} /> */}
         </div>
 
         <div className="border-t py-2">
@@ -106,15 +86,15 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
       <ShortsModal isOpen={shortsModalOpen} onClose={() => setShortsModalOpen(false)} />
     </>
-  )
+  );
 }
 
 interface MobileSidebarItemProps {
-  href: string
-  icon: React.ReactNode
-  label: string
-  active?: boolean
-  onClick: () => void
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  onClick: () => void;
 }
 
 function MobileSidebarItem({ href, icon, label, active, onClick }: MobileSidebarItemProps) {
@@ -122,7 +102,7 @@ function MobileSidebarItem({ href, icon, label, active, onClick }: MobileSidebar
     <Link href={href} onClick={onClick} className={cn("flex items-center gap-4 px-4 py-2.5 text-sm hover:bg-muted transition-colors", active && "font-medium bg-muted/50")}>
       {icon}<span>{label}</span>
     </Link>
-  )
+  );
 }
 
 function UserIcon({ className }: { className?: string }) {
@@ -131,5 +111,5 @@ function UserIcon({ className }: { className?: string }) {
       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
-  )
+  );
 }

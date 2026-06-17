@@ -1,56 +1,50 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { useRouter, usePathname } from "next/navigation"
-import { Search, Bell, Menu, Mic, ArrowLeft, X, UserCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import AccountDropdown from "@/components/account-dropdown"
-import MobileSidebar from "@/components/mobile-sidebar"
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { Search, Bell, Menu, Mic, ArrowLeft, X, UserCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import AccountDropdown from "@/components/account-dropdown";
+import MobileSidebar from "@/components/mobile-sidebar";
 
 export default function AppHeader() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
-  const [mobileSearchQuery, setMobileSearchQuery] = useState("")
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
-  const [authLoaded, setAuthLoaded] = useState(false)
+  const router = useRouter();
+  const pathname = usePathname();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
 
-  // Check auth state on mount
   useEffect(() => {
     try {
-      const prefs = localStorage.getItem("deeni-language-prefs")
+      const prefs = localStorage.getItem("deeni-language-prefs");
       if (prefs) {
-        const parsed = JSON.parse(prefs)
-        setIsLoggedIn(!parsed.isGuest)
+        const parsed = JSON.parse(prefs);
+        setIsLoggedIn(!parsed.isGuest);
       } else {
-        setIsLoggedIn(false)
+        setIsLoggedIn(false);
       }
     } catch {
-      setIsLoggedIn(false)
+      setIsLoggedIn(false);
     }
-    const timer = setTimeout(() => setAuthLoaded(true), 100)
-    return () => clearTimeout(timer)
-  }, [])
+    const timer = setTimeout(() => setAuthLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleMobileSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (mobileSearchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(mobileSearchQuery.trim())}`)
-      setShowMobileSearch(false)
-      setMobileSearchQuery("")
+      router.push(`/search?q=${encodeURIComponent(mobileSearchQuery.trim())}`);
+      setShowMobileSearch(false);
+      setMobileSearchQuery("");
     }
-  }
+  };
 
-  // Show hamburger on desktop only for the Shorts page
-  const showDesktopHamburger = pathname === "/shorts"
-
-  // Debug: log sidebar state (remove in production)
-  useEffect(() => {
-    if (mobileSidebarOpen) console.log("Sidebar opened")
-  }, [mobileSidebarOpen])
+  // Show hamburger on desktop for /shorts and /videos/* pages
+  const showDesktopHamburger = pathname === "/shorts" || pathname.startsWith("/videos/");
 
   return (
     <>
@@ -114,7 +108,6 @@ export default function AppHeader() {
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Bell className="h-5 w-5" />
               </Button>
-              {/* Mobile Auth Area */}
               {!authLoaded ? (
                 <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
               ) : isLoggedIn ? (
@@ -134,7 +127,6 @@ export default function AppHeader() {
       {/* Desktop Header */}
       <header className="hidden md:flex fixed top-0 left-0 right-0 items-center justify-between px-4 py-2 border-b bg-background z-30 w-full max-w-[100vw]">
         <div className="flex items-center gap-4 flex-shrink-0">
-          {/* Hamburger button – visible on desktop only for /shorts */}
           {showDesktopHamburger && (
             <button
               onClick={() => setMobileSidebarOpen(true)}
@@ -184,7 +176,6 @@ export default function AppHeader() {
           <Button variant="ghost" size="icon" className="rounded-full">
             <Bell className="w-5 h-5" />
           </Button>
-          {/* Desktop Auth Area */}
           {!authLoaded ? (
             <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
           ) : isLoggedIn ? (
@@ -202,5 +193,5 @@ export default function AppHeader() {
 
       <MobileSidebar isOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
     </>
-  )
+  );
 }
