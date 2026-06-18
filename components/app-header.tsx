@@ -43,8 +43,11 @@ export default function AppHeader() {
     }
   };
 
-  // Show hamburger on desktop for /shorts and /videos/* pages
-  const showDesktopHamburger = pathname === "/shorts" || pathname.startsWith("/videos/");
+  // ✅ Now also show hamburger on playlist pages
+  const showDesktopHamburger =
+    pathname === "/shorts" ||
+    pathname.startsWith("/videos/") ||
+    pathname.startsWith("/playlists");
 
   return (
     <>

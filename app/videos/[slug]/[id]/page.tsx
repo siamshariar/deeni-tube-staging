@@ -143,7 +143,6 @@ function ReplyItem({
 
   const handleReplySubmit = () => {
     if (!replyText.trim()) return;
-    // UI only – no actual save
     setReplyText("");
     setShowReplyInput(false);
     toast.success("Reply added (demo)");
@@ -165,16 +164,12 @@ function ReplyItem({
       <div className="flex gap-2.5">
         <Avatar className="h-7 w-7 flex-shrink-0">
           <AvatarImage src={reply.avatar} />
-          <AvatarFallback className="text-[10px]">
-            {reply.user.charAt(0)}
-          </AvatarFallback>
+          <AvatarFallback className="text-[10px]">{reply.user.charAt(0)}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-medium">{displayName}</span>
-            <span className="text-[10px] text-muted-foreground">
-              {reply.timeAgo}
-            </span>
+            <span className="text-[10px] text-muted-foreground">{reply.timeAgo}</span>
           </div>
           <p className="text-sm mt-0.5">{reply.content}</p>
           <div className="flex items-center gap-2 mt-1.5">
@@ -184,9 +179,7 @@ function ReplyItem({
                 isLiked ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <ThumbsUp
-                className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`}
-              />
+              <ThumbsUp className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
               <span className="text-xs">{reply.likes}</span>
             </button>
             <button
@@ -195,9 +188,7 @@ function ReplyItem({
                 isDisliked ? "text-destructive" : "text-muted-foreground"
               }`}
             >
-              <ThumbsDown
-                className={`h-4 w-4 ${isDisliked ? "fill-current" : ""}`}
-              />
+              <ThumbsDown className={`h-4 w-4 ${isDisliked ? "fill-current" : ""}`} />
             </button>
             <button
               onClick={() => setShowReplyInput(!showReplyInput)}
@@ -414,7 +405,7 @@ export default function VideoPlayPage() {
   };
 
   const videoSrc =
-    video.videoUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
+    (video as any).videoUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
 
   return (
     <div className="min-h-screen bg-background">
@@ -422,9 +413,9 @@ export default function VideoPlayPage() {
       <div className="pt-[56px] md:pt-[72px] pb-nav-safe md:pb-6 px-4">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 min-w-0">
-            {/* Video player - responsive with taller aspect on mobile */}
+            {/* Video player – responsive with taller aspect on mobile, shorter on desktop */}
             <div className="w-full bg-black rounded-xl overflow-hidden">
-              <div className="relative w-full aspect-[4/3] md:aspect-video">
+              <div className="relative w-full aspect-[4/3] md:aspect-video md:max-h-[75vh] md:mx-auto">
                 <iframe
                   src={videoSrc}
                   title={video.title}
@@ -854,8 +845,8 @@ export default function VideoPlayPage() {
             </div>
           </div>
 
-          {/* Related Videos */}
-          <div className="lg:w-[400px] flex-shrink-0">
+          {/* Related Videos – same width as playlist panel */}
+          <div className="lg:w-[450px] flex-shrink-0">
             <h3 className="font-semibold text-base mb-4">Related Videos</h3>
             <div className="space-y-3">
               {relatedVideos.map((v) => (
