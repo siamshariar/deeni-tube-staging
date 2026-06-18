@@ -1,3 +1,4 @@
+// app/channels/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,16 +14,17 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { mockChannels, mockLanguages } from "@/lib/mock-data";
+import { toast } from "sonner";
 
 function ChannelSkeleton() {
   return (
-    <div className="flex items-center gap-4 px-2 py-3">
-      <Skeleton className="h-14 w-14 md:h-16 md:w-16 rounded-full flex-shrink-0" />
+    <div className="flex items-center gap-3 px-4 py-3">
+      <Skeleton className="h-12 w-12 md:h-14 md:w-14 rounded-full flex-shrink-0" />
       <div className="flex-1 min-w-0 space-y-2">
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-3 w-20" />
       </div>
-      <Skeleton className="h-9 w-28 rounded-full" />
+      <Skeleton className="h-8 w-16 md:w-24 rounded-full" />
     </div>
   );
 }
@@ -54,11 +56,20 @@ export default function ChannelsPage() {
   };
 
   const toggleFollow = (channelId: string) => {
-    setFollowedChannels((prev) =>
-      prev.includes(channelId)
+    setFollowedChannels((prev) => {
+      const newList = prev.includes(channelId)
         ? prev.filter((id) => id !== channelId)
-        : [...prev, channelId]
-    );
+        : [...prev, channelId];
+      const channel = mockChannels.find((ch) => ch.id === channelId);
+      if (channel) {
+        toast.success(
+          newList.includes(channelId)
+            ? `Showing ${channel.name} in feed`
+            : `Hidden ${channel.name} from feed`
+        );
+      }
+      return newList;
+    });
   };
 
   const filteredChannels = mockChannels
@@ -67,7 +78,9 @@ export default function ChannelsPage() {
       !searchQuery || ch.name.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) =>
-      sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+      sortOrder === "asc"
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name)
     );
 
   const formatSubscribers = (count: number) => {
@@ -81,99 +94,92 @@ export default function ChannelsPage() {
       <AppHeader />
       <div className="flex">
         <DesktopSidebar className="hidden md:block" />
-        <div className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px] pb-nav-safe md:pb-6">
+        <div className="flex-1 md:pl-[240px] md:pt-[34px] pb-nav-safe md:pb-6 overflow-x-hidden">
+          {/* Mobile header – back button + title */}
           <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
             <button
               onClick={() => router.back()}
-              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted"
+              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="font-semibold text-lg">Channels</h1>
           </div>
 
-          <div className="max-w-[1096px] mx-auto px-4 md:px-6">
-            <div className="py-4 md:py-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  {!isMobile && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                        <Tv className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <h1 className="text-2xl font-bold">Channels</h1>
-                        <p className="text-sm text-muted-foreground">
-                          {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {isMobile && (
-                    <span className="text-sm text-muted-foreground">
-                      {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1 sm:flex-none">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      placeholder="Search channels"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full sm:w-64 pl-10 pr-4 py-2 bg-muted/50 rounded-full text-sm outline-none focus:bg-muted transition-colors"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
-                    className="rounded-full flex-shrink-0"
-                  >
-                    <SortAsc
-                      className={cn(
-                        "h-4 w-4 transition-transform",
-                        sortOrder === "desc" && "rotate-180"
-                      )}
-                    />
-                  </Button>
-                </div>
+          <div className="px-4 md:px-6 py-6 md:py-6">
+            {/* Page header – search always visible */}
+            <div className="flex flex-col mt-12 sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              {/* Channel count*/}
+              <div className="hidden md:block">
+                <h1 className="text-2xl font-bold">Channels</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
+                </p>
               </div>
 
-              <div className="flex flex-wrap gap-2 mt-4">
-                {mockLanguages.slice(0, 2).map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => toggleLanguage(lang.code)}
+              {/* Search + Sort*/}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 min-w-0">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search channels"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-10 py-2 bg-muted/50 rounded-full text-sm outline-none focus:bg-muted transition-colors"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() =>
+                    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+                  }
+                  className="rounded-full flex-shrink-0 h-9 w-9"
+                  title={`Sort ${sortOrder === "asc" ? "Z-A" : "A-Z"}`}
+                >
+                  <SortAsc
                     className={cn(
-                      "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-                      selectedLanguages.includes(lang.code)
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted hover:bg-muted/80 text-foreground"
+                      "h-4 w-4 transition-transform",
+                      sortOrder === "desc" && "rotate-180"
                     )}
-                  >
-                    {lang.name}
-                  </button>
-                ))}
+                  />
+                </Button>
               </div>
             </div>
 
+            {/* Language filter chips */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+              {mockLanguages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => toggleLanguage(lang.code)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                    selectedLanguages.includes(lang.code)
+                      ? "bg-foreground text-background"
+                      : "bg-muted hover:bg-muted/80 text-foreground"
+                  )}
+                >
+                  {lang.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Channel list */}
             {isLoading ? (
               <div className="divide-y">
-                <ChannelSkeleton />
-                <ChannelSkeleton />
-                <ChannelSkeleton />
-                <ChannelSkeleton />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <ChannelSkeleton key={i} />
+                ))}
               </div>
             ) : filteredChannels.length === 0 ? (
               <div className="text-center py-16">
@@ -181,7 +187,9 @@ export default function ChannelsPage() {
                   <Tv className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-medium mb-1">No channels found</h3>
-                <p className="text-muted-foreground">Try different language or search</p>
+                <p className="text-muted-foreground">
+                  Try different language or search keywords
+                </p>
               </div>
             ) : (
               <div className="divide-y">
@@ -190,23 +198,30 @@ export default function ChannelsPage() {
                   return (
                     <div
                       key={channel.id}
-                      className="flex items-center gap-3 md:gap-4 px-2 py-3 hover:bg-muted/50 transition-colors"
+                      className="flex items-center gap-3 px-2 py-3 hover:bg-muted/30 transition-colors group"
                     >
-                      <Link href={`/channels/${channel.slug}`} className="flex-shrink-0">
-                        <Avatar className="h-12 w-12 md:h-14 md:w-14">
+                      <Link
+                        href={`/channels/${channel.slug}`}
+                        className="flex-shrink-0"
+                      >
+                        <Avatar className="h-12 w-12 md:h-14 md:w-14 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
                           <AvatarImage src={channel.avatar} />
                           <AvatarFallback>{channel.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                       </Link>
+
                       <div className="flex-1 min-w-0">
-                        <Link href={`/channels/${channel.slug}`} className="hover:underline">
+                        <Link
+                          href={`/channels/${channel.slug}`}
+                          className="hover:underline"
+                        >
                           <div className="flex items-center gap-1">
-                            <h3 className="font-medium text-sm md:text-base truncate">
+                            <h3 className="font-medium text-sm md:text-base truncate group-hover:text-primary transition-colors">
                               {channel.name}
                             </h3>
                             {channel.verified && (
                               <svg
-                                className="w-4 h-4 text-blue-500"
+                                className="w-4 h-4 text-blue-500 flex-shrink-0"
                                 fill="currentColor"
                                 viewBox="0 0 24 24"
                               >
@@ -215,28 +230,42 @@ export default function ChannelsPage() {
                             )}
                           </div>
                         </Link>
-                        <p className="text-xs md:text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground truncate">
                           {formatSubscribers(channel.subscribers)}
                         </p>
                       </div>
+
+                      {/* Responsive toggle button */}
                       <button
-                        onClick={() => toggleFollow(channel.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFollow(channel.id);
+                        }}
                         className={cn(
-                          "relative inline-flex items-center h-9 px-4 rounded-full text-sm font-medium transition-all duration-200 border flex-shrink-0",
+                          "flex items-center rounded-full border flex-shrink-0 transition-colors",
+                          isMobile
+                            ? "h-8 px-2 text-xs gap-1"
+                            : "h-9 px-4 text-sm font-medium gap-1.5",
                           isOn
                             ? "bg-primary/10 border-primary text-primary hover:bg-primary/20"
                             : "bg-muted/50 border-muted-foreground/20 text-muted-foreground hover:bg-muted/80"
                         )}
+                        title={isOn ? "Hide from feed" : "Show in feed"}
                       >
                         {isOn ? (
-                          <>
-                            <Eye className="h-4 w-4 mr-1.5" /> Show in feed
-                          </>
+                          <Eye className="h-3.5 w-3.5 flex-shrink-0" />
                         ) : (
-                          <>
-                            <EyeOff className="h-4 w-4 mr-1.5" /> Hidden
-                          </>
+                          <EyeOff className="h-3.5 w-3.5 flex-shrink-0" />
                         )}
+                        <span className={isMobile ? "truncate max-w-[60px]" : ""}>
+                          {isMobile
+                            ? isOn
+                              ? "Show"
+                              : "Hidden"
+                            : isOn
+                              ? "Show in feed"
+                              : "Hidden"}
+                        </span>
                       </button>
                     </div>
                   );

@@ -77,7 +77,7 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
         <div className="border-t py-2">
           <MobileSidebarItem href="/settings" icon={<Settings className="h-5 w-5" />} label="Settings" onClick={onClose} />
-          <MobileSidebarItem href="/report" icon={<Flag className="h-5 w-5" />} label="Report history" onClick={onClose} />
+          {/* <MobileSidebarItem href="/report" icon={<Flag className="h-5 w-5" />} label="Report history" onClick={onClose} /> */}
           <MobileSidebarItem href="/help" icon={<HelpCircle className="h-5 w-5" />} label="Help" onClick={onClose} />
         </div>
 

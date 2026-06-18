@@ -13,7 +13,6 @@ import {
   Clock,
   Bookmark,
   Share,
-  ChevronDown,
 } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import MobileNav from "@/components/mobile-nav";
@@ -27,21 +26,49 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { mockCategories, mockVideos } from "@/lib/mock-data";
-import { useWatchLater } from "@/hooks/useWatchLater";
 import { ShareModal } from "@/components/share-modal";
-import { AddToPlaylistDialog } from "@/components/add-to-playlist-dialog";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
-// Helper to generate more mock videos for each category
+// Generate more mock videos for each category - with fallback
 const generateCategoryVideos = (categoryName: string) => {
   let videos = mockVideos.filter((v) => v.category === categoryName);
+  
+  // If no videos found for this category, create some basic ones
+  if (videos.length === 0) {
+    for (let i = 1; i <= 8; i++) {
+      videos.push({
+        id: `mock-${categoryName}-${i}`,
+        title: `${categoryName} Video ${i}`,
+        channel: `${categoryName} Channel`,
+        channelId: `channel-${i}`,
+        channelAvatar: "/placeholder.svg?height=100&width=100",
+        views: `${Math.floor(Math.random() * 500 + 100)}K views`,
+        timeAgo: `${Math.floor(Math.random() * 30 + 1)} days ago`,
+        duration: `${Math.floor(Math.random() * 20 + 5)}:${String(
+          Math.floor(Math.random() * 60)
+        ).padStart(2, "0")}`,
+        thumbnail: `https://placehold.co/600x400/111/888?text=Video+${i}`,
+        language: "en",
+        category: categoryName,
+        description: `This is a mock video for the ${categoryName} category.`,
+      });
+    }
+    return videos;
+  }
+  
+  // Extend to at least 8 videos
   if (videos.length < 8) {
     const baseVideos = [...videos];
     while (videos.length < 8) {
-      const base = baseVideos[videos.length % baseVideos.length];
+      const index = (videos.length - baseVideos.length + baseVideos.length) % baseVideos.length;
+      const base = baseVideos[index];
+      
+      // Safety check
+      if (!base) continue;
+      
       videos.push({
         ...base,
         id: `${base.id}-dup-${videos.length}`,
@@ -94,7 +121,6 @@ export default function CategoryVideosPage() {
   const slug = params.slug as string;
   const category = mockCategories.find((c) => c.slug === slug) || mockCategories[0];
   const categoryVideos = generateCategoryVideos(category.name);
-  const { addToWatchLater } = useWatchLater();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -143,26 +169,35 @@ export default function CategoryVideosPage() {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="font-semibold text-lg truncate">{category.name}</h1>
-      </div>
       <div className="flex">
         <DesktopSidebar className="hidden md:block" />
-        <div className="flex-1 md:pl-[240px] md:pt-[80px] pb-nav-safe">
-          <div className="max-w-[1096px] mx-auto">
+        <div className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px] pb-nav-safe">
+          {/* Mobile header – exactly like history/playlists pages */}
+          <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="font-semibold text-lg truncate">{category.name}</h1>
+          </div>
+
+          <div className="px-4 md:px-6 py-4 md:py-6">
             {isLoading ? (
-              <div className="px-4 md:px-6 py-4 md:py-6">
+              <>
                 <div className="hidden md:block mb-4">
                   <Skeleton className="h-8 w-48 mb-2" />
                   <Skeleton className="h-4 w-64" />
                 </div>
-                <Skeleton className="h-10 w-full rounded-full mb-4" />
+                <div className="mb-6">
+                  <Skeleton className="h-10 w-full md:w-64 rounded-full mb-4" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-9 w-16 rounded-full" />
+                    <Skeleton className="h-9 w-16 rounded-full" />
+                    <Skeleton className="h-9 w-16 rounded-full" />
+                  </div>
+                </div>
                 <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <VideoSkeleton key={i} />
@@ -173,25 +208,32 @@ export default function CategoryVideosPage() {
                     <VideoSkeletonHorizontal key={i} />
                   ))}
                 </div>
-              </div>
+              </>
             ) : (
               <>
-                <div className="px-4 md:px-6 pt-14 pb-3 md:py-6 border-b">
-                  <div className="hidden md:block">
+                {/* Category title & description – desktop only */}
+                {!isMobile && (
+                  <div className="mb-6">
                     <h1 className="text-2xl font-bold">{category.name}</h1>
                     <p className="text-sm text-muted-foreground mt-1">
                       {category.description}
                     </p>
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
-                    <div className="relative flex-1 max-w-md">
+                )}
+
+                {/* Search + Sort chips */}
+                {/* Desktop: search left, chips right | Mobile/Tablet: search full width on top, chips below */}
+                <div className="mb-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    {/* Search input – left aligned on desktop, full width on mobile */}
+                    <div className="relative w-full md:max-w-md">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="text"
                         placeholder={`Search ${category.name} videos...`}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-10 h-10 text-sm rounded-full bg-muted/50 focus:bg-muted transition-colors"
+                        className="w-full pl-10 pr-10 h-10 text-sm rounded-full bg-muted/50 focus:bg-muted transition-colors"
                       />
                       {searchQuery && (
                         <button
@@ -202,54 +244,29 @@ export default function CategoryVideosPage() {
                         </button>
                       )}
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-full gap-1"
-                        >
-                          {isMobile ? (
-                            <>
-                              <span className="text-xs">
-                                {sortMode === "priority"
-                                  ? "Priority"
-                                  : sortMode === "latest"
-                                  ? "Latest"
-                                  : "Popular"}
-                              </span>
-                              <ChevronDown className="h-3 w-3" />
-                            </>
-                          ) : (
-                            <>
-                              Sort by:{" "}
-                              {sortMode === "priority"
-                                ? "Priority"
-                                : sortMode === "latest"
-                                ? "Latest"
-                                : "Popular"}
-                              <ChevronDown className="h-4 w-4" />
-                            </>
+
+                    {/* Sort chips – right aligned on desktop, below search on mobile */}
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                      {(["priority", "latest", "popular"] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          onClick={() => setSortMode(mode)}
+                          className={cn(
+                            "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                            sortMode === mode
+                              ? "bg-foreground text-background"
+                              : "bg-muted hover:bg-muted/80 text-foreground"
                           )}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem onClick={() => setSortMode("priority")}>
-                          Priority
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setSortMode("latest")}>
-                          Latest
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setSortMode("popular")}>
-                          Popular
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        >
+                          {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Desktop Grid */}
-                <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4 md:px-6 pb-6">
+                {/* Desktop grid */}
+                <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {filteredVideos.map((video) => (
                     <div key={video.id} className="flex flex-col group">
                       <Link
@@ -291,43 +308,26 @@ export default function CategoryVideosPage() {
                                   <MoreVertical className="h-4 w-4 text-muted-foreground" />
                                 </button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                              <DropdownMenuContent align="end" className="w-48 rounded-xl">
                                 <DropdownMenuItem
                                   className="cursor-pointer"
                                   onClick={() => {
-                                    addToWatchLater({
-                                      id: video.id,
-                                      title: video.title,
-                                      channel: video.channel,
-                                      channelAvatar: video.channelAvatar,
-                                      thumbnail: video.thumbnail,
-                                      views: video.views,
-                                      timeAgo: video.timeAgo,
-                                      duration: video.duration,
-                                      addedAt: Date.now(),
-                                    });
-                                    toast.success("Added to Watch Later");
+                                    toast.success("Added to Watch Later (demo)");
                                   }}
                                 >
-                                  <Clock className="h-4 w-4 mr-3" /> Save to Watch later
+                                  <Clock className="h-4 w-4 mr-2" /> Save to Watch later
                                 </DropdownMenuItem>
-                                <AddToPlaylistDialog
-                                  video={{
-                                    id: video.id,
-                                    title: video.title,
-                                    channel: video.channel,
-                                  }}
-                                  onAdded={() => toast.success("Added to playlist")}
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() => toast.success("Added to playlist (demo)")}
                                 >
-                                  <DropdownMenuItem className="cursor-pointer w-full">
-                                    <Bookmark className="h-4 w-4 mr-3" /> Save to playlist
-                                  </DropdownMenuItem>
-                                </AddToPlaylistDialog>
+                                  <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="cursor-pointer"
                                   onClick={() => handleShare(video)}
                                 >
-                                  <Share className="h-4 w-4 mr-3" /> Share
+                                  <Share className="h-4 w-4 mr-2" /> Share
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -344,8 +344,8 @@ export default function CategoryVideosPage() {
                   ))}
                 </div>
 
-                {/* Mobile List */}
-                <div className="flex flex-col md:hidden px-4 pb-6">
+                {/* Mobile list */}
+                <div className="flex flex-col md:hidden">
                   {filteredVideos.map((video) => (
                     <div key={video.id} className="flex gap-3 py-3 border-b last:border-0 group">
                       <Link
@@ -375,43 +375,26 @@ export default function CategoryVideosPage() {
                                 <MoreVertical className="h-4 w-4 text-muted-foreground" />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                            <DropdownMenuContent align="end" className="w-48 rounded-xl">
                               <DropdownMenuItem
                                 className="cursor-pointer"
                                 onClick={() => {
-                                  addToWatchLater({
-                                    id: video.id,
-                                    title: video.title,
-                                    channel: video.channel,
-                                    channelAvatar: video.channelAvatar,
-                                    thumbnail: video.thumbnail,
-                                    views: video.views,
-                                    timeAgo: video.timeAgo,
-                                    duration: video.duration,
-                                    addedAt: Date.now(),
-                                  });
-                                  toast.success("Added to Watch Later");
+                                  toast.success("Added to Watch Later (demo)");
                                 }}
                               >
-                                <Clock className="h-4 w-4 mr-3" /> Save to Watch later
+                                <Clock className="h-4 w-4 mr-2" /> Save to Watch later
                               </DropdownMenuItem>
-                              <AddToPlaylistDialog
-                                video={{
-                                  id: video.id,
-                                  title: video.title,
-                                  channel: video.channel,
-                                }}
-                                onAdded={() => toast.success("Added to playlist")}
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => toast.success("Added to playlist (demo)")}
                               >
-                                <DropdownMenuItem className="cursor-pointer w-full">
-                                  <Bookmark className="h-4 w-4 mr-3" /> Save to playlist
-                                </DropdownMenuItem>
-                              </AddToPlaylistDialog>
+                                <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="cursor-pointer"
                                 onClick={() => handleShare(video)}
                               >
-                                <Share className="h-4 w-4 mr-3" /> Share
+                                <Share className="h-4 w-4 mr-2" /> Share
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

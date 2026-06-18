@@ -1,8 +1,9 @@
+// app/you-new/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Globe, Tv, LogOut, Check, ChevronRight, ChevronDown } from "lucide-react";
+import { ArrowLeft, Globe, Tv, LogOut, Check, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,7 +16,6 @@ import AppHeader from "@/components/app-header";
 import Link from "next/link";
 import MobileNav from "@/components/mobile-nav";
 import DesktopSidebar from "@/components/desktop-sidebar";
-import LanguagePrompt from "@/components/language-prompt";
 import { mockLanguages } from "@/lib/mock-data";
 import { toast } from "sonner";
 
@@ -30,9 +30,7 @@ export default function YouPage() {
   const [defaultLanguage, setDefaultLanguage] = useState("en");
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>(["ar", "bn", "hi"]);
   const [isLoading, setIsLoading] = useState(true);
-  const [languageDrawerOpen, setLanguageDrawerOpen] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
-  const [showLanguagePrompt, setShowLanguagePrompt] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -60,12 +58,15 @@ export default function YouPage() {
   }, []);
 
   const savePreferences = () => {
-    localStorage.setItem("deeni-lang-prefs", JSON.stringify({
-      languages: preferredLanguages,
-      default: defaultLanguage,
-      hasSelected: true,
-      isGuest: false,
-    }));
+    localStorage.setItem(
+      "deeni-lang-prefs",
+      JSON.stringify({
+        languages: preferredLanguages,
+        default: defaultLanguage,
+        hasSelected: true,
+        isGuest: false,
+      })
+    );
     toast.success("Preferences saved successfully!");
   };
 
@@ -81,6 +82,7 @@ export default function YouPage() {
     router.push("/signin");
   };
 
+  // ── Skeleton loading ─────────────────────────────────────
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -88,10 +90,60 @@ export default function YouPage() {
         <div className="flex">
           <DesktopSidebar className="hidden md:block" />
           <main className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px] pb-nav-safe md:pb-6">
-            <div className="max-w-2xl mx-auto p-4 md:p-6">
-              <Skeleton className="h-8 w-40 mb-6" />
-              <Skeleton className="h-24 w-full rounded-xl mb-4" />
-              <Skeleton className="h-48 w-full rounded-xl mb-4" />
+            <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <Skeleton className="h-6 w-16" />
+            </div>
+            <div className="px-4 md:px-6 py-4 md:py-6">
+              <div className="hidden md:block mb-6">
+                <Skeleton className="h-8 w-32 mb-2" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+              <div className="mb-6 rounded-xl border p-4 flex items-center gap-4">
+                <Skeleton className="h-14 w-14 md:h-16 md:w-16 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-9 w-28 rounded-full" />
+              </div>
+              <div className="mb-6 rounded-xl border overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 border-b">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                <div className="p-4 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-3 w-36" />
+                    </div>
+                    <Skeleton className="h-10 w-full sm:w-44 rounded-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-36" />
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                    ))}
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <Skeleton className="h-10 w-full sm:w-auto rounded-full" />
+                </div>
+              </div>
+              <div className="rounded-xl border overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 border-b">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-36" />
+                </div>
+                <div className="flex items-center justify-between px-4 py-3.5">
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-40" />
+                  </div>
+                  <Skeleton className="h-4 w-4" />
+                </div>
+              </div>
             </div>
           </main>
         </div>
@@ -106,20 +158,31 @@ export default function YouPage() {
       <div className="flex">
         <DesktopSidebar className="hidden md:block" />
         <main className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px] pb-nav-safe md:pb-6">
-          <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
+          {/* Mobile header */}
+          <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
             <button
               onClick={() => router.back()}
-              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted"
+              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="font-semibold text-lg">You</h1>
           </div>
 
-          <div className="max-w-2xl mx-auto p-4 md:p-6">
+          <div className="px-4 md:px-6 py-4 md:py-6">
+            {/* Page header – desktop only */}
+            {!isMobile && (
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold">You</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Manage your profile and preferences
+                </p>
+              </div>
+            )}
+
             {/* User Profile Card */}
-            <div className="mb-6">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-card border shadow-sm">
+            <div className="mb-6 rounded-xl border shadow-sm overflow-hidden">
+              <div className="p-4 flex items-center gap-4">
                 <Avatar className="h-14 w-14 md:h-16 md:w-16 ring-2 ring-primary/10">
                   <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
                     {userInitials}
@@ -135,14 +198,14 @@ export default function YouPage() {
                     <LogOut className="h-4 w-4" /> Sign out
                   </button>
                 </div>
-                <Button variant="outline" size="sm" className="rounded-full" asChild>
+                <Button variant="outline" size="sm" className="rounded-full flex-shrink-0" asChild>
                   <Link href={`/channel/${userName}`}>View channel</Link>
                 </Button>
               </div>
             </div>
 
             {/* Language Preference Card */}
-            <div className="mb-6 rounded-xl border overflow-hidden shadow-sm">
+            <div className="mb-6 rounded-xl border shadow-sm overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 border-b">
                 <Globe className="h-4 w-4 text-primary" />
                 <h2 className="font-semibold text-sm">Language preference</h2>
@@ -173,95 +236,52 @@ export default function YouPage() {
                   </div>
                 </div>
 
+                {/* Preferred languages – always shown as checkbox list (no drawer) */}
                 <div>
-                  {isMobile ? (
-                    <Drawer open={languageDrawerOpen} onOpenChange={setLanguageDrawerOpen}>
-                      <DrawerTrigger asChild>
-                        <button className="w-full flex items-center justify-between py-2 hover:bg-muted/50 rounded-lg px-2 text-left">
-                          <div>
-                            <p className="text-sm font-medium">Preferred languages</p>
-                            <p className="text-xs text-muted-foreground">
-                              {preferredLanguages.length} selected
-                            </p>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <p className="text-sm font-medium mb-3">Preferred languages</p>
+                  <div className="border rounded-xl divide-y overflow-hidden">
+                    {preferredLanguageOptions.map((lang) => {
+                      const isSelected = preferredLanguages.includes(lang.code);
+                      return (
+                        <button
+                          key={lang.code}
+                          onClick={() => togglePreferredLanguage(lang.code)}
+                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                        >
+                          <span className="text-sm">{lang.name}</span>
+                          <span
+                            className={cn(
+                              "h-5 w-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                              isSelected
+                                ? "bg-primary border-primary text-primary-foreground"
+                                : "border-muted-foreground/30"
+                            )}
+                          >
+                            {isSelected && <Check className="h-3.5 w-3.5" />}
+                          </span>
                         </button>
-                      </DrawerTrigger>
-                      <DrawerContent>
-                        <DrawerHeader>
-                          <DrawerTitle>Preferred languages</DrawerTitle>
-                        </DrawerHeader>
-                        <div className="p-4 space-y-2">
-                          {preferredLanguageOptions.map((lang) => {
-                            const isSelected = preferredLanguages.includes(lang.code);
-                            return (
-                              <button
-                                key={lang.code}
-                                onClick={() => togglePreferredLanguage(lang.code)}
-                                className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors text-left"
-                              >
-                                <span className="text-sm font-medium">{lang.name}</span>
-                                <span
-                                  className={cn(
-                                    "h-5 w-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                                    isSelected
-                                      ? "bg-primary border-primary text-primary-foreground"
-                                      : "border-muted-foreground/30"
-                                  )}
-                                >
-                                  {isSelected && <Check className="h-3.5 w-3.5" />}
-                                </span>
-                              </button>
-                            );
-                          })}
-                          <Button className="w-full mt-4 rounded-full" onClick={() => setLanguageDrawerOpen(false)}>
-                            Done
-                          </Button>
-                        </div>
-                      </DrawerContent>
-                    </Drawer>
-                  ) : (
-                    <>
-                      <p className="text-sm font-medium mb-3">Preferred languages</p>
-                      <div className="border rounded-xl divide-y overflow-hidden">
-                        {preferredLanguageOptions.map((lang) => {
-                          const isSelected = preferredLanguages.includes(lang.code);
-                          return (
-                            <button
-                              key={lang.code}
-                              onClick={() => togglePreferredLanguage(lang.code)}
-                              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors text-left"
-                            >
-                              <span className="text-sm">{lang.name}</span>
-                              <span
-                                className={cn(
-                                  "h-5 w-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                                  isSelected
-                                    ? "bg-primary border-primary text-primary-foreground"
-                                    : "border-muted-foreground/30"
-                                )}
-                              >
-                                {isSelected && <Check className="h-3.5 w-3.5" />}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
+                      );
+                    })}
+                  </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     Content shown in selected languages will appear in your feed
                   </p>
                 </div>
 
-                <Button onClick={savePreferences} className="w-full rounded-full">
-                  Save preferences
-                </Button>
+                {/* Save button – larger on desktop, full width on mobile */}
+                <div className="flex justify-center sm:justify-start">
+                  <Button
+                    onClick={savePreferences}
+                    className="w-full sm:w-auto rounded-full px-8 py-2.5 text-sm sm:text-base"
+                  >
+                    Save preferences
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Channel Preference Card */}
-            <div className="rounded-xl border overflow-hidden shadow-sm">
+            <div className="rounded-xl border shadow-sm overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 border-b">
                 <Tv className="h-4 w-4 text-primary" />
                 <h2 className="font-semibold text-sm">Channel preference</h2>
@@ -299,18 +319,6 @@ export default function YouPage() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Language Prompt Modal */}
-      <LanguagePrompt
-        open={showLanguagePrompt}
-        onSave={(langs) => {
-          setPreferredLanguages(langs);
-          savePreferences();
-          setShowLanguagePrompt(false);
-        }}
-        onSkip={() => setShowLanguagePrompt(false)}
-        initialSelected={preferredLanguages}
-      />
     </div>
   );
 }

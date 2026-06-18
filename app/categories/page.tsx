@@ -1,8 +1,9 @@
+// app/categories/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Search, X, Tv, ChevronDown } from "lucide-react";
+import { ArrowLeft, Search, X, ChevronDown, Folder } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import MobileNav from "@/components/mobile-nav";
 import DesktopSidebar from "@/components/desktop-sidebar";
@@ -72,58 +73,35 @@ export default function CategoriesPage() {
       <div className="flex">
         <DesktopSidebar className="hidden md:block" />
         <div className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px] pb-nav-safe md:pb-6">
-          <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
+          {/* Mobile header */}
+          <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
             <button
               onClick={() => router.back()}
-              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted"
+              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="font-semibold text-lg">Categories</h1>
           </div>
 
-          <div className="max-w-[1096px] mx-auto px-4 md:px-6">
-            <div className="py-4 md:py-6">
-              {!isMobile && (
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                    <Tv className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold">Categories</h1>
-                    <p className="text-sm text-muted-foreground">
-                      Browse videos by topic
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                {mockLanguages.slice(0, 4).map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => toggleLanguage(lang.code)}
-                    className={cn(
-                      "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-                      selectedLanguages.includes(lang.code)
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted hover:bg-muted/80 text-foreground"
-                    )}
-                  >
-                    {lang.name}
-                  </button>
-                ))}
+          <div className="px-4 md:px-6 py-4 md:py-6">
+            {/* Page header – search always visible on all screens */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="hidden md:block">
+                <h1 className="text-2xl font-bold">Categories</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {filteredCategories.length} category{filteredCategories.length !== 1 ? "s" : ""}
+                </p>
               </div>
-
-              <div className="flex items-center gap-2 mb-6">
-                <div className="relative flex-1">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
                     type="text"
                     placeholder="Search categories"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 bg-muted/50 rounded-full text-sm outline-none focus:bg-muted transition-colors"
+                    className="w-full pl-10 pr-10 py-2 bg-muted/50 rounded-full text-sm outline-none focus:bg-muted transition-colors"
                   />
                   {searchQuery && (
                     <button
@@ -138,7 +116,7 @@ export default function CategoriesPage() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
-                      className="rounded-full gap-2 flex-shrink-0"
+                      className="rounded-full gap-2 flex-shrink-0 h-9 mr-4"
                       size="sm"
                     >
                       {sortMode === "recent"
@@ -149,7 +127,7 @@ export default function CategoriesPage() {
                       <ChevronDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="w-40 rounded-xl">
                     <DropdownMenuItem onClick={() => setSortMode("recent")}>
                       Recent
                     </DropdownMenuItem>
@@ -164,38 +142,64 @@ export default function CategoriesPage() {
               </div>
             </div>
 
+            {/* Language filter chips */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+              {mockLanguages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => toggleLanguage(lang.code)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                    selectedLanguages.includes(lang.code)
+                      ? "bg-foreground text-background"
+                      : "bg-muted hover:bg-muted/80 text-foreground"
+                  )}
+                >
+                  {lang.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Category grid */}
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <CategorySkeleton />
-                <CategorySkeleton />
-                <CategorySkeleton />
-                <CategorySkeleton />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <CategorySkeleton key={i} />
+                ))}
               </div>
             ) : filteredCategories.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Tv className="h-8 w-8 text-muted-foreground" />
+                  <Folder className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-medium mb-1">No categories found</h3>
                 <p className="text-muted-foreground">
-                  Try different language or search
+                  Try different language or keywords
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredCategories.map((category) => (
                   <Link
                     key={category.id}
                     href={`/categories/${category.slug}`}
-                    className="p-5 border rounded-xl hover:bg-muted/50 transition-colors"
+                    className="p-5 border rounded-xl hover:bg-muted/30 transition-colors group cursor-pointer flex items-start gap-3"
                   >
-                    <h3 className="font-semibold text-base">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {category.description}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {category.videoCount} videos
-                    </p>
+                    {/* ✅ স্ট্যান্ডার্ড ফোল্ডার আইকন */}
+                    <div className="flex-shrink-0 w-9 h-9 bg-muted rounded-full flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                      <Folder className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base group-hover:text-primary transition-colors truncate">
+                        {category.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        {category.description}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2 font-medium">
+                        {category.videoCount} videos
+                      </p>
+                    </div>
                   </Link>
                 ))}
               </div>

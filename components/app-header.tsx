@@ -84,7 +84,7 @@ export default function AppHeader() {
             </form>
           </div>
         ) : (
-          <div className="flex items-center justify-between px-4 py-2 w-full">
+          <div className="flex items-center justify-between px-2 py-2 w-full">
             <div className="flex items-center gap-3 min-w-0">
               <button onClick={() => setMobileSidebarOpen(true)} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors flex-shrink-0" type="button">
                 <Menu className="h-5 w-5" />

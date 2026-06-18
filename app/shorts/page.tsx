@@ -1,3 +1,4 @@
+// app/shorts/page.tsx (updated – dark mode panel backgrounds)
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -90,7 +91,6 @@ function MoreIcon({ className }: { className?: string }) {
   return <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" className={className}><path d="M12 4a2 2 0 100 4 2 2 0 000-4Zm0 6a2 2 0 100 4 2 2 0 000-4Zm0 6a2 2 0 100 4 2 2 0 000-4Z" fill="currentColor" /></svg>
 }
 
-// CC Off – outline, adapts to current text color
 function CCIconOff({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" className={className}>
@@ -99,7 +99,6 @@ function CCIconOff({ className }: { className?: string }) {
   )
 }
 
-// CC On – white background, black text (high contrast)
 function CCIconOn({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" className={className}>
@@ -611,15 +610,15 @@ export default function ShortsPage() {
       <div className="relative z-50"><AppHeader /></div>
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} />
 
-      <div className="hidden md:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 flex-col gap-1 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md">
+      <div className="hidden md:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 flex-col gap-1 bg-background/80 dark:bg-[#b5abab66] rounded-full p-1.5 shadow-md">
         <button onClick={() => scrollToVideo(currentIndex - 1)} disabled={currentIndex === 0} className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronUp className="h-6 w-6" /></button>
         <button onClick={() => scrollToVideo(currentIndex + 1)} disabled={currentIndex === shortsData.length - 1} className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronDown className="h-6 w-6" /></button>
       </div>
 
-      {/* Desktop Panel */}
+      {/* Desktop Panel – dark background as #212121 */}
       {activePanel && (
         <div className="hidden md:flex fixed top-[56px] bottom-0 z-40 items-center" style={{ right: `${panelRight}px` }}>
-          <div className="bg-card rounded-2xl overflow-hidden flex flex-col shadow-2xl animate-fade-in-left h-[85vh]" style={{ width: `${panelWidth}px` }}>
+          <div className="bg-card dark:bg-[#212121] rounded-2xl overflow-hidden flex flex-col shadow-2xl animate-fade-in-left h-[85vh]" style={{ width: `${panelWidth}px` }}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-foreground font-semibold">{panelTitle}</h3>
@@ -698,11 +697,11 @@ export default function ShortsPage() {
         </div>
       )}
 
-      {/* Mobile Panel */}
+      {/* Mobile Panel – dark background as #212121 */}
       {activePanel && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60" onClick={() => setActivePanel(null)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl max-h-[70vh] flex flex-col animate-slide-up">
+          <div className="absolute bottom-0 left-0 right-0 bg-card dark:bg-[#212121] rounded-t-2xl max-h-[70vh] flex flex-col animate-slide-up">
             <div className="w-10 h-1 bg-muted rounded-full mx-auto mt-3 mb-2 flex-shrink-0" />
             <div className="flex items-center justify-between px-4 py-2 border-b border-border flex-shrink-0">
               <div className="flex items-center gap-2"><h3 className="text-foreground font-semibold">{panelTitle}</h3>{activePanel === "comments" && <span className="text-muted-foreground text-sm">{totalCommentsCount}</span>}</div>
@@ -788,7 +787,7 @@ export default function ShortsPage() {
           return (
             <section key={short.id} className="relative h-[calc(95vh-56px)] w-full snap-start snap-always flex items-center justify-center bg-background">
               <div
-                className="relative w-full h-full md:w-[400px] md:h-[85vh] md:rounded-2xl overflow-hidden mx-auto bg-muted"
+                className="relative w-full h-full md:max-h-[85vh] md:w-auto md:aspect-[9/16] md:rounded-2xl overflow-hidden mx-auto bg-muted"
                 onMouseEnter={() => setHoveredVideoId(short.id)}
                 onMouseLeave={() => { setHoveredVideoId(null); setShowVolumeSlider(false); setShowMoreMenu(false) }}
               >
@@ -804,8 +803,8 @@ export default function ShortsPage() {
 
                 {/* Center play/pause overlay */}
                 <div className={`absolute inset-0 flex items-center justify-center z-25 pointer-events-none transition-opacity duration-200 ${showCenterPlayPause ? "opacity-100" : "opacity-0"}`}>
-                  <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                    {isPlaying ? <Pause className="h-8 w-8 text-white fill-white" /> : <Play className="h-8 w-8 text-white fill-white ml-1" />}
+                  <div className="w-16 h-16 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                    {isPlaying ? <Pause className="h-8 w-8 text-foreground" /> : <Play className="h-8 w-8 text-foreground" />}
                   </div>
                 </div>
 
@@ -817,29 +816,29 @@ export default function ShortsPage() {
                 <div className={`absolute top-0 left-0 right-0 z-30 px-4 pt-4 pb-16 transition-opacity duration-200 ${isHovered && !isScrolling && !isTransitioning ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button onClick={handleTogglePlay} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors">
+                      <button onClick={handleTogglePlay} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
                         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                       </button>
                       <div className="relative flex items-center" onMouseEnter={() => setShowVolumeSlider(true)} onMouseLeave={() => setShowVolumeSlider(false)}>
-                        <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors">
+                        <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
                           {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                         </button>
                         {showVolumeSlider && (
-                          <div className="hidden md:flex items-center bg-black/60 backdrop-blur-sm rounded-full px-3 py-2 ml-1">
-                            <input type="range" min="0" max="100" value={isMuted ? 0 : volume} onChange={(e) => { setVolume(Number(e.target.value)); setIsMuted(false) }} className="w-20 h-1 accent-white cursor-pointer" />
+                          <div className="hidden md:flex items-center rounded-full px-3 py-2 ml-1 shadow-lg" style={{ backgroundColor: "#b5abab66" }}>
+                            <input type="range" min="0" max="100" value={isMuted ? 0 : volume} onChange={(e) => { setVolume(Number(e.target.value)); setIsMuted(false) }} className="w-20 h-1 accent-black dark:accent-white cursor-pointer" />
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setCaptionsEnabled(!captionsEnabled)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors" title={captionsEnabled ? "CC on" : "CC off"} aria-pressed={captionsEnabled}>
+                      <button onClick={() => setCaptionsEnabled(!captionsEnabled)} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
                         {captionsEnabled ? <CCIconOn className="h-5 w-5" /> : <CCIconOff className="h-5 w-5" />}
                       </button>
-                      <button onClick={toggleFullscreen} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors">
+                      <button onClick={toggleFullscreen} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
                         <FullscreenIcon className="h-5 w-5" />
                       </button>
                       <div className="relative">
-                        <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-white/20 transition-colors">
+                        <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
                           <MoreIcon className="h-5 w-5" />
                         </button>
                         {showMoreMenu && (
@@ -875,51 +874,50 @@ export default function ShortsPage() {
                   </div>
                 </div>
 
-                {/* Bottom info & actions (Subscribe button removed) */}
+                {/* Bottom info & actions – dark mode text white */}
                 <div className={`absolute bottom-6 left-4 right-20 z-20 transition-all duration-500 ${isActive && !isScrolling && !isTransitioning ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar className="h-10 w-10 border-2 border-white/20 flex-shrink-0">
                       <AvatarImage src={short.channelAvatar} />
-                      <AvatarFallback className="bg-muted text-foreground text-xs">{short.channel.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="bg-muted text-black dark:text-white text-xs">{short.channel.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <span className="text-foreground font-semibold text-sm truncate">{short.channel}</span>
-                    {/* Subscribe button removed */}
+                    <span className="text-black dark:text-white font-semibold text-sm truncate">{short.channel}</span>
                   </div>
                   <button onClick={() => openPanel("description")} className="text-left w-full">
-                    <p className="text-foreground/90 text-sm leading-relaxed line-clamp-2 hover:text-foreground transition-colors">{short.title}</p>
+                    <p className="text-black/90 dark:text-white/90 text-sm leading-relaxed line-clamp-2 hover:text-black dark:hover:text-white transition-colors">{short.title}</p>
                   </button>
                 </div>
 
                 <div className={`absolute right-3 bottom-28 flex flex-col gap-6 items-center z-20 transition-all duration-500 ${isActive && !isScrolling && !isTransitioning ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"}`}>
                   <button onClick={() => toggleLike(short.id)} className="flex flex-col items-center gap-1 group">
-                    <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all", isLiked[short.id] ? "bg-primary/20 scale-110" : "bg-background/10", "group-hover:bg-background/20 group-active:scale-95")}>
-                      <Heart className={cn("h-6 w-6", isLiked[short.id] ? "text-red-500 fill-red-500" : "text-foreground")} />
+                    <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all", isLiked[short.id] ? "scale-110" : "", "group-hover:bg-white/10 group-active:scale-95")} style={{ backgroundColor: isLiked[short.id] ? "rgba(255, 0, 0, 0.2)" : "#b5abab66" }}>
+                      <Heart className={cn("h-6 w-6", isLiked[short.id] ? "text-red-500 fill-red-500" : "text-black dark:text-white")} />
                     </div>
-                    <span className="text-foreground text-xs font-medium">{short.likes}</span>
+                    <span className="text-black dark:text-white text-xs font-medium">{short.likes}</span>
                   </button>
                   <button onClick={() => openPanel("comments")} className="flex flex-col items-center gap-1 group">
-                    <div className="w-12 h-12 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-background/20 transition-all group-active:scale-95">
-                      <MessageCircle className="h-6 w-6 text-foreground" />
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
+                      <MessageCircle className="h-6 w-6 text-black dark:text-white" />
                     </div>
-                    <span className="text-foreground text-xs font-medium">{short.comments}</span>
+                    <span className="text-black dark:text-white text-xs font-medium">{short.comments}</span>
                   </button>
                   <button onClick={() => setShowShareModal(true)} className="flex flex-col items-center gap-1 group">
-                    <div className="w-12 h-12 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-background/20 transition-all group-active:scale-95">
-                      <Share2 className="h-6 w-6 text-foreground" />
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
+                      <Share2 className="h-6 w-6 text-black dark:text-white" />
                     </div>
-                    <span className="text-foreground text-xs font-medium">Share</span>
+                    <span className="text-black dark:text-white text-xs font-medium">Share</span>
                   </button>
                   <button className="flex flex-col items-center gap-1 group">
-                    <div className="w-12 h-12 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-background/20 transition-all group-active:scale-95">
-                      <Bookmark className="h-6 w-6 text-foreground" />
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
+                      <Bookmark className="h-6 w-6 text-black dark:text-white" />
                     </div>
-                    <span className="text-foreground text-xs font-medium">Save</span>
+                    <span className="text-black dark:text-white text-xs font-medium">Save</span>
                   </button>
                   <button className="flex flex-col items-center gap-1 group">
-                    <div className="w-12 h-12 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-background/20 transition-all group-active:scale-95">
-                      <Flag className="h-6 w-6 text-foreground" />
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
+                      <Flag className="h-6 w-6 text-black dark:text-white" />
                     </div>
-                    <span className="text-foreground text-xs font-medium">Report</span>
+                    <span className="text-black dark:text-white text-xs font-medium">Report</span>
                   </button>
                 </div>
               </div>

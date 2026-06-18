@@ -76,7 +76,7 @@ export default function DesktopSidebar({ className }: DesktopSidebarProps) {
 
         <div className="border-t py-2">
           <SidebarItem href="/settings" icon={<Settings className="h-5 w-5" />} label="Settings" />
-          <SidebarItem href="/report" icon={<Flag className="h-5 w-5" />} label="Report history" />
+          {/* <SidebarItem href="/report" icon={<Flag className="h-5 w-5" />} label="Report history" /> */}
           <SidebarItem href="/help" icon={<HelpCircle className="h-5 w-5" />} label="Help" />
         </div>
       </aside>

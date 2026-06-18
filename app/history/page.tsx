@@ -235,15 +235,15 @@ export default function HistoryPage() {
           </div>
 
           {/* Page content */}
-          <div className="px-4 md:px-6 py-4 md:py-6">
+          <div className="px-4 md:px-6 py-2 md:py-6">
             {/* Top bar: heading, search, actions */}
             <div className="flex flex-col gap-4 mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-3">
                   {!isMobile && <h1 className="text-2xl font-bold">Watch History</h1>}
-                  {!isLoading && videos.length > 0 && (
+                  {/* {!isLoading && videos.length > 0 && (
                     <span className="text-sm text-muted-foreground">{videos.length} video{videos.length !== 1 ? 's' : ''}</span>
-                  )}
+                  )} */}
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="relative flex-1 sm:flex-none min-w-[200px]">
