@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const REPORT_REASONS = [
-  "Sexual content",
   "Violent or repulsive content",
   "Hateful or abusive content",
   "Harmful or dangerous acts",

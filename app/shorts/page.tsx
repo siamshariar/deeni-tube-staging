@@ -1,4 +1,5 @@
-// app/shorts/page.tsx (updated – dark mode panel backgrounds)
+// app/shorts/page.tsx
+// Updated: integrated ReportDialog and feedback modal, other UI unchanged.
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -14,7 +15,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { ReportDialog } from "@/components/report-dialog"
+import { toast } from "sonner"
 
 // ============ DATA & STORAGE ============
 
@@ -413,6 +419,11 @@ export default function ShortsPage() {
   const descTimerRef = useRef<NodeJS.Timeout | null>(null)
   const switchTimerRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Feedback dialog state
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
+  const [feedbackText, setFeedbackText] = useState("")
+  const [feedbackSent, setFeedbackSent] = useState(false)
+
   const currentShort = shortsData[currentIndex]
 
   // Sync liked/disliked to localStorage
@@ -593,6 +604,18 @@ export default function ShortsPage() {
 
   const currentDesc = descriptionsByVideo[currentShort?.id]
 
+  // ---- FEEDBACK HANDLING ----
+  const handleSendFeedback = () => {
+    if (!feedbackText.trim()) return
+    setFeedbackSent(true)
+    setTimeout(() => {
+      setFeedbackSent(false)
+      setFeedbackText("")
+      setShowFeedbackDialog(false)
+      toast.success("Feedback sent! Thank you.")
+    }, 1500)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <style>{`
@@ -608,7 +631,45 @@ export default function ShortsPage() {
       `}</style>
 
       <div className="relative z-50"><AppHeader /></div>
+
+      {/* Share Modal */}
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} />
+
+      {/* Feedback Dialog */}
+      <Dialog open={showFeedbackDialog} onOpenChange={setShowFeedbackDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-primary" /> Send Feedback</DialogTitle>
+            <DialogDescription>Help us improve Deeni.tube. Share your thoughts, suggestions, or report issues.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {feedbackSent ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="h-8 w-8 text-green-500" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Thank You!</h3>
+                <p className="text-sm text-muted-foreground">Your feedback has been sent successfully.</p>
+              </div>
+            ) : (
+              <>
+                <Textarea
+                  placeholder="Write your feedback here..."
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  className="min-h-[120px] resize-none"
+                />
+                <div className="flex gap-3">
+                  <Button variant="outline" className="flex-1" onClick={() => setShowFeedbackDialog(false)}>Cancel</Button>
+                  <Button className="flex-1" onClick={handleSendFeedback} disabled={!feedbackText.trim()}>
+                    <Send className="h-4 w-4 mr-2" /> Send
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="hidden md:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 flex-col gap-1 bg-background/80 dark:bg-[#b5abab66] rounded-full p-1.5 shadow-md">
         <button onClick={() => scrollToVideo(currentIndex - 1)} disabled={currentIndex === 0} className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronUp className="h-6 w-6" /></button>
@@ -856,13 +917,14 @@ export default function ShortsPage() {
                                 <div className="flex items-center gap-4">{captionsEnabled ? <CCIconOn className="h-5 w-5" /> : <CCIconOff className="h-5 w-5" />} Captions</div>
                                 <span className="text-muted-foreground text-xs">{captionsEnabled ? "On" : "Off"}</span>
                               </button>
-                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => setShowMoreMenu(false)}>
-                                <Ban className="h-5 w-5" /> Don't recommend this channel
-                              </button>
-                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => setShowMoreMenu(false)}>
-                                <Flag className="h-5 w-5" /> Report
-                              </button>
-                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => setShowMoreMenu(false)}>
+                              <ReportDialog videoTitle={short.title} videoId={short.id}>
+                                <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors">
+                                  <Flag className="h-5 w-5" />
+                                  <span>Report</span>
+                                </button>
+                              </ReportDialog>
+
+                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => { setShowMoreMenu(false); setShowFeedbackDialog(true); }}>
                                 <MessageSquare className="h-5 w-5" /> Send feedback
                               </button>
                               <div className="h-4 md:hidden" />
@@ -913,12 +975,14 @@ export default function ShortsPage() {
                     </div>
                     <span className="text-black dark:text-white text-xs font-medium">Save</span>
                   </button>
-                  <button className="flex flex-col items-center gap-1 group">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
-                      <Flag className="h-6 w-6 text-black dark:text-white" />
-                    </div>
-                    <span className="text-black dark:text-white text-xs font-medium">Report</span>
-                  </button>
+                  <ReportDialog videoTitle={short.title} videoId={short.id}>
+                    <button className="flex flex-col items-center gap-1 group">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
+                        <Flag className="h-6 w-6 text-black dark:text-white" />
+                      </div>
+                      <span className="text-black dark:text-white text-xs font-medium">Report</span>
+                    </button>
+                  </ReportDialog>
                 </div>
               </div>
             </section>

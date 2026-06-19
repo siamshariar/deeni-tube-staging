@@ -846,7 +846,7 @@ export const mockShorts = [
 ];
 
 export const mockAccounts = [
-  { id: "acc1", name: "Abdullah Rahman", email: "abdullah@example.com", avatar: "", initials: "AR" },
-  { id: "acc2", name: "Fatima Begum", email: "fatima@example.com", avatar: "", initials: "FB" },
+  { id: "acc1", name: "Tamzid Muhammad", email: "muhammad.tamzid@sun-asterisk.com", avatar: "", initials: "TM" },
+  { id: "acc2", name: "Abdullah Rahman", email: "abdullah@example.com", avatar: "", initials: "AR" },
   { id: "acc3", name: "Guest User", email: "guest@deeni.tube", avatar: "", initials: "GU" },
 ];
