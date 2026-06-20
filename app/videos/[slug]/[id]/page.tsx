@@ -1,3 +1,4 @@
+// app/videos/[slug]/[id]/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -21,7 +22,6 @@ import {
   Reply,
 } from "lucide-react";
 import AppHeader from "@/components/app-header";
-import MobileNav from "@/components/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,10 +40,147 @@ import {
 } from "@/components/ui/drawer";
 import { ShareModal } from "@/components/share-modal";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { mockVideos } from "@/lib/mock-data";
 import { toast } from "sonner";
 
-// Mock comments with nested replies
+// ─── Avatar URLs ─────────────────────────────────────────────────────
+const MONZUR_AVATAR =
+  "https://yt3.googleusercontent.com/ytc/AIdro_lLp3SxQeehJxSmd_QCmSxpFBj4k-7X-brif7v9Jz0rBg=s160-c-k-c0x00ffffff-no-rj";
+const ABDULLAH_AVATAR =
+  "https://yt3.googleusercontent.com/stJnVilfKhMtBiIq_hXTu-9DnanUT0GNtmsRePmQvLAi6c7bhXoIIHGlYL0HqUrdEjrL0KFs7Q=s160-c-k-c0x00ffffff-no-rj";
+
+// ─── 10 videos data ──────────────────────────────────────────────────
+const videoData = [
+  {
+    id: "v1",
+    videoId: "XVscS6piz9A",
+    title: "Islamic Halaka : শেষ জামানার ফিতনা ।। Prof. Dr. Mohammad Monzur-E-Elahi",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelAvatar: MONZUR_AVATAR,
+    duration: "18:44",
+    views: "2.3M views",
+    timeAgo: "6 months ago",
+    description:
+      "প্রফেসর ড. মোহাম্মদ মানজুরে ইলাহী\nপিএইচডি, শারী'আহ অনুষদ, মদীনা ইসলামী বিশ্ববিদ্যালয়",
+  },
+  {
+    id: "v2",
+    videoId: "UugARckPloo",
+    title:
+      "তরুণদের জন্য কুরআন-সুন্নাহ নির্দেশনা (পর্ব-১) ।। Prof. Dr. Mohammad Monzur-E-Elahi",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelAvatar: MONZUR_AVATAR,
+    duration: "25:10",
+    views: "1.8M views",
+    timeAgo: "3 months ago",
+    description:
+      "প্রফেসর ড. মোহাম্মদ মানজুরে ইলাহী\nপিএইচডি, শারী'আহ অনুষদ, মদীনা ইসলামী বিশ্ববিদ্যালয়",
+  },
+  {
+    id: "v3",
+    videoId: "gZ3C_UO_tZM",
+    title:
+      "প্রকৃত ঈমানদার ও তাকওয়াবান ব্যক্তির গুণাবলি ।। Prof. Dr. Mohammad Monzur-E-Elahi",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelAvatar: MONZUR_AVATAR,
+    duration: "32:45",
+    views: "1.2M views",
+    timeAgo: "2 weeks ago",
+    description:
+      "প্রফেসর ড. মোহাম্মদ মানজুরে ইলাহী\nপিএইচডি, শারী'আহ অনুষদ, মদীনা ইসলামী বিশ্ববিদ্যালয়",
+  },
+  {
+    id: "v4",
+    videoId: "rPEGK8WV1v4",
+    title:
+      "১৩৫. ইলম অর্জনে তারুণ্যের প্রতি কুরআন-সুন্নাহর দিক-নির্দেশনা।। Dr. Mohammad Monzur-E-Elahi",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelAvatar: MONZUR_AVATAR,
+    duration: "28:55",
+    views: "950K views",
+    timeAgo: "1 month ago",
+    description:
+      "প্রফেসর ড. মোহাম্মদ মানজুরে ইলাহী\nপিএইচডি, শারী'আহ অনুষদ, মদীনা ইসলামী বিশ্ববিদ্যালয়",
+  },
+  {
+    id: "v5",
+    videoId: "EtlK09Ikq4o",
+    title:
+      "জুমু'আর খুতবাহ : কুরআন মুখী জীবন ।। Dr. Mohammad Monzur-E-Elahi",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelAvatar: MONZUR_AVATAR,
+    duration: "20:18",
+    views: "1.5M views",
+    timeAgo: "4 months ago",
+    description:
+      "স্থান : মাসজিদ আত তাওহীদ ও ইসলামী কমপ্লেক্স খুতবাহ\nতারিখ : ১৯ এপ্রিল ২০২৪\n\nড. মোহাম্মদ মানজুরে ইলাহী\nপিএইচডি, শারী'আহ অনুষদ, মদীনা ইসলামী বিশ্ববিদ্যালয়",
+  },
+  {
+    id: "v6",
+    videoId: "908GzCFuysY",
+    title:
+      "জীবন ঘনিষ্ঠ গুরুত্বপূর্ণ কিছু প্রশ্নোত্তর│Question & Answer│Dr. Khondokar Abdullah Jahangir",
+    channel: "Dr. Khandaker Abdullah Jahangir Rh.",
+    channelAvatar: ABDULLAH_AVATAR,
+    duration: "45:12",
+    views: "3.1M views",
+    timeAgo: "1 year ago",
+    description:
+      "জীবন ঘনিষ্ঠ গুরুত্বপূর্ণ কিছু ইসলামিক প্রশ্নোত্তর। Islamic Question & Answer (Full Video) by Dr. Khondokar Abdullah Jahangir. বর্তমান সময়ের উপযোগী ডঃ খন্দকার আব্দুল্লাহ জাহাঙ্গীর (রহিমাহুল্লাহ) এর অতীব গুরুত্বপূর্ণ এবং তথ্যবহুল এই প্রশ্নোত্তরগুলি প্রতিটি মুসলিম নারী পুরুষকে অবশ্যই জেনে রাখা উচিৎ।",
+  },
+  {
+    id: "v7",
+    videoId: "bUNorIRvpaY",
+    title:
+      "Biography of Prophet (S.) Dr.Khandaker Abdullah Jahangir (Rh.) ড.খন্দকার আব্দুল্লাহ জাহাঙ্গীর (রহ.)।",
+    channel: "Dr. Khandaker Abdullah Jahangir Rh.",
+    channelAvatar: ABDULLAH_AVATAR,
+    duration: "55:30",
+    views: "2.4M views",
+    timeAgo: "2 years ago",
+    description: "ড.খন্দকার আব্দুল্লাহ জাহাঙ্গীর (রহ.)।",
+  },
+  {
+    id: "v8",
+    videoId: "rtVnA9EA0xg",
+    title:
+      "আত্মার তৃপ্তি কোথায়? | Dr. Abdullah Jahangir R. | অন্তরের প্রকৃত শান্তি পাওয়ার উপায়",
+    channel: "Dr. Khandaker Abdullah Jahangir Rh.",
+    channelAvatar: ABDULLAH_AVATAR,
+    duration: "40:05",
+    views: "1.9M views",
+    timeAgo: "8 months ago",
+    description:
+      "আসসালামু আলাইকুম,\nআজকের এই আধুনিক যুগে আমাদের চারপাশে সব ধরনের ভোগ-বিলাসের উপাদান থাকা সত্ত্বেও মানুষের মনে শান্তি নেই। সব পেয়েও যেন মানুষ এক চরম মানসিক অশান্তি ও শূন্যতায় ভুগছে। ড. আব্দুল্লাহ জাহাঙ্গীর (রাহিমাহুল্লাহ) এই ভিডিওতে কুরআন ও সুন্নাহর আলোকে আলোচনা করেছেন যে, মানুষের আত্মার আসল তৃপ্তি ও প্রশান্তি আসলে কোথায় লুকিয়ে আছে।",
+  },
+  {
+    id: "v9",
+    videoId: "kVbpcXFFeWQ",
+    title:
+      "এত সুন্দর করে আর কে বুঝাবে || খন্দকার আবদুল্লাহ জাহাঙ্গীর Abdullaha Jahangir, MAAS Islamic Media",
+    channel: "Dr. Khandaker Abdullah Jahangir Rh.",
+    channelAvatar: ABDULLAH_AVATAR,
+    duration: "22:15",
+    views: "1.3M views",
+    timeAgo: "5 months ago",
+    description:
+      "হৃদয়স্পর্শী লেকচার || এত সুন্দর করে আর কে বুঝাবে  || খন্দকার আবদুল্লাহ জাহাঙ্গীর Abdullaha Jahangir, MAAS Islamic Media",
+  },
+  {
+    id: "v10",
+    videoId: "9K_wuVawflg",
+    title:
+      "আখিরাতের চিন্তা এবং আব্দুল কাদের জিলানী রহমতুল্লাহি আলাইহির জীবনী│by Dr. Khondokar Abdullah Jahangir",
+    channel: "Dr. Khandaker Abdullah Jahangir Rh.",
+    channelAvatar: ABDULLAH_AVATAR,
+    duration: "35:48",
+    views: "2.7M views",
+    timeAgo: "10 months ago",
+    description:
+      "আল্লাহুয়াকবার! কি প্রাণচঞ্চল একটি আলোচনা! আখিরাতের চিন্তা এবং আব্দুল কাদের জিলানী রহমতুল্লাহি আলাইহির জীবনী। Amazing Islamic Lecture by Dr. Khondokar Abdullah Jahangir.",
+  },
+];
+
+// ─── Mock comments (unchanged) ─────────────────────────────────────
 const mockCommentsWithReplies = [
   {
     id: "c1",
@@ -107,6 +244,7 @@ const mockCommentsWithReplies = [
   },
 ];
 
+// ─── Skeletons ─────────────────────────────────────────────────────
 function CommentSkeleton() {
   return (
     <div className="flex gap-3 py-3">
@@ -120,7 +258,6 @@ function CommentSkeleton() {
   );
 }
 
-// Recursive reply component
 function ReplyItem({
   reply,
   onLike,
@@ -164,12 +301,16 @@ function ReplyItem({
       <div className="flex gap-2.5">
         <Avatar className="h-7 w-7 flex-shrink-0">
           <AvatarImage src={reply.avatar} />
-          <AvatarFallback className="text-[10px]">{reply.user.charAt(0)}</AvatarFallback>
+          <AvatarFallback className="text-[10px]">
+            {reply.user.charAt(0)}
+          </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-medium">{displayName}</span>
-            <span className="text-[10px] text-muted-foreground">{reply.timeAgo}</span>
+            <span className="text-[10px] text-muted-foreground">
+              {reply.timeAgo}
+            </span>
           </div>
           <p className="text-sm mt-0.5">{reply.content}</p>
           <div className="flex items-center gap-2 mt-1.5">
@@ -179,7 +320,9 @@ function ReplyItem({
                 isLiked ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <ThumbsUp className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
+              <ThumbsUp
+                className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`}
+              />
               <span className="text-xs">{reply.likes}</span>
             </button>
             <button
@@ -188,7 +331,9 @@ function ReplyItem({
                 isDisliked ? "text-destructive" : "text-muted-foreground"
               }`}
             >
-              <ThumbsDown className={`h-4 w-4 ${isDisliked ? "fill-current" : ""}`} />
+              <ThumbsDown
+                className={`h-4 w-4 ${isDisliked ? "fill-current" : ""}`}
+              />
             </button>
             <button
               onClick={() => setShowReplyInput(!showReplyInput)}
@@ -264,30 +409,44 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
+// ─── Main Component ─────────────────────────────────────────────────
 export default function VideoPlayPage() {
   const router = useRouter();
   const params = useParams();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const [video, setVideo] = useState(mockVideos[0]);
-  const [relatedVideos, setRelatedVideos] = useState(mockVideos.slice(1, 7));
+  const [mainVideo, setMainVideo] = useState(videoData[0]);
+  const [relatedVideos, setRelatedVideos] = useState(videoData.slice(1));
+
   const [comments, setComments] = useState(mockCommentsWithReplies);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [descriptionDrawerOpen, setDescriptionDrawerOpen] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const [commentsDrawerOpen, setCommentsDrawerOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
-  const [dislikedComments, setDislikedComments] = useState<Set<string>>(
-    new Set()
-  );
+  const [dislikedComments, setDislikedComments] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(timer);
   }, []);
+
+  // Switch main video when route changes
+  useEffect(() => {
+    const slug = params?.slug as string;
+    const videoId = params?.id as string;
+    const found = videoData.find(
+      (v) => v.videoId === videoId || (slug && v.channel.toLowerCase().includes(slug.toLowerCase()))
+    );
+    if (found) {
+      setMainVideo(found);
+      setRelatedVideos(videoData.filter((v) => v.id !== found.id));
+      setShowFullDescription(false); // reset expansion on video change
+    }
+  }, [params]);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -335,19 +494,13 @@ export default function VideoPlayPage() {
       prev.map((c) => {
         if (c.id === commentId) {
           const isLikedNow = !likedComments.has(commentId);
-          return {
-            ...c,
-            likes: isLikedNow ? c.likes + 1 : c.likes - 1,
-          };
+          return { ...c, likes: isLikedNow ? c.likes + 1 : c.likes - 1 };
         }
         if (c.replies) {
           const updatedReplies = c.replies.map((r) => {
             if (r.id === commentId) {
               const isLikedNow = !likedComments.has(commentId);
-              return {
-                ...r,
-                likes: isLikedNow ? r.likes + 1 : r.likes - 1,
-              };
+              return { ...r, likes: isLikedNow ? r.likes + 1 : r.likes - 1 };
             }
             return r;
           });
@@ -377,19 +530,13 @@ export default function VideoPlayPage() {
       prev.map((c) => {
         if (c.id === commentId) {
           const isDislikedNow = !dislikedComments.has(commentId);
-          return {
-            ...c,
-            dislikes: isDislikedNow ? c.dislikes + 1 : c.dislikes - 1,
-          };
+          return { ...c, dislikes: isDislikedNow ? c.dislikes + 1 : c.dislikes - 1 };
         }
         if (c.replies) {
           const updatedReplies = c.replies.map((r) => {
             if (r.id === commentId) {
               const isDislikedNow = !dislikedComments.has(commentId);
-              return {
-                ...r,
-                dislikes: isDislikedNow ? r.dislikes + 1 : r.dislikes - 1,
-              };
+              return { ...r, dislikes: isDislikedNow ? r.dislikes + 1 : r.dislikes - 1 };
             }
             return r;
           });
@@ -404,266 +551,248 @@ export default function VideoPlayPage() {
     toast("Reply input opened (demo)");
   };
 
-  const videoSrc =
-    (video as any).videoUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
+  // Auto-play URL
+  const videoSrc = `https://www.youtube.com/embed/${mainVideo.videoId}?autoplay=1`;
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <div className="pt-[56px] md:pt-[72px] pb-nav-safe md:pb-6 px-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1 min-w-0">
-            {/* Video player – responsive with taller aspect on mobile, shorter on desktop */}
-            <div className="w-full bg-black rounded-xl overflow-hidden">
-              <div className="relative w-full aspect-[4/3] md:aspect-video md:max-h-[75vh] md:mx-auto">
-                <iframe
-                  src={videoSrc}
-                  title={video.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full"
-                />
-              </div>
+
+      {/* Mobile back button – fixed below header, consistent layout */}
+      {isMobile && (
+        <div className="fixed top-[56px] left-0 right-0 z-10 bg-background/95 backdrop-blur-sm border-b">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1.5 px-4 py-2 w-full"
+          >
+            <ArrowLeft className="h-6 w-6 shrink-0" />
+            <span className="text-sm font-medium line-clamp-1 text-left">
+              {mainVideo.title}
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Main layout */}
+      <div className="pt-0 md:pt-[72px] pb-6" style={isMobile ? { paddingTop: 0 } : {}}>
+        {/* Mobile: full-width video */}
+        {isMobile && (
+          <div className="w-full bg-black" style={{ marginTop: "calc(56px + 48px)" }}>
+            <div className="relative w-full aspect-video">
+              <iframe
+                src={videoSrc}
+                title={mainVideo.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
             </div>
+          </div>
+        )}
 
-            {/* Video info - unchanged */}
-            <div className="mt-2">
-              <h1 className="text-lg md:text-xl font-bold leading-tight">
-                {video.title}
-              </h1>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={video.channelAvatar} />
-                    <AvatarFallback>{video.channel.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">{video.channel}</p>
-                    <p className="text-xs text-muted-foreground">
-                      780K subscribers
-                    </p>
+        <div className="px-4 md:px-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 min-w-0">
+              {/* Desktop video player */}
+              {!isMobile && (
+                <div className="w-full bg-black rounded-xl overflow-hidden">
+                  <div className="relative w-full aspect-video md:max-h-[75vh] md:mx-auto">
+                    <iframe
+                      src={videoSrc}
+                      title={mainVideo.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full"
+                    />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center bg-muted rounded-full overflow-hidden">
-                    <button
-                      onClick={handleLike}
-                      className={`flex items-center gap-2 px-4 py-2 hover:bg-muted/80 transition-colors border-r border-border ${
-                        isLiked ? "text-foreground" : ""
-                      }`}
-                    >
-                      <ThumbsUp
-                        className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`}
-                      />
-                      <span className="text-sm font-medium">15K</span>
-                    </button>
-                    <button
-                      onClick={handleDislike}
-                      className={`px-4 py-2 hover:bg-muted/80 transition-colors ${
-                        isDisliked ? "text-foreground" : ""
-                      }`}
-                    >
-                      <ThumbsDown
-                        className={`h-5 w-5 ${isDisliked ? "fill-current" : ""}`}
-                      />
-                    </button>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full"
-                    onClick={() => setShowShareModal(true)}
-                  >
-                    <Share className="h-5 w-5" />
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full"
-                      >
-                        <MoreHorizontal className="h-5 w-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-72">
-                      <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                        <Clock className="h-5 w-5" /> Save to Watch later
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                        <Bookmark className="h-5 w-5" /> Save to playlist
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => toast("Channel removed from feed")}
-                        className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-                      >
-                        <UserX className="h-5 w-5" /> Don't recommend channel
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          toast("Video removed");
-                          setTimeout(() => router.back(), 1000);
-                        }}
-                        className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-                      >
-                        <EyeOff className="h-5 w-5" /> Not interested
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                        <Flag className="h-5 w-5" /> Report
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
+              )}
 
-              {/* Description */}
-              <div className="mt-2 bg-muted/40 rounded-xl p-3 md:p-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">{video.views}</span>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-muted-foreground">{video.timeAgo}</span>
-                </div>
-                {!isMobile ? (
-                  <p className="text-sm mt-1 whitespace-pre-wrap">
-                    {video.description}
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-sm mt-1 line-clamp-2">
-                      {video.description}
-                    </p>
-                    <button
-                      onClick={() => setDescriptionDrawerOpen(true)}
-                      className="text-sm text-primary hover:underline font-medium mt-1"
-                    >
-                      Read more
-                    </button>
-                  </>
-                )}
-              </div>
-
-              <Drawer
-                open={descriptionDrawerOpen}
-                onOpenChange={setDescriptionDrawerOpen}
-              >
-                <DrawerContent className="max-h-[80vh]">
-                  <DrawerHeader>
-                    <DrawerTitle className="text-lg">
-                      About this video
-                    </DrawerTitle>
-                  </DrawerHeader>
-                  <div className="p-4 overflow-y-auto">
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {video.description}
-                    </p>
-                  </div>
-                </DrawerContent>
-              </Drawer>
-
-              {/* Comments */}
-              <div className="mt-4">
-                {!isMobile ? (
-                  <div>
-                    <div className="flex items-center gap-6 mb-4">
-                      <MessageCircle className="h-5 w-5" />
-                      <span className="font-semibold text-base">
-                        {comments.length} Comments
-                      </span>
+              {/* Video info */}
+              <div className="mt-2">
+                <h1 className="text-lg md:text-xl font-bold leading-tight">
+                  {mainVideo.title}
+                </h1>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={mainVideo.channelAvatar} />
+                      <AvatarFallback>{mainVideo.channel.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{mainVideo.channel}</p>
+                      <p className="text-xs text-muted-foreground">
+                        780K subscribers
+                      </p>
                     </div>
-                    <div className="flex gap-3 mb-6">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>Y</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder="Add a comment..."
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && handleAddComment()
-                          }
-                          className="w-full bg-transparent border-b border-border pb-1.5 text-sm focus:outline-none focus:ring-0 placeholder:text-muted-foreground"
-                        />
-                        {commentText && (
-                          <div className="flex items-center gap-2 mt-3 justify-end">
-                            <button
-                              onClick={() => setCommentText("")}
-                              className="text-sm font-medium hover:bg-muted rounded-full px-4 py-2"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={handleAddComment}
-                              className="text-sm font-medium bg-foreground text-background rounded-full px-4 py-2 hover:bg-foreground/90 disabled:opacity-50"
-                              disabled={!commentText.trim()}
-                            >
-                              Comment
-                            </button>
-                          </div>
-                        )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center bg-muted rounded-full overflow-hidden">
+                      <button
+                        onClick={handleLike}
+                        className={`flex items-center gap-2 px-4 py-2 hover:bg-muted/80 transition-colors border-r border-border ${
+                          isLiked ? "text-foreground" : ""
+                        }`}
+                      >
+                        <ThumbsUp className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
+                        <span className="text-sm font-medium">15K</span>
+                      </button>
+                      <button
+                        onClick={handleDislike}
+                        className={`px-4 py-2 hover:bg-muted/80 transition-colors ${
+                          isDisliked ? "text-foreground" : ""
+                        }`}
+                      >
+                        <ThumbsDown className={`h-5 w-5 ${isDisliked ? "fill-current" : ""}`} />
+                      </button>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full"
+                      onClick={() => setShowShareModal(true)}
+                    >
+                      <Share className="h-5 w-5" />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="rounded-full">
+                          <MoreHorizontal className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-72">
+                        <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                          <Clock className="h-5 w-5" /> Save to Watch later
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                          <Bookmark className="h-5 w-5" /> Save to playlist
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => toast("Channel removed from feed")}
+                          className="flex items-center gap-3 px-4 py-3 cursor-pointer"
+                        >
+                          <UserX className="h-5 w-5" /> Don't recommend channel
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            toast("Video removed");
+                            setTimeout(() => router.back(), 1000);
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 cursor-pointer"
+                        >
+                          <EyeOff className="h-5 w-5" /> Not interested
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                          <Flag className="h-5 w-5" /> Report
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+
+                {/* Description – inline expand on mobile */}
+                <div className="mt-2 bg-muted/40 rounded-xl p-3 md:p-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium">{mainVideo.views}</span>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground">{mainVideo.timeAgo}</span>
+                  </div>
+                  {isMobile && !showFullDescription ? (
+                    <>
+                      <p className="text-sm mt-1 line-clamp-2">
+                        {mainVideo.description}
+                      </p>
+                      <button
+                        onClick={() => setShowFullDescription(true)}
+                        className="text-sm text-primary hover:underline font-medium mt-1"
+                      >
+                        Read more
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-sm mt-1 whitespace-pre-wrap">
+                      {mainVideo.description}
+                      {isMobile && showFullDescription && (
+                        <button
+                          onClick={() => setShowFullDescription(false)}
+                          className="text-primary ml-1 hover:underline font-medium text-sm"
+                        >
+                          Show less
+                        </button>
+                      )}
+                    </p>
+                  )}
+                </div>
+
+                {/* Comments */}
+                <div className="mt-4">
+                  {!isMobile ? (
+                    <div>
+                      <div className="flex items-center gap-6 mb-4">
+                        <MessageCircle className="h-5 w-5" />
+                        <span className="font-semibold text-base">
+                          {comments.length} Comments
+                        </span>
                       </div>
-                    </div>
-                    {isLoading ? (
-                      <CommentSkeleton />
-                    ) : (
-                      comments.map((comment) => (
+                      <div className="flex gap-3 mb-6">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>Y</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="Add a comment..."
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
+                            className="w-full bg-transparent border-b border-border pb-1.5 text-sm focus:outline-none focus:ring-0 placeholder:text-muted-foreground"
+                          />
+                          {commentText && (
+                            <div className="flex items-center gap-2 mt-3 justify-end">
+                              <button onClick={() => setCommentText("")} className="text-sm font-medium hover:bg-muted rounded-full px-4 py-2">
+                                Cancel
+                              </button>
+                              <button
+                                onClick={handleAddComment}
+                                className="text-sm font-medium bg-foreground text-background rounded-full px-4 py-2 hover:bg-foreground/90 disabled:opacity-50"
+                                disabled={!commentText.trim()}
+                              >
+                                Comment
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {comments.map((comment) => (
                         <div key={comment.id} className="py-3 border-b last:border-0">
                           <div className="flex gap-3">
                             <Avatar className="h-8 w-8">
                               <AvatarImage src={comment.avatar} />
-                              <AvatarFallback>
-                                {comment.user.charAt(0)}
-                              </AvatarFallback>
+                              <AvatarFallback>{comment.user.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">
-                                  {comment.user}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {comment.timeAgo}
-                                </span>
+                                <span className="text-sm font-medium">{comment.user}</span>
+                                <span className="text-xs text-muted-foreground">{comment.timeAgo}</span>
                               </div>
                               <p className="text-sm mt-0.5">{comment.content}</p>
                               <div className="flex items-center gap-2 mt-1.5">
                                 <button
                                   onClick={() => handleLikeComment(comment.id)}
                                   className={`flex items-center gap-1.5 hover:bg-muted rounded-full px-2.5 py-1 transition-colors ${
-                                    likedComments.has(comment.id)
-                                      ? "text-primary"
-                                      : "text-muted-foreground"
+                                    likedComments.has(comment.id) ? "text-primary" : "text-muted-foreground"
                                   }`}
                                 >
-                                  <ThumbsUp
-                                    className={`h-4 w-4 ${
-                                      likedComments.has(comment.id)
-                                        ? "fill-current"
-                                        : ""
-                                    }`}
-                                  />
-                                  <span className="text-xs">
-                                    {comment.likes}
-                                  </span>
+                                  <ThumbsUp className={`h-4 w-4 ${likedComments.has(comment.id) ? "fill-current" : ""}`} />
+                                  <span className="text-xs">{comment.likes}</span>
                                 </button>
                                 <button
-                                  onClick={() =>
-                                    handleDislikeComment(comment.id)
-                                  }
+                                  onClick={() => handleDislikeComment(comment.id)}
                                   className={`hover:bg-muted rounded-full p-1 transition-colors ${
-                                    dislikedComments.has(comment.id)
-                                      ? "text-destructive"
-                                      : "text-muted-foreground"
+                                    dislikedComments.has(comment.id) ? "text-destructive" : "text-muted-foreground"
                                   }`}
                                 >
-                                  <ThumbsDown
-                                    className={`h-4 w-4 ${
-                                      dislikedComments.has(comment.id)
-                                        ? "fill-current"
-                                        : ""
-                                    }`}
-                                  />
+                                  <ThumbsDown className={`h-4 w-4 ${dislikedComments.has(comment.id) ? "fill-current" : ""}`} />
                                 </button>
                                 <button
                                   onClick={() => handleReply(comment.id)}
@@ -672,9 +801,9 @@ export default function VideoPlayPage() {
                                   Reply
                                 </button>
                               </div>
-                              {comment.replies && comment.replies.length > 0 && (
+                              {comment.replies?.length > 0 && (
                                 <div className="mt-2">
-                                  {comment.replies.map((reply) => (
+                                  {comment.replies.map((reply: any) => (
                                     <ReplyItem
                                       key={reply.id}
                                       reply={reply}
@@ -690,135 +819,88 @@ export default function VideoPlayPage() {
                             </div>
                           </div>
                         </div>
-                      ))
-                    )}
-                  </div>
-                ) : (
-                  <Drawer
-                    open={commentsDrawerOpen}
-                    onOpenChange={setCommentsDrawerOpen}
-                  >
-                    <DrawerTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full rounded-full flex items-center gap-2"
-                      >
-                        <MessageCircle className="h-4 w-4" /> {comments.length}{" "}
-                        Comments
-                      </Button>
-                    </DrawerTrigger>
-                    <DrawerContent className="h-[80vh]">
-                      <DrawerHeader>
-                        <DrawerTitle className="text-lg">Comments</DrawerTitle>
-                      </DrawerHeader>
-                      <div className="px-4 overflow-y-auto">
-                        {/* Mobile comments */}
-                        <div className="flex gap-3 mb-6">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>Y</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <input
-                              type="text"
-                              placeholder="Add a comment..."
-                              value={commentText}
-                              onChange={(e) => setCommentText(e.target.value)}
-                              onKeyDown={(e) =>
-                                e.key === "Enter" && handleAddComment()
-                              }
-                              className="w-full bg-transparent border-b border-border pb-1.5 text-sm focus:outline-none focus:ring-0"
-                            />
-                            {commentText && (
-                              <div className="flex items-center gap-2 mt-2 justify-end">
-                                <button
-                                  onClick={() => setCommentText("")}
-                                  className="text-sm font-medium hover:bg-muted rounded-full px-3 py-1"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={handleAddComment}
-                                  className="text-sm font-medium bg-foreground text-background rounded-full px-3 py-1 disabled:opacity-50"
-                                  disabled={!commentText.trim()}
-                                >
-                                  Comment
-                                </button>
-                              </div>
-                            )}
+                      ))}
+                    </div>
+                  ) : (
+                    <Drawer open={commentsDrawerOpen} onOpenChange={setCommentsDrawerOpen}>
+                      <DrawerTrigger asChild>
+                        <Button variant="outline" className="w-full rounded-full flex items-center gap-2">
+                          <MessageCircle className="h-4 w-4" /> {comments.length} Comments
+                        </Button>
+                      </DrawerTrigger>
+                      <DrawerContent className="h-[80vh]">
+                        <DrawerHeader>
+                          <DrawerTitle className="text-lg">Comments</DrawerTitle>
+                        </DrawerHeader>
+                        <div className="px-4 overflow-y-auto">
+                          <div className="flex gap-3 mb-6">
+                            <Avatar className="h-8 w-8"><AvatarFallback>Y</AvatarFallback></Avatar>
+                            <div className="flex-1">
+                              <input
+                                type="text"
+                                placeholder="Add a comment..."
+                                value={commentText}
+                                onChange={(e) => setCommentText(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
+                                className="w-full bg-transparent border-b border-border pb-1.5 text-sm focus:outline-none focus:ring-0"
+                              />
+                              {commentText && (
+                                <div className="flex items-center gap-2 mt-2 justify-end">
+                                  <button onClick={() => setCommentText("")} className="text-sm font-medium hover:bg-muted rounded-full px-3 py-1">
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={handleAddComment}
+                                    className="text-sm font-medium bg-foreground text-background rounded-full px-3 py-1 disabled:opacity-50"
+                                    disabled={!commentText.trim()}
+                                  >
+                                    Comment
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        {comments.map((comment) => (
-                          <div key={comment.id} className="py-3 border-b last:border-0">
-                            <div className="flex gap-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={comment.avatar} />
-                                <AvatarFallback>
-                                  {comment.user.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium">
-                                    {comment.user}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {comment.timeAgo}
-                                  </span>
-                                </div>
-                                <p className="text-sm mt-0.5">
-                                  {comment.content}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1.5">
-                                  <button
-                                    onClick={() =>
-                                      handleLikeComment(comment.id)
-                                    }
-                                    className={`flex items-center gap-1.5 hover:bg-muted rounded-full px-2.5 py-1 transition-colors ${
-                                      likedComments.has(comment.id)
-                                        ? "text-primary"
-                                        : "text-muted-foreground"
-                                    }`}
-                                  >
-                                    <ThumbsUp
-                                      className={`h-4 w-4 ${
-                                        likedComments.has(comment.id)
-                                          ? "fill-current"
-                                          : ""
+                          {comments.map((comment) => (
+                            <div key={comment.id} className="py-3 border-b last:border-0">
+                              <div className="flex gap-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={comment.avatar} />
+                                  <AvatarFallback>{comment.user.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium">{comment.user}</span>
+                                    <span className="text-xs text-muted-foreground">{comment.timeAgo}</span>
+                                  </div>
+                                  <p className="text-sm mt-0.5">{comment.content}</p>
+                                  <div className="flex items-center gap-2 mt-1.5">
+                                    <button
+                                      onClick={() => handleLikeComment(comment.id)}
+                                      className={`flex items-center gap-1.5 hover:bg-muted rounded-full px-2.5 py-1 transition-colors ${
+                                        likedComments.has(comment.id) ? "text-primary" : "text-muted-foreground"
                                       }`}
-                                    />
-                                    <span className="text-xs">
-                                      {comment.likes}
-                                    </span>
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleDislikeComment(comment.id)
-                                    }
-                                    className={`hover:bg-muted rounded-full p-1 transition-colors ${
-                                      dislikedComments.has(comment.id)
-                                        ? "text-destructive"
-                                        : "text-muted-foreground"
-                                    }`}
-                                  >
-                                    <ThumbsDown
-                                      className={`h-4 w-4 ${
-                                        dislikedComments.has(comment.id)
-                                          ? "fill-current"
-                                          : ""
+                                    >
+                                      <ThumbsUp className={`h-4 w-4 ${likedComments.has(comment.id) ? "fill-current" : ""}`} />
+                                      <span className="text-xs">{comment.likes}</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDislikeComment(comment.id)}
+                                      className={`hover:bg-muted rounded-full p-1 transition-colors ${
+                                        dislikedComments.has(comment.id) ? "text-destructive" : "text-muted-foreground"
                                       }`}
-                                    />
-                                  </button>
-                                  <button
-                                    onClick={() => handleReply(comment.id)}
-                                    className="text-xs text-muted-foreground hover:bg-muted rounded-full px-2.5 py-1 transition-colors"
-                                  >
-                                    Reply
-                                  </button>
-                                </div>
-                                {comment.replies &&
-                                  comment.replies.length > 0 && (
+                                    >
+                                      <ThumbsDown className={`h-4 w-4 ${dislikedComments.has(comment.id) ? "fill-current" : ""}`} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleReply(comment.id)}
+                                      className="text-xs text-muted-foreground hover:bg-muted rounded-full px-2.5 py-1 transition-colors"
+                                    >
+                                      Reply
+                                    </button>
+                                  </div>
+                                  {comment.replies?.length > 0 && (
                                     <div className="mt-2">
-                                      {comment.replies.map((reply) => (
+                                      {comment.replies.map((reply: any) => (
                                         <ReplyItem
                                           key={reply.id}
                                           reply={reply}
@@ -826,47 +908,87 @@ export default function VideoPlayPage() {
                                           onDislike={handleDislikeComment}
                                           onReply={handleReply}
                                           isLiked={likedComments.has(reply.id)}
-                                          isDisliked={dislikedComments.has(
-                                            reply.id
-                                          )}
+                                          isDisliked={dislikedComments.has(reply.id)}
                                         />
                                       ))}
                                     </div>
                                   )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </DrawerContent>
-                  </Drawer>
-                )}
+                          ))}
+                        </div>
+                      </DrawerContent>
+                    </Drawer>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Related Videos – same width as playlist panel */}
-          <div className="lg:w-[450px] flex-shrink-0">
+            {/* Related Videos – Desktop */}
+            {!isMobile && (
+              <div className="lg:w-[450px] flex-shrink-0">
+                <h3 className="font-semibold text-base mb-4">Related Videos</h3>
+                <div className="space-y-3">
+                  {relatedVideos.map((v) => (
+                    <Link
+                      key={v.id}
+                      href={`/videos/${v.channel}/${v.videoId}`}
+                      className="flex gap-2 group hover:bg-muted/30 rounded-lg p-1 transition-colors"
+                    >
+                      <div className="relative w-[168px] h-[94px] flex-shrink-0">
+                        <Image
+                          src={`https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`}
+                          alt={v.title}
+                          fill
+                          className="object-cover rounded-lg"
+                        />
+                        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium">
+                          {v.duration}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0 py-1">
+                        <h4 className="font-medium text-sm line-clamp-2 group-hover:text-primary">
+                          {v.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {v.channel}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {v.views} • {v.timeAgo}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Related Videos – Mobile */}
+        {isMobile && (
+          <div className="px-4 mt-6">
             <h3 className="font-semibold text-base mb-4">Related Videos</h3>
             <div className="space-y-3">
               {relatedVideos.map((v) => (
                 <Link
                   key={v.id}
-                  href={`/videos/${v.channel}/${v.id}`}
-                  className="flex gap-2 group hover:bg-muted/30 rounded-lg p-1 transition-colors"
+                  href={`/videos/${v.channel}/${v.videoId}`}
+                  className="flex gap-3 group py-2 border-b last:border-0"
                 >
-                  <div className="relative w-[168px] h-[94px] flex-shrink-0">
+                  <div className="relative w-40 aspect-video flex-shrink-0">
                     <Image
-                      src={v.thumbnail}
+                      src={`https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`}
                       alt={v.title}
                       fill
                       className="object-cover rounded-lg"
                     />
-                    <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium">
+                    <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 py-0.5 rounded font-medium">
                       {v.duration}
                     </div>
                   </div>
-                  <div className="flex-1 min-w-0 py-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm line-clamp-2 group-hover:text-primary">
                       {v.title}
                     </h4>
@@ -881,7 +1003,7 @@ export default function VideoPlayPage() {
               ))}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Share Modal */}
@@ -890,8 +1012,6 @@ export default function VideoPlayPage() {
         onClose={() => setShowShareModal(false)}
         videoUrl={typeof window !== "undefined" ? window.location.href : ""}
       />
-
-      <MobileNav />
     </div>
   );
 }

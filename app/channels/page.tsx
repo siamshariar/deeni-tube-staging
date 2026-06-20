@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { mockChannels, mockLanguages } from "@/lib/mock-data";
+import { channelData, ChannelItem } from "@/lib/channel-data";
 import { toast } from "sonner";
 
 function ChannelSkeleton() {
@@ -34,16 +34,31 @@ export default function ChannelsPage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["en"]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["bn"]); // default Bangla
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [followedChannels, setFollowedChannels] = useState<string[]>(
-    mockChannels.map((ch) => ch.id)
-  );
+  const [followedChannels, setFollowedChannels] = useState<string[]>([]);
 
+  // Load initial visibility from localStorage
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
+    const saved = localStorage.getItem("feed-visible-channels");
+    if (saved) {
+      try {
+        setFollowedChannels(JSON.parse(saved));
+        return () => clearTimeout(timer);
+      } catch {}
+    }
+    // Default: all channels visible
+    const allIds = channelData.map((ch: ChannelItem) => ch.id);
+    setFollowedChannels(allIds);
     return () => clearTimeout(timer);
   }, []);
+
+  // Persist visibility changes to localStorage
+  const persistVisibility = (newList: string[]) => {
+    localStorage.setItem("feed-visible-channels", JSON.stringify(newList));
+    setFollowedChannels(newList);
+  };
 
   const toggleLanguage = (code: string) => {
     setSelectedLanguages((prev) =>
@@ -60,7 +75,7 @@ export default function ChannelsPage() {
       const newList = prev.includes(channelId)
         ? prev.filter((id) => id !== channelId)
         : [...prev, channelId];
-      const channel = mockChannels.find((ch) => ch.id === channelId);
+      const channel = channelData.find((ch: ChannelItem) => ch.id === channelId);
       if (channel) {
         toast.success(
           newList.includes(channelId)
@@ -68,16 +83,18 @@ export default function ChannelsPage() {
             : `Hidden ${channel.name} from feed`
         );
       }
+      persistVisibility(newList);
       return newList;
     });
   };
 
-  const filteredChannels = mockChannels
-    .filter((ch) => selectedLanguages.includes(ch.language))
-    .filter((ch) =>
-      !searchQuery || ch.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredChannels: ChannelItem[] = channelData
+    .filter((ch: ChannelItem) => selectedLanguages.includes(ch.language))
+    .filter(
+      (ch: ChannelItem) =>
+        !searchQuery || ch.name.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    .sort((a, b) =>
+    .sort((a: ChannelItem, b: ChannelItem) =>
       sortOrder === "asc"
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name)
@@ -89,13 +106,19 @@ export default function ChannelsPage() {
     return `${count} subscribers`;
   };
 
+  const mockLanguages = [
+    { code: "bn", name: "Bangla" },
+    { code: "en", name: "English" },
+    { code: "ar", name: "Arabic" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
       <div className="flex">
         <DesktopSidebar className="hidden md:block" />
         <div className="flex-1 md:pl-[240px] md:pt-[34px] pb-nav-safe md:pb-6 overflow-x-hidden">
-          {/* Mobile header – back button + title */}
+          {/* Mobile back button + title */}
           <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
             <button
               onClick={() => router.back()}
@@ -107,17 +130,15 @@ export default function ChannelsPage() {
           </div>
 
           <div className="px-4 md:px-6 py-6 md:py-6">
-            {/* Page header – search always visible */}
             <div className="flex flex-col mt-12 sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              {/* Channel count*/}
               <div className="hidden md:block">
                 <h1 className="text-2xl font-bold">Channels</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
+                  {filteredChannels.length} channel
+                  {filteredChannels.length !== 1 ? "s" : ""}
                 </p>
               </div>
 
-              {/* Search + Sort*/}
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -156,7 +177,7 @@ export default function ChannelsPage() {
               </div>
             </div>
 
-            {/* Language filter chips */}
+            {/* Language chips */}
             <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
               {mockLanguages.map((lang) => (
                 <button
@@ -193,8 +214,8 @@ export default function ChannelsPage() {
               </div>
             ) : (
               <div className="divide-y">
-                {filteredChannels.map((channel) => {
-                  const isOn = followedChannels.includes(channel.id);
+                {filteredChannels.map((channel: ChannelItem) => {
+                  const isVisible = followedChannels.includes(channel.id);
                   return (
                     <div
                       key={channel.id}
@@ -206,7 +227,9 @@ export default function ChannelsPage() {
                       >
                         <Avatar className="h-12 w-12 md:h-14 md:w-14 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
                           <AvatarImage src={channel.avatar} />
-                          <AvatarFallback>{channel.name.charAt(0)}</AvatarFallback>
+                          <AvatarFallback>
+                            {channel.name.charAt(0)}
+                          </AvatarFallback>
                         </Avatar>
                       </Link>
 
@@ -235,37 +258,35 @@ export default function ChannelsPage() {
                         </p>
                       </div>
 
-                      {/* Responsive toggle button */}
+                      {/* Visible / Hidden toggle */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleFollow(channel.id);
                         }}
                         className={cn(
-                          "flex items-center rounded-full border flex-shrink-0 transition-colors",
-                          isMobile
-                            ? "h-8 px-2 text-xs gap-1"
-                            : "h-9 px-4 text-sm font-medium gap-1.5",
-                          isOn
-                            ? "bg-primary/10 border-primary text-primary hover:bg-primary/20"
-                            : "bg-muted/50 border-muted-foreground/20 text-muted-foreground hover:bg-muted/80"
+                          "flex items-center gap-1 rounded-full transition-colors",
+                          isMobile ? "h-8 w-8 justify-center" : "h-9 px-3",
+                          isVisible
+                            ? "bg-primary/10 text-primary"
+                            : "bg-muted text-muted-foreground"
                         )}
-                        title={isOn ? "Hide from feed" : "Show in feed"}
+                        title={
+                          isVisible
+                            ? "Visible in feed – click to hide"
+                            : "Hidden from feed – click to show"
+                        }
                       >
-                        {isOn ? (
-                          <Eye className="h-3.5 w-3.5 flex-shrink-0" />
+                        {isVisible ? (
+                          <Eye className="h-4 w-4 flex-shrink-0" />
                         ) : (
-                          <EyeOff className="h-3.5 w-3.5 flex-shrink-0" />
+                          <EyeOff className="h-4 w-4 flex-shrink-0" />
                         )}
-                        <span className={isMobile ? "truncate max-w-[60px]" : ""}>
-                          {isMobile
-                            ? isOn
-                              ? "Show"
-                              : "Hidden"
-                            : isOn
-                              ? "Show in feed"
-                              : "Hidden"}
-                        </span>
+                        {!isMobile && (
+                          <span className="text-xs font-medium">
+                            {isVisible ? "Visible" : "Hidden"}
+                          </span>
+                        )}
                       </button>
                     </div>
                   );

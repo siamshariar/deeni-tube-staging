@@ -1,3 +1,4 @@
+// components/desktop-sidebar.tsx
 "use client";
 
 import type React from "react";
@@ -12,7 +13,6 @@ import {
   History,
   PlaySquare,
   Settings,
-  Flag,
   HelpCircle,
   Users,
   GraduationCap,
@@ -25,23 +25,46 @@ import ShortsModal from "./shorts-modal";
 
 interface DesktopSidebarProps {
   className?: string;
+  /** Only used on Home page to adjust top offset when header/chip bar hide */
+  headerVisible?: boolean;
 }
 
-export default function DesktopSidebar({ className }: DesktopSidebarProps) {
+export default function DesktopSidebar({
+  className,
+  headerVisible = true,
+}: DesktopSidebarProps) {
   const [shortsModalOpen, setShortsModalOpen] = useState(false);
   const pathname = usePathname();
 
-  // Hide sidebar on video pages
   if (pathname?.startsWith("/videos/")) {
     return null;
   }
+
+  const isHome = pathname === "/";
+
+  // On home page, the header + chip bar are 104px high.
+  // When visible, sidebar starts at 104px and height is 100vh-104px.
+  // When hidden, sidebar slides to top (0px) and height becomes full screen.
+  const top = isHome
+    ? headerVisible
+      ? "top-[104px]"
+      : "top-0"                       // ⬅ slide completely to top
+    : "top-[56px]";
+
+  const height = isHome
+    ? headerVisible
+      ? "h-[calc(100vh-104px)]"
+      : "h-screen"                    // ⬅ take full screen height
+    : "h-[calc(100vh-56px)]";
 
   return (
     <>
       <aside
         className={cn(
-          "fixed top-[56px] left-0 w-[240px] border-r bg-background overflow-y-auto h-[calc(100vh-56px)] flex-shrink-0 z-10",
-          className,
+          "fixed left-0 w-[240px] border-r bg-background overflow-y-auto flex-shrink-0 z-10 transition-all duration-300",
+          top,
+          height,
+          className
         )}
       >
         <div className="py-2">
@@ -76,7 +99,6 @@ export default function DesktopSidebar({ className }: DesktopSidebarProps) {
 
         <div className="border-t py-2">
           <SidebarItem href="/settings" icon={<Settings className="h-5 w-5" />} label="Settings" />
-          {/* <SidebarItem href="/report" icon={<Flag className="h-5 w-5" />} label="Report history" /> */}
           <SidebarItem href="/help" icon={<HelpCircle className="h-5 w-5" />} label="Help" />
         </div>
       </aside>

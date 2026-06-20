@@ -1,3 +1,4 @@
+// components/language-prompt.tsx
 "use client";
 
 import { useState } from "react";
@@ -5,69 +6,103 @@ import { Globe, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { mockLanguages } from "@/lib/mock-data";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { cn } from "@/lib/utils";
 
 interface LanguagePromptProps {
   open: boolean;
   onSave: (languages: string[]) => void;
-  onSkip: () => void;
+  onSkip?: () => void; // kept for backward compatibility but ignored in UI
   initialSelected?: string[];
 }
 
-export default function LanguagePrompt({ open, onSave, onSkip, initialSelected = ["en"] }: LanguagePromptProps) {
+export default function LanguagePrompt({
+  open,
+  onSave,
+  initialSelected = ["en"],
+}: LanguagePromptProps) {
   const [selected, setSelected] = useState<string[]>(initialSelected);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const toggle = (code: string) => {
-    setSelected(prev =>
+    setSelected((prev) =>
       prev.includes(code)
-        ? prev.length > 1 ? prev.filter(l => l !== code) : prev
+        ? prev.length > 1
+          ? prev.filter((l) => l !== code)
+          : prev
         : [...prev, code]
     );
   };
 
+  const handleContinue = () => {
+    onSave(selected);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5 text-primary" />
+    <Dialog open={open} onOpenChange={() => {}} modal={true}>
+      <DialogContent
+        className={cn(
+          "p-0 gap-0 overflow-hidden flex flex-col bg-background",
+          isMobile
+            ? "max-w-full h-[100dvh] rounded-none border-0 [&>button]:hidden"
+            : "sm:max-w-md max-h-[90vh] overflow-y-auto"
+        )}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
+        {/* Header */}
+        <div className="flex-shrink-0 px-6 pt-12 pb-6 text-center">
+          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <Globe className="h-8 w-8 text-primary" />
+          </div>
+          <DialogTitle className="text-2xl font-bold mb-2">
             Choose Your Language
           </DialogTitle>
-          <DialogDescription>
-            Select languages to personalise your content feed. You can change this later in Settings.
+          <DialogDescription className="text-base text-muted-foreground">
+            Select one or more languages to personalize your content. You can
+            change this later in Settings.
           </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="border rounded-lg divide-y">
+        </div>
+
+        {/* Language list */}
+        <div className="flex-1 overflow-y-auto px-6 py-2">
+          <div className="border rounded-xl divide-y overflow-hidden">
             {mockLanguages.map((lang) => {
               const isSelected = selected.includes(lang.code);
               return (
                 <button
                   key={lang.code}
                   onClick={() => toggle(lang.code)}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/40 transition-colors"
                 >
-                  <span className="text-sm font-medium">{lang.name}</span>
+                  <span className="text-base font-medium">{lang.name}</span>
                   <span
-                    className={`h-5 w-5 rounded border flex items-center justify-center flex-shrink-0 ${
+                    className={cn(
+                      "h-6 w-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
                       isSelected
                         ? "bg-primary border-primary text-primary-foreground"
-                        : "border-border"
-                    }`}
+                        : "border-muted-foreground/30"
+                    )}
                   >
-                    {isSelected && <Check className="h-3.5 w-3.5" />}
+                    {isSelected && <Check className="h-4 w-4" />}
                   </span>
                 </button>
               );
             })}
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={onSkip}>
-              Skip for now
-            </Button>
-            <Button className="flex-1" onClick={() => onSave(selected)}>
-              Continue
-            </Button>
-          </div>
+        </div>
+
+        {/* Footer – Continue button */}
+        <div className="flex-shrink-0 px-6 pb-8 pt-4 bg-background">
+          <Button
+            onClick={handleContinue}
+            className="w-full h-12 rounded-full text-base font-semibold"
+          >
+            Continue
+          </Button>
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            At least one language is required.
+          </p>
         </div>
       </DialogContent>
     </Dialog>

@@ -58,7 +58,8 @@ import DesktopSidebar from "@/components/desktop-sidebar";
 import MobileNav from "@/components/mobile-nav";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
-import { mockChannels, mockVideos } from "@/lib/mock-data";
+import { channelData, ChannelItem } from "@/lib/channel-data";
+import { videoData, VideoItem } from "@/lib/video-data";
 import {
   Drawer,
   DrawerContent,
@@ -121,35 +122,75 @@ export default function ChannelDetailPage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const channelSlug = params.slug as string;
 
-  const channel =
-    mockChannels.find((ch) => ch.slug === channelSlug) || mockChannels[0];
-  const channelVideos = mockVideos
-    .filter((v) => v.channelId === channel.id)
-    .slice(0, 8);
+  const channel: ChannelItem | undefined = channelData.find(
+    (ch) => ch.slug === channelSlug
+  );
+  if (!channel) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        Channel not found
+      </div>
+    );
+  }
+
+  const channelVideos: VideoItem[] = videoData.filter(
+    (v) => v.channelId === channel.id
+  );
 
   const [activeTab, setActiveTab] = useState("videos");
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [showAllLinks, setShowAllLinks] = useState(false);
   const [descriptionDrawerOpen, setDescriptionDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [localOn, setLocalOn] = useState(true);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
-
-  // Mock prototype images (hardcoded)
-  const bannerImage = "/vibrant-health-cover.png";
-  const avatarImage = "/medical-professional-profile.png";
+  const [localOn, setLocalOn] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
     setShareUrl(typeof window !== "undefined" ? window.location.href : "");
+
+    const saved = localStorage.getItem("feed-visible-channels");
+    if (saved) {
+      try {
+        const visibleIds: string[] = JSON.parse(saved);
+        setLocalOn(visibleIds.includes(channel.id));
+      } catch {
+        setLocalOn(true);
+      }
+    } else {
+      setLocalOn(true);
+    }
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [channel.id]);
 
   const handleToggleFeed = (checked: boolean) => {
     setLocalOn(checked);
+    const saved = localStorage.getItem("feed-visible-channels");
+    let visibleIds: string[] = [];
+    if (saved) {
+      try {
+        visibleIds = JSON.parse(saved);
+      } catch {
+        visibleIds = channelData.map((ch) => ch.id);
+      }
+    } else {
+      visibleIds = channelData.map((ch) => ch.id);
+    }
+
+    if (checked) {
+      if (!visibleIds.includes(channel.id)) {
+        visibleIds.push(channel.id);
+      }
+    } else {
+      visibleIds = visibleIds.filter((id) => id !== channel.id);
+    }
+
+    localStorage.setItem("feed-visible-channels", JSON.stringify(visibleIds));
     toast(
-      checked ? "Channel added to your feed" : "Channel removed from your feed"
+      checked
+        ? "Channel will appear in your feed"
+        : "Channel hidden from your feed"
     );
   };
 
@@ -173,26 +214,13 @@ export default function ChannelDetailPage() {
       <div className="flex">
         <DesktopSidebar className="hidden md:block" />
         <main className="flex-1 md:pl-[240px] pt-[56px] pb-nav-safe">
-          {/* Mobile header */}
-          {/* <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-20">
-            <button
-              onClick={() => router.back()}
-              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="font-semibold text-lg truncate">{channel.name}</h1>
-          </div> */}
-
-          {/* Banner – using prototype mock image */}
+          {/* Banner – using standard img for guaranteed loading */}
           <div className="relative w-full">
-            <div className="w-full aspect-[3/1] md:aspect-[6/1.5] relative bg-muted">
-              <Image
-                src={bannerImage}
+            <div className="w-full aspect-[3/1] md:aspect-[6/1.5] relative bg-muted overflow-hidden">
+              <img
+                src={channel.banner || "/vibrant-health-cover.png"}
                 alt="Channel banner"
-                fill
-                className="object-cover"
-                priority
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </div>
           </div>
@@ -200,14 +228,13 @@ export default function ChannelDetailPage() {
           {/* Channel info */}
           <div className="px-4 py-4 border-b">
             <div className="flex items-start gap-4">
-              {/* Avatar – using prototype mock image */}
               <Avatar
                 className={cn(
                   "flex-shrink-0 ring-4 ring-background -mt-8 relative z-10",
                   isMobile ? "h-16 w-16" : "h-20 w-20"
                 )}
               >
-                <AvatarImage src={avatarImage} />
+                <AvatarImage src={channel.avatar} />
                 <AvatarFallback className="text-lg">
                   {channel.name.charAt(0)}
                 </AvatarFallback>
@@ -231,7 +258,7 @@ export default function ChannelDetailPage() {
                 <p className="text-sm text-muted-foreground">@{channel.slug}</p>
                 <p className="text-sm text-muted-foreground">
                   {formatNumber(channel.subscribers)} subscribers •{" "}
-                  {formatNumber(channel.videosCount)} videos
+                  {channelVideos.length} videos
                 </p>
 
                 {/* Description */}
@@ -250,15 +277,16 @@ export default function ChannelDetailPage() {
                         </>
                       ) : (
                         <>
-                          {channel.description.slice(0, 150)}
-                          {channel.description.length > 150 && (
-                            <button
-                              onClick={() => setShowFullDescription(true)}
-                              className="text-primary ml-1 hover:underline font-medium"
-                            >
-                              ...more
-                            </button>
-                          )}
+                          {channel.description?.slice(0, 150)}
+                          {channel.description &&
+                            channel.description.length > 150 && (
+                              <button
+                                onClick={() => setShowFullDescription(true)}
+                                className="text-primary ml-1 hover:underline font-medium"
+                              >
+                                ...more
+                              </button>
+                            )}
                         </>
                       )}
                     </p>
@@ -295,80 +323,18 @@ export default function ChannelDetailPage() {
                   </DrawerContent>
                 </Drawer>
 
-                {/* Links */}
-                <div className="mt-2 space-y-1">
-                  {channel.website && (
-                    <Link
-                      href={`https://${channel.website}`}
-                      target="_blank"
-                      className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-                    >
-                      <Globe className="h-3 w-3" />
-                      {channel.website}
-                    </Link>
-                  )}
-                  {showAllLinks ? (
-                    <>
-                      {channel.facebook && (
-                        <Link
-                          href={`https://${channel.facebook}`}
-                          target="_blank"
-                          className="text-sm text-blue-600 hover:underline block"
-                        >
-                          Facebook
-                        </Link>
-                      )}
-                      {channel.twitter && (
-                        <Link
-                          href={`https://${channel.twitter}`}
-                          target="_blank"
-                          className="text-sm text-blue-600 hover:underline block"
-                        >
-                          Twitter
-                        </Link>
-                      )}
-                      {channel.youtube && (
-                        <Link
-                          href={`https://${channel.youtube}`}
-                          target="_blank"
-                          className="text-sm text-blue-600 hover:underline block"
-                        >
-                          YouTube
-                        </Link>
-                      )}
-                      <button
-                        onClick={() => setShowAllLinks(false)}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
-                        Show less
-                      </button>
-                    </>
-                  ) : (
-                    (channel.facebook ||
-                      channel.twitter ||
-                      channel.youtube) && (
-                      <button
-                        onClick={() => setShowAllLinks(true)}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
-                        Show more links
-                      </button>
-                    )
-                  )}
-                </div>
-
                 {/* Action buttons */}
                 <div className="flex items-center gap-2 mt-4 flex-wrap">
                   <div className="flex items-center gap-2 bg-muted rounded-full px-3 py-1.5">
                     <span className="text-sm font-medium">
-                      {localOn ? "On" : "Off"}
+                      {localOn ? "Visible" : "Hidden"}
                     </span>
                     <Switch
                       checked={localOn}
                       onCheckedChange={handleToggleFeed}
                     />
                     <span className="text-xs text-muted-foreground hidden sm:inline">
-                      Feed preference
+                      In feed
                     </span>
                   </div>
 
@@ -401,8 +367,7 @@ export default function ChannelDetailPage() {
                         className="cursor-pointer"
                         onClick={() => toast("Channel hidden")}
                       >
-                        <Ban className="h-4 w-4 mr-3" /> Don't recommend
-                        channel
+                        <Ban className="h-4 w-4 mr-3" /> Don't recommend channel
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -453,7 +418,7 @@ export default function ChannelDetailPage() {
                 {channelVideos.map((video) => (
                   <VideoCard
                     key={video.id}
-                    videoId={video.id}
+                    videoId={video.videoId}
                     title={video.title}
                     channel={video.channel}
                     channelId={video.channelId}
@@ -461,7 +426,7 @@ export default function ChannelDetailPage() {
                     views={video.views}
                     timestamp={video.timeAgo}
                     duration={video.duration}
-                    thumbnail={video.thumbnail}
+                    thumbnail={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
                     isHorizontal={false}
                   />
                 ))}
@@ -470,7 +435,7 @@ export default function ChannelDetailPage() {
                 {channelVideos.map((video) => (
                   <VideoCard
                     key={video.id}
-                    videoId={video.id}
+                    videoId={video.videoId}
                     title={video.title}
                     channel={video.channel}
                     channelId={video.channelId}
@@ -478,7 +443,7 @@ export default function ChannelDetailPage() {
                     views={video.views}
                     timestamp={video.timeAgo}
                     duration={video.duration}
-                    thumbnail={video.thumbnail}
+                    thumbnail={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
                     isHorizontal={true}
                   />
                 ))}

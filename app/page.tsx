@@ -1,37 +1,36 @@
+// app/page.tsx
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import VideoCard from "@/components/video-card";
 import MobileNav from "@/components/mobile-nav";
 import DesktopSidebar from "@/components/desktop-sidebar";
 import AppHeader from "@/components/app-header";
 import LanguagePrompt from "@/components/language-prompt";
-import { mockVideos } from "@/lib/mock-data";
+import { videoData, VideoItem } from "@/lib/video-data";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [headerVisible, setHeaderVisible] = useState(true);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
-  const [visible, setVisible] = useState(true);
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
   const [activeChip, setActiveChip] = useState("All");
-  const chipContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [allVideos, setAllVideos] = useState(mockVideos);
+  const [allVideos] = useState<VideoItem[]>(videoData);
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>(["en"]);
   const [hasSelected, setHasSelected] = useState(false);
   const [isGuest, setIsGuest] = useState(true);
-
-  // Generate chip items from unique categories in mockVideos
-  const allCategories = mockVideos.map(v => v.category).filter(Boolean);
-  const uniqueCategories = Array.from(new Set(allCategories));
-  const chipItems = ["All", ...uniqueCategories];
-
-  // Language prompt state
   const [showLanguagePrompt, setShowLanguagePrompt] = useState(false);
+  const [visibleChannelIds, setVisibleChannelIds] = useState<string[]>([]);
+
+  const allCategories: string[] = videoData
+    .map((v: VideoItem) => v.category)
+    .filter(Boolean) as string[];
+  const uniqueCategories: string[] = Array.from(new Set(allCategories));
+  const chipItems: string[] = ["All", ...uniqueCategories];
 
   useEffect(() => {
     const timer = setTimeout(() => setInitialLoading(false), 800);
@@ -46,6 +45,17 @@ export default function Home() {
         setIsGuest(parsed.isGuest !== false);
       } catch {}
     }
+    // Load visible channel IDs from localStorage
+    const savedVisible = localStorage.getItem("feed-visible-channels");
+    if (savedVisible) {
+      try {
+        setVisibleChannelIds(JSON.parse(savedVisible));
+      } catch {}
+    } else {
+      // Default: all channels visible
+      const allIds = videoData.map((v: VideoItem) => v.channelId);
+      setVisibleChannelIds(Array.from(new Set(allIds)));
+    }
     return () => clearTimeout(timer);
   }, []);
 
@@ -53,7 +63,10 @@ export default function Home() {
     setPreferredLanguages(languages);
     setHasSelected(true);
     setIsGuest(guest);
-    localStorage.setItem("deeni-lang-prefs", JSON.stringify({ languages, hasSelected: true, isGuest: guest }));
+    localStorage.setItem(
+      "deeni-lang-prefs",
+      JSON.stringify({ languages, hasSelected: true, isGuest: guest })
+    );
     setShowLanguagePrompt(false);
   };
 
@@ -61,111 +74,90 @@ export default function Home() {
     saveLanguagePrefs(["en"], true);
   };
 
-  // Filter videos by language
-  const filteredVideos = allVideos.filter(v => preferredLanguages.includes(v.language));
+  const filteredVideos = allVideos.filter(
+    (v: VideoItem) =>
+      preferredLanguages.includes(v.language) &&
+      visibleChannelIds.includes(v.channelId)
+  );
+  const displayedVideos =
+    activeChip === "All"
+      ? filteredVideos
+      : filteredVideos.filter((v: VideoItem) => v.category === activeChip);
 
-  // Category filter
-  const displayedVideos = activeChip === "All" ? filteredVideos : filteredVideos.filter(v => v.category === activeChip);
-
-  // Scroll handling (header hide)
+  // Scroll detection for header
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
       const isScrollingDown = currentScrollPos > prevScrollPos;
-      if (isScrollingDown && currentScrollPos > 150) setVisible(false);
-      else setVisible(true);
+      if (isScrollingDown && currentScrollPos > 150) setHeaderVisible(false);
+      else setHeaderVisible(true);
       setPrevScrollPos(currentScrollPos);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [prevScrollPos]);
 
-  // Chip bar arrows
-  const updateArrows = useCallback(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    setShowLeftArrow(el.scrollLeft > 10);
-    setShowRightArrow(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", updateArrows);
-    window.addEventListener("resize", updateArrows);
-    const timeouts = [0, 100, 300, 500, 1000].map(d => setTimeout(updateArrows, d));
-    return () => {
-      el.removeEventListener("scroll", updateArrows);
-      window.removeEventListener("resize", updateArrows);
-      timeouts.forEach(clearTimeout);
-    };
-  }, [updateArrows]);
-
-  const scrollChips = (dir: "left" | "right") => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    const amt = el.clientWidth * 0.8;
-    el.scrollBy({ left: dir === "left" ? -amt : amt, behavior: "smooth" });
-  };
+  const headerHeight = isMobile ? 56 + 48 : 72 + 48;
+  const marginTop = headerHeight;
+  const mobileNavHeight = `calc(56px + env(safe-area-inset-bottom, 0px))`;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <LanguagePrompt
         open={showLanguagePrompt}
-        onSave={(langs) => saveLanguagePrefs(langs, true)}
+        onSave={(langs: string[]) => saveLanguagePrefs(langs, true)}
         onSkip={skipLanguage}
         initialSelected={["en"]}
       />
-      <AppHeader />
+
+      <AppHeader visible={headerVisible}>
+        <div className="h-12 border-b bg-background">
+          <div
+            ref={scrollContainerRef}
+            className="h-full overflow-x-auto scrollbar-none px-4"
+            style={{
+              WebkitOverflowScrolling: "touch",
+              overscrollBehaviorX: "contain",
+              touchAction: "pan-x",
+            }}
+          >
+            <div className="flex gap-2 py-2 w-max items-center h-full">
+              {chipItems.map((chip: string) => (
+                <button
+                  key={chip}
+                  onClick={() => setActiveChip(chip)}
+                  className={cn(
+                    "px-3.5 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 select-none",
+                    activeChip === chip
+                      ? "bg-foreground text-background"
+                      : "bg-muted hover:bg-muted/80 text-foreground"
+                  )}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AppHeader>
 
       <div className="flex">
-        <DesktopSidebar className="hidden md:block" />
-        <main className="flex-1 md:pl-[240px] md:pt-[62px] pt-0 md:pb-0 pb-nav-safe overflow-hidden w-full max-w-[100vw]">
+        <DesktopSidebar className="hidden md:block" headerVisible={headerVisible} />
+        <main
+          className="flex-1 md:pl-[240px] w-full max-w-[100vw]"
+          style={{
+            marginTop: marginTop,
+            paddingBottom: isMobile ? mobileNavHeight : "0",
+          }}
+        >
           {hasSelected && preferredLanguages.length > 0 && (
             <div className="px-4 py-1.5 text-xs text-muted-foreground bg-muted/30 border-b hidden md:block">
-              Content: {preferredLanguages.map(l => l.toUpperCase()).join(", ")}{isGuest && " (Guest)"}
+              Content: {preferredLanguages.map((l: string) => l.toUpperCase()).join(", ")}
+              {isGuest && " (Guest)"}
             </div>
           )}
 
-          {/* Chip Bar */}
-          <div className={`sticky top-[56px] md:top-[32px] z-10 bg-background border-b ${visible ? "" : "-translate-y-full"} transition-transform duration-300`}>
-            <div className="relative h-12">
-              <div ref={scrollContainerRef} className="h-full overflow-x-auto scrollbar-none px-[0.75rem] mr-4" onScroll={updateArrows}>
-                <div ref={chipContainerRef} className="flex gap-2 py-2 w-max items-center h-full">
-                  {chipItems.map(chip => (
-                    <button
-                      key={chip}
-                      onClick={() => setActiveChip(chip)}
-                      className={`px-3.5 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 select-none ${
-                        activeChip === chip ? "bg-foreground text-background" : "bg-muted hover:bg-muted/80 text-foreground"
-                      }`}
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {showLeftArrow && (
-                <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center">
-                  <div className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-background via-background to-transparent" />
-                  <button className="relative ml-2 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg" onClick={() => scrollChips("left")}>
-                    <ChevronLeft className="h-5 w-5 text-white" />
-                  </button>
-                </div>
-              )}
-              {showRightArrow && (
-                <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center justify-end">
-                  <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-background via-background to-transparent" />
-                  <button className="relative mr-3 h-9 w-9 rounded-full bg-black hover:bg-black/90 flex items-center justify-center shadow-lg" onClick={() => scrollChips("right")}>
-                    <ChevronRight className="h-5 w-5 text-white" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Loading skeletons */}
-          {initialLoading && (
+          {initialLoading ? (
             <>
               <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -173,7 +165,11 @@ export default function Home() {
                     <Skeleton className="aspect-video w-full rounded-lg" />
                     <div className="flex mt-2 gap-2">
                       <Skeleton className="h-9 w-9 rounded-full" />
-                      <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-3 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -184,54 +180,53 @@ export default function Home() {
                     <Skeleton className="aspect-video w-full rounded-lg" />
                     <div className="flex mt-3 gap-3">
                       <Skeleton className="h-9 w-9 rounded-full" />
-                      <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-3 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             </>
-          )}
-
-          {/* Desktop grid */}
-          {!initialLoading && (
-            <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-              {displayedVideos.map(video => (
-                <VideoCard
-                  key={video.id}
-                  videoId={video.id}
-                  title={video.title}
-                  channel={video.channel}
-                  channelId={video.channelId}
-                  channelAvatar={video.channelAvatar}
-                  views={video.views}
-                  timestamp={video.timeAgo}
-                  duration={video.duration}
-                  thumbnail={video.thumbnail}
-                  isHorizontal={false}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Mobile list */}
-          {!initialLoading && (
-            <div className="flex flex-col md:hidden">
-              {displayedVideos.map(video => (
-                <VideoCard
-                  key={video.id}
-                  videoId={video.id}
-                  title={video.title}
-                  channel={video.channel}
-                  channelId={video.channelId}
-                  channelAvatar={video.channelAvatar}
-                  views={video.views}
-                  timestamp={video.timeAgo}
-                  duration={video.duration}
-                  thumbnail={video.thumbnail}
-                  isHorizontal={true}
-                />
-              ))}
-            </div>
+          ) : (
+            <>
+              <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+                {displayedVideos.map((video: VideoItem) => (
+                  <VideoCard
+                    key={video.id}
+                    videoId={video.videoId}
+                    title={video.title}
+                    channel={video.channel}
+                    channelId={video.channelId}
+                    channelAvatar={video.channelAvatar}
+                    views={video.views}
+                    timestamp={video.timeAgo}
+                    duration={video.duration}
+                    thumbnail={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                    isHorizontal={false}
+                  />
+                ))}
+              </div>
+              <div className="flex flex-col md:hidden">
+                {displayedVideos.map((video: VideoItem) => (
+                  <VideoCard
+                    key={video.id}
+                    videoId={video.videoId}
+                    title={video.title}
+                    channel={video.channel}
+                    channelId={video.channelId}
+                    channelAvatar={video.channelAvatar}
+                    views={video.views}
+                    timestamp={video.timeAgo}
+                    duration={video.duration}
+                    thumbnail={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                    isHorizontal={true}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </main>
       </div>
