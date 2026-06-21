@@ -1,3 +1,4 @@
+// app/playlists/[slug]/[id]/page.tsx
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -30,8 +31,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import AppHeader from "@/components/app-header";
-import MobileNav from "@/components/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -50,11 +49,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShareModal } from "@/components/share-modal";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { mockPlaylists, mockVideos } from "@/lib/mock-data";
+import { videoData, VideoItem } from "@/lib/video-data";
+import { extendedPlaylists, PlaylistItem } from "@/lib/playlist-data";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// ─── Mock comments (unchanged) ─────────────────────────────────
+// ─── Mock comments ─────────────────────────────────
 const mockCommentsWithReplies = [
   {
     id: "c1",
@@ -118,7 +118,7 @@ const mockCommentsWithReplies = [
   },
 ];
 
-// ─── Reply component (recursive) ────────────────────────────────────────
+// ─── Reply component (recursive) ─────────────────────
 function ReplyItem({
   reply,
   onLike,
@@ -253,7 +253,7 @@ function ReplyItem({
   );
 }
 
-// ─── Skeleton for video card in playlist ───────────────────────────────
+// ─── Skeleton for playlist video card ───────────────
 function VideoSkeleton() {
   return (
     <div className="flex gap-3 py-2">
@@ -266,45 +266,21 @@ function VideoSkeleton() {
   );
 }
 
-// ─── Generate extended mock videos for playlist ────────────────────────
-const extendedMockVideos = (playlist: any) => {
-  if (!playlist) return [];
-  const videos = playlist.videoIds
-    .map((id: string) => mockVideos.find((v) => v.id === id))
-    .filter(Boolean);
-  while (videos.length < 15) {
-    const idx = videos.length + 1;
-    videos.push({
-      id: `gen-${idx}`,
-      title: `Mock Video ${idx} - ${playlist.name}`,
-      channel: playlist.isPublic ? "Mock Channel" : "Private Channel",
-      duration: `${Math.floor(Math.random() * 10)}:${String(
-        Math.floor(Math.random() * 60)
-      ).padStart(2, "0")}`,
-      views: `${Math.floor(Math.random() * 1000)}K views`,
-      timeAgo: "1 month ago",
-      thumbnail: `https://placehold.co/600x400/111/888?text=Video+${idx}`,
-      channelAvatar: `https://placehold.co/32x32/333/fff?text=C`,
-      videoUrl: "https://www.youtube.com/embed/5qap5aO4i9A",
-      description: "This is a mock video description for the playlist.",
-    });
-  }
-  return videos.slice(0, 15);
-};
-
 export default function PlaylistDetailPage() {
   const router = useRouter();
   const params = useParams();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const playlistId = params.id as string;
 
-  const [playlist, setPlaylist] = useState<any>(null);
-  const [videos, setVideos] = useState<any[]>([]);
+  const [playlist, setPlaylist] = useState<PlaylistItem | null>(null);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [collapsed, setCollapsed] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   const [dragItem, setDragItem] = useState<number | null>(null);
 
@@ -312,7 +288,6 @@ export default function PlaylistDetailPage() {
   const [commentText, setCommentText] = useState("");
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [dislikedComments, setDislikedComments] = useState<Set<string>>(new Set());
-  const [descriptionDrawerOpen, setDescriptionDrawerOpen] = useState(false);
   const [commentsDrawerOpen, setCommentsDrawerOpen] = useState(false);
 
   const [isLiked, setIsLiked] = useState(false);
@@ -320,14 +295,14 @@ export default function PlaylistDetailPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const found = mockPlaylists.find((p) => p.id === playlistId);
+      const found = extendedPlaylists.find((p) => p.id === playlistId);
       if (found) {
         setPlaylist(found);
-        const playlistVideos = extendedMockVideos(found);
-        setVideos(playlistVideos);
-        setShareUrl(
-          `${window.location.origin}/playlists/${found.slug}/${found.id}`
-        );
+        const playlistVideos = found.videoIds
+          .map(id => videoData.find(v => v.id === id))
+          .filter(Boolean) as VideoItem[];
+        setVideos(playlistVideos.length > 0 ? playlistVideos : videoData);
+        setShareUrl(`${window.location.origin}/playlists/${found.slug}/${found.id}`);
       }
       setIsLoading(false);
     }, 600);
@@ -343,7 +318,11 @@ export default function PlaylistDetailPage() {
     );
   }, [videos, searchQuery]);
 
-  const currentVideo = videos[0];
+  const currentVideo = videos[currentVideoIndex];
+
+  const handleSelectVideo = (index: number) => {
+    setCurrentVideoIndex(index);
+  };
 
   const handleDragStart = (index: number) => setDragItem(index);
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -467,491 +446,511 @@ export default function PlaylistDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <AppHeader />
-        <div className="pt-[56px] md:pt-[72px] pb-nav-safe md:pb-6">
-          <div className="flex flex-col lg:flex-row gap-4 px-4">
-            <div className="flex-1 min-w-0">
-              <Skeleton className="aspect-[4/3] md:aspect-video w-full rounded-xl" />
-            </div>
-            <div className="lg:w-[450px] space-y-3">
-              <Skeleton className="h-8 w-48" />
-              <div className="space-y-2">
-                <VideoSkeleton />
-                <VideoSkeleton />
-                <VideoSkeleton />
-              </div>
+      <div className="min-h-screen bg-background md:-ml-[240px]">
+        <div className="flex flex-col lg:flex-row gap-4 px-4 pt-2 md:pt-4">
+          <div className="flex-1 min-w-0">
+            <Skeleton className="aspect-[4/3] md:aspect-video w-full rounded-xl" />
+          </div>
+          <div className="lg:w-[450px] space-y-3">
+            <Skeleton className="h-8 w-48" />
+            <div className="space-y-2">
+              <VideoSkeleton />
+              <VideoSkeleton />
+              <VideoSkeleton />
             </div>
           </div>
         </div>
-        <MobileNav />
       </div>
     );
   }
 
   if (!playlist) {
     return (
-      <div className="min-h-screen bg-background">
-        <AppHeader />
-        <div className="flex-1 pt-[56px] md:pt-[72px] pb-nav-safe md:pb-6">
-          <div className="text-center py-16">
-            <h2 className="text-xl font-semibold">Playlist not found</h2>
-            <Button variant="outline" className="mt-4 rounded-full" onClick={() => router.back()}>
-              Go back
-            </Button>
-          </div>
+      <div className="min-h-screen bg-background flex items-center justify-center md:-ml-[240px]">
+        <div className="text-center py-16">
+          <h2 className="text-xl font-semibold">Playlist not found</h2>
+          <Button variant="outline" className="mt-4 rounded-full" onClick={() => router.back()}>
+            Go back
+          </Button>
         </div>
-        <MobileNav />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader />
-      <div className="pt-[56px] md:pt-[72px] pb-nav-safe md:pb-6 px-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* ===================== LEFT SIDE: Player + Details + Comments ===================== */}
-          <div className="flex-1 min-w-0">
-            {/* Video player – shorter on desktop to reveal comments */}
-              {/* Video player – responsive aspect ratio like video details page */}
-              <div className="w-full bg-black rounded-xl overflow-hidden">
-                <div className="relative w-full aspect-[4/3] md:aspect-video md:max-h-[75vh] md:mx-auto">
-                  <iframe
-                    src={currentVideo?.videoUrl || "https://www.youtube.com/embed/5qap5aO4i9A"}
-                    title={currentVideo?.title || "Video"}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute inset-0 w-full h-full"
-                  />
-                </div>
-              </div>
-
-            {/* Video info */}
-            {currentVideo && (
-              <div className="mt-2">
-                <h1 className="text-lg md:text-xl font-bold leading-tight">
-                  {currentVideo.title}
-                </h1>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={currentVideo.channelAvatar} />
-                      <AvatarFallback>{currentVideo.channel?.charAt(0) || "C"}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">{currentVideo.channel}</p>
-                      <p className="text-xs text-muted-foreground">780K subscribers</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center bg-muted rounded-full overflow-hidden">
-                      <button
-                        onClick={handleLikeVideo}
-                        className={`flex items-center gap-2 px-4 py-2 hover:bg-muted/80 transition-colors border-r border-border ${
-                          isLiked ? "text-foreground" : ""
-                        }`}
-                      >
-                        <ThumbsUp className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
-                        <span className="text-sm font-medium">15K</span>
-                      </button>
-                      <button
-                        onClick={handleDislikeVideo}
-                        className={`px-4 py-2 hover:bg-muted/80 transition-colors ${
-                          isDisliked ? "text-foreground" : ""
-                        }`}
-                      >
-                        <ThumbsDown className={`h-5 w-5 ${isDisliked ? "fill-current" : ""}`} />
-                      </button>
-                    </div>
-                    <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowShareModal(true)}>
-                      <Share className="h-5 w-5" />
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-full">
-                          <MoreHorizontal className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-72">
-                        <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <Clock className="h-5 w-5" /> Save to Watch later
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <Bookmark className="h-5 w-5" /> Save to playlist
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast("Channel removed from feed")} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <UserX className="h-5 w-5" /> Don't recommend channel
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <EyeOff className="h-5 w-5" /> Not interested
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <Flag className="h-5 w-5" /> Report
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="mt-2 bg-muted/40 rounded-xl p-3 md:p-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium">{currentVideo.views}</span>
-                    <span className="text-muted-foreground">•</span>
-                    <span className="text-muted-foreground">{currentVideo.timeAgo}</span>
-                  </div>
-                  {!isMobile ? (
-                    <p className="text-sm mt-1 whitespace-pre-wrap">
-                      {currentVideo.description || "This is a mock video description. The actual content will appear here."}
-                    </p>
-                  ) : (
-                    <>
-                      <p className="text-sm mt-1 line-clamp-2">
-                        {currentVideo.description || "Mock description..."}
-                      </p>
-                      <button
-                        onClick={() => setDescriptionDrawerOpen(true)}
-                        className="text-sm text-primary hover:underline font-medium mt-1"
-                      >
-                        Read more
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                {/* Mobile description drawer */}
-                <Drawer open={descriptionDrawerOpen} onOpenChange={setDescriptionDrawerOpen}>
-                  <DrawerContent className="max-h-[80vh]">
-                    <DrawerHeader>
-                      <DrawerTitle className="text-lg">About this video</DrawerTitle>
-                    </DrawerHeader>
-                    <div className="p-4 overflow-y-auto">
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {currentVideo.description || "Full description (mock)."}
-                      </p>
-                    </div>
-                  </DrawerContent>
-                </Drawer>
-
-                {/* Comments */}
-                <div className="mt-4">
-                  {!isMobile ? (
-                    <div>
-                      <div className="flex items-center gap-6 mb-4">
-                        <MessageCircle className="h-5 w-5" />
-                        <span className="font-semibold text-base">{comments.length} Comments</span>
-                      </div>
-                      <div className="flex gap-3 mb-6">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>Y</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            placeholder="Add a comment..."
-                            value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
-                            className="w-full bg-transparent border-b border-border pb-1.5 text-sm focus:outline-none focus:ring-0 placeholder:text-muted-foreground"
-                          />
-                          {commentText && (
-                            <div className="flex items-center gap-2 mt-3 justify-end">
-                              <button onClick={() => setCommentText("")} className="text-sm font-medium hover:bg-muted rounded-full px-4 py-2">Cancel</button>
-                              <button onClick={handleAddComment} className="text-sm font-medium bg-foreground text-background rounded-full px-4 py-2 hover:bg-foreground/90 disabled:opacity-50" disabled={!commentText.trim()}>Comment</button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {comments.map((comment) => (
-                        <div key={comment.id} className="py-3 border-b last:border-0">
-                          <div className="flex gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={comment.avatar} />
-                              <AvatarFallback>{comment.user.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">{comment.user}</span>
-                                <span className="text-xs text-muted-foreground">{comment.timeAgo}</span>
-                              </div>
-                              <p className="text-sm mt-0.5">{comment.content}</p>
-                              <div className="flex items-center gap-2 mt-1.5">
-                                <button onClick={() => handleLikeComment(comment.id)} className={`flex items-center gap-1.5 hover:bg-muted rounded-full px-2.5 py-1 transition-colors ${likedComments.has(comment.id) ? "text-primary" : "text-muted-foreground"}`}>
-                                  <ThumbsUp className={`h-4 w-4 ${likedComments.has(comment.id) ? "fill-current" : ""}`} />
-                                  <span className="text-xs">{comment.likes}</span>
-                                </button>
-                                <button onClick={() => handleDislikeComment(comment.id)} className={`hover:bg-muted rounded-full p-1 transition-colors ${dislikedComments.has(comment.id) ? "text-destructive" : "text-muted-foreground"}`}>
-                                  <ThumbsDown className={`h-4 w-4 ${dislikedComments.has(comment.id) ? "fill-current" : ""}`} />
-                                </button>
-                                <button onClick={() => handleReply(comment.id)} className="text-xs text-muted-foreground hover:bg-muted rounded-full px-2.5 py-1 transition-colors">Reply</button>
-                              </div>
-                              {comment.replies && comment.replies.length > 0 && (
-                                <div className="mt-2">
-                                  {comment.replies.map((reply: any) => (
-                                    <ReplyItem
-                                      key={reply.id}
-                                      reply={reply}
-                                      onLike={handleLikeComment}
-                                      onDislike={handleDislikeComment}
-                                      onReply={handleReply}
-                                      isLiked={likedComments.has(reply.id)}
-                                      isDisliked={dislikedComments.has(reply.id)}
-                                    />
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <Drawer open={commentsDrawerOpen} onOpenChange={setCommentsDrawerOpen}>
-                      <DrawerTrigger asChild>
-                        <Button variant="outline" className="w-full rounded-full flex items-center gap-2">
-                          <MessageCircle className="h-4 w-4" /> {comments.length} Comments
-                        </Button>
-                      </DrawerTrigger>
-                      <DrawerContent className="h-[80vh]">
-                        <DrawerHeader>
-                          <DrawerTitle className="text-lg">Comments</DrawerTitle>
-                        </DrawerHeader>
-                        <div className="px-4 overflow-y-auto">
-                          <div className="flex gap-3 mb-6">
-                            <Avatar className="h-8 w-8"><AvatarFallback>Y</AvatarFallback></Avatar>
-                            <div className="flex-1">
-                              <input type="text" placeholder="Add a comment..." value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddComment()} className="w-full bg-transparent border-b border-border pb-1.5 text-sm focus:outline-none focus:ring-0" />
-                              {commentText && (
-                                <div className="flex items-center gap-2 mt-2 justify-end">
-                                  <button onClick={() => setCommentText("")} className="text-sm font-medium hover:bg-muted rounded-full px-3 py-1">Cancel</button>
-                                  <button onClick={handleAddComment} className="text-sm font-medium bg-foreground text-background rounded-full px-3 py-1 disabled:opacity-50" disabled={!commentText.trim()}>Comment</button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {comments.map((comment) => (
-                            <div key={comment.id} className="py-3 border-b last:border-0">
-                              <div className="flex gap-3">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src={comment.avatar} />
-                                  <AvatarFallback>{comment.user.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">{comment.user}</span>
-                                    <span className="text-xs text-muted-foreground">{comment.timeAgo}</span>
-                                  </div>
-                                  <p className="text-sm mt-0.5">{comment.content}</p>
-                                  <div className="flex items-center gap-2 mt-1.5">
-                                    <button onClick={() => handleLikeComment(comment.id)} className={`flex items-center gap-1.5 hover:bg-muted rounded-full px-2.5 py-1 transition-colors ${likedComments.has(comment.id) ? "text-primary" : "text-muted-foreground"}`}>
-                                      <ThumbsUp className={`h-4 w-4 ${likedComments.has(comment.id) ? "fill-current" : ""}`} />
-                                      <span className="text-xs">{comment.likes}</span>
-                                    </button>
-                                    <button onClick={() => handleDislikeComment(comment.id)} className={`hover:bg-muted rounded-full p-1 transition-colors ${dislikedComments.has(comment.id) ? "text-destructive" : "text-muted-foreground"}`}>
-                                      <ThumbsDown className={`h-4 w-4 ${dislikedComments.has(comment.id) ? "fill-current" : ""}`} />
-                                    </button>
-                                    <button onClick={() => handleReply(comment.id)} className="text-xs text-muted-foreground hover:bg-muted rounded-full px-2.5 py-1 transition-colors">Reply</button>
-                                  </div>
-                                  {comment.replies && comment.replies.length > 0 && (
-                                    <div className="mt-2">
-                                      {comment.replies.map((reply: any) => (
-                                        <ReplyItem
-                                          key={reply.id}
-                                          reply={reply}
-                                          onLike={handleLikeComment}
-                                          onDislike={handleDislikeComment}
-                                          onReply={handleReply}
-                                          isLiked={likedComments.has(reply.id)}
-                                          isDisliked={dislikedComments.has(reply.id)}
-                                        />
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </DrawerContent>
-                    </Drawer>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ===================== RIGHT SIDE: Playlist Panel (draggable) ===================== */}
-          <div
-            className={cn(
-              "rounded-xl border bg-card overflow-hidden",
-              isMobile
-                ? "flex-1 min-h-0 flex flex-col"
-                : "lg:w-[450px] flex-shrink-0"
-            )}
+    <div className="min-h-screen bg-background md:-ml-[240px]">
+      {/* Mobile back button + title – exactly like video details */}
+      {isMobile && (
+        <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1.5 px-4 py-2 w-full"
           >
-            <div className="p-4 border-b flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-lg">
-                    <Link href={`/playlists/${playlist.slug}/${playlist.id}`} className="hover:text-primary">
-                      {playlist.name}
-                    </Link>
-                  </h3>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                    <span className="flex items-center gap-1">
-                      {playlist.isPublic ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                      {playlist.isPublic ? "Public" : "Private"}
-                    </span>
-                    <span>•</span>
-                    <span>{videos.length} videos</span>
+            <ArrowLeft className="h-6 w-6 shrink-0" />
+            <span className="text-sm font-medium line-clamp-1 text-left">
+              {currentVideo?.title || playlist.name}
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Mobile: full-width video (edge-to-edge) – no top padding */}
+      {isMobile && (
+        <div className="w-full bg-black">
+          <div className="relative w-full aspect-video">
+            <iframe
+              src={`https://www.youtube.com/embed/${currentVideo?.videoId || "5qap5aO4i9A"}?autoplay=1`}
+              title={currentVideo?.title || "Video"}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="pb-6">
+        <div className="px-4 md:px-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 min-w-0">
+              {/* Desktop video player */}
+              {!isMobile && (
+                <div className="w-full bg-black rounded-xl overflow-hidden">
+                  <div className="relative w-full aspect-video md:max-h-[75vh] md:mx-auto">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${currentVideo?.videoId || "5qap5aO4i9A"}?autoplay=1`}
+                      title={currentVideo?.title || "Video"}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full"
+                    />
                   </div>
                 </div>
-                <button onClick={toggleCollapse} className="p-1 rounded-full hover:bg-muted">
-                  <ChevronDown className={cn("h-5 w-5 transition-transform", collapsed ? "rotate-180" : "")} />
-                </button>
-              </div>
-              {!collapsed && (
-                <div className="flex items-center gap-2 mt-3">
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" title="Loop playlist" onClick={() => toast.info("Loop toggled (demo)")}>
-                      <Repeat className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" title="Shuffle playlist" onClick={() => {
-                      if (videos.length) {
-                        const random = videos[Math.floor(Math.random() * videos.length)];
-                        router.push(`/videos/${random.channel}/${random.id}`);
-                      }
-                    }}>
-                      <Shuffle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex-1" />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="rounded-full">
-                        <MoreVertical className="h-5 w-5" />
+              )}
+
+              {currentVideo && (
+                <div className="mt-2">
+                  <h1 className="text-lg md:text-xl font-bold leading-tight">
+                    {currentVideo.title}
+                  </h1>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={currentVideo.channelAvatar} />
+                        <AvatarFallback>{currentVideo.channel?.charAt(0) || "C"}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{currentVideo.channel}</p>
+                        <p className="text-xs text-muted-foreground">780K subscribers</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center bg-muted rounded-full overflow-hidden">
+                        <button
+                          onClick={handleLikeVideo}
+                          className={`flex items-center gap-2 px-4 py-2 hover:bg-muted/80 transition-colors border-r border-border ${
+                            isLiked ? "text-foreground" : ""
+                          }`}
+                        >
+                          <ThumbsUp className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
+                          <span className="text-sm font-medium">15K</span>
+                        </button>
+                        <button
+                          onClick={handleDislikeVideo}
+                          className={`px-4 py-2 hover:bg-muted/80 transition-colors ${
+                            isDisliked ? "text-foreground" : ""
+                          }`}
+                        >
+                          <ThumbsDown className={`h-5 w-5 ${isDisliked ? "fill-current" : ""}`} />
+                        </button>
+                      </div>
+                      <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowShareModal(true)}>
+                        <Share className="h-5 w-5" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                      {playlist.isPublic && (
-                        <DropdownMenuItem className="cursor-pointer" onClick={handleShare}>
-                          <Share className="h-4 w-4 mr-2" /> Share
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem className="cursor-pointer" onClick={() => toast("Edit playlist (prototype)")}>
-                        <Edit className="h-4 w-4 mr-2" /> Edit playlist
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer text-red-500 dark:text-red-400" onClick={() => toast("Delete playlist (prototype)")}>
-                        <Trash2 className="h-4 w-4 mr-2" /> Delete playlist
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="rounded-full">
+                            <MoreHorizontal className="h-5 w-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-72">
+                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                            <Clock className="h-5 w-5" /> Save to Watch later
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                            <Bookmark className="h-5 w-5" /> Save to playlist
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast("Channel removed from feed")} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                            <UserX className="h-5 w-5" /> Don't recommend channel
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                            <EyeOff className="h-5 w-5" /> Not interested
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                            <Flag className="h-5 w-5" /> Report
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+
+                  {/* Description – inline expand on mobile */}
+                  <div className="mt-2 bg-muted/40 rounded-xl p-3 md:p-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium">{currentVideo.views}</span>
+                      <span className="text-muted-foreground">•</span>
+                      <span className="text-muted-foreground">{currentVideo.timeAgo}</span>
+                    </div>
+                    {isMobile && !showFullDescription ? (
+                      <>
+                        <p className="text-sm mt-1 line-clamp-2">
+                          {currentVideo.description}
+                        </p>
+                        <button
+                          onClick={() => setShowFullDescription(true)}
+                          className="text-sm text-primary hover:underline font-medium mt-1"
+                        >
+                          Read more
+                        </button>
+                      </>
+                    ) : (
+                      <p className="text-sm mt-1 whitespace-pre-wrap">
+                        {currentVideo.description}
+                        {isMobile && showFullDescription && (
+                          <button
+                            onClick={() => setShowFullDescription(false)}
+                            className="text-primary ml-1 hover:underline font-medium text-sm"
+                          >
+                            Show less
+                          </button>
+                        )}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Comments */}
+                  <div className="mt-4">
+                    {!isMobile ? (
+                      <div>
+                        <div className="flex items-center gap-6 mb-4">
+                          <MessageCircle className="h-5 w-5" />
+                          <span className="font-semibold text-base">{comments.length} Comments</span>
+                        </div>
+                        <div className="flex gap-3 mb-6">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>Y</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              placeholder="Add a comment..."
+                              value={commentText}
+                              onChange={(e) => setCommentText(e.target.value)}
+                              onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
+                              className="w-full bg-transparent border-b border-border pb-1.5 text-sm focus:outline-none focus:ring-0 placeholder:text-muted-foreground"
+                            />
+                            {commentText && (
+                              <div className="flex items-center gap-2 mt-3 justify-end">
+                                <button onClick={() => setCommentText("")} className="text-sm font-medium hover:bg-muted rounded-full px-4 py-2">Cancel</button>
+                                <button onClick={handleAddComment} className="text-sm font-medium bg-foreground text-background rounded-full px-4 py-2 hover:bg-foreground/90 disabled:opacity-50" disabled={!commentText.trim()}>Comment</button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {comments.map((comment) => (
+                          <div key={comment.id} className="py-3 border-b last:border-0">
+                            <div className="flex gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={comment.avatar} />
+                                <AvatarFallback>{comment.user.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium">{comment.user}</span>
+                                  <span className="text-xs text-muted-foreground">{comment.timeAgo}</span>
+                                </div>
+                                <p className="text-sm mt-0.5">{comment.content}</p>
+                                <div className="flex items-center gap-2 mt-1.5">
+                                  <button onClick={() => handleLikeComment(comment.id)} className={`flex items-center gap-1.5 hover:bg-muted rounded-full px-2.5 py-1 transition-colors ${likedComments.has(comment.id) ? "text-primary" : "text-muted-foreground"}`}>
+                                    <ThumbsUp className={`h-4 w-4 ${likedComments.has(comment.id) ? "fill-current" : ""}`} />
+                                    <span className="text-xs">{comment.likes}</span>
+                                  </button>
+                                  <button onClick={() => handleDislikeComment(comment.id)} className={`hover:bg-muted rounded-full p-1 transition-colors ${dislikedComments.has(comment.id) ? "text-destructive" : "text-muted-foreground"}`}>
+                                    <ThumbsDown className={`h-4 w-4 ${dislikedComments.has(comment.id) ? "fill-current" : ""}`} />
+                                  </button>
+                                  <button onClick={() => handleReply(comment.id)} className="text-xs text-muted-foreground hover:bg-muted rounded-full px-2.5 py-1 transition-colors">Reply</button>
+                                </div>
+                                {comment.replies && comment.replies.length > 0 && (
+                                  <div className="mt-2">
+                                    {comment.replies.map((reply: any) => (
+                                      <ReplyItem
+                                        key={reply.id}
+                                        reply={reply}
+                                        onLike={handleLikeComment}
+                                        onDislike={handleDislikeComment}
+                                        onReply={handleReply}
+                                        isLiked={likedComments.has(reply.id)}
+                                        isDisliked={dislikedComments.has(reply.id)}
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <Drawer open={commentsDrawerOpen} onOpenChange={setCommentsDrawerOpen}>
+                        <DrawerTrigger asChild>
+                          <Button variant="outline" className="w-full rounded-full flex items-center gap-2">
+                            <MessageCircle className="h-4 w-4" /> {comments.length} Comments
+                        </Button>
+                        </DrawerTrigger>
+                        <DrawerContent className="h-[80vh]">
+                          <DrawerHeader>
+                            <DrawerTitle className="text-lg">Comments</DrawerTitle>
+                          </DrawerHeader>
+                          <div className="px-4 overflow-y-auto">
+                            <div className="flex gap-3 mb-6">
+                              <Avatar className="h-8 w-8"><AvatarFallback>Y</AvatarFallback></Avatar>
+                              <div className="flex-1">
+                                <input type="text" placeholder="Add a comment..." value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddComment()} className="w-full bg-transparent border-b border-border pb-1.5 text-sm focus:outline-none focus:ring-0" />
+                                {commentText && (
+                                  <div className="flex items-center gap-2 mt-2 justify-end">
+                                    <button onClick={() => setCommentText("")} className="text-sm font-medium hover:bg-muted rounded-full px-3 py-1">Cancel</button>
+                                    <button onClick={handleAddComment} className="text-sm font-medium bg-foreground text-background rounded-full px-3 py-1 disabled:opacity-50" disabled={!commentText.trim()}>Comment</button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {comments.map((comment) => (
+                              <div key={comment.id} className="py-3 border-b last:border-0">
+                                <div className="flex gap-3">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src={comment.avatar} />
+                                    <AvatarFallback>{comment.user.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium">{comment.user}</span>
+                                      <span className="text-xs text-muted-foreground">{comment.timeAgo}</span>
+                                    </div>
+                                    <p className="text-sm mt-0.5">{comment.content}</p>
+                                    <div className="flex items-center gap-2 mt-1.5">
+                                      <button onClick={() => handleLikeComment(comment.id)} className={`flex items-center gap-1.5 hover:bg-muted rounded-full px-2.5 py-1 transition-colors ${likedComments.has(comment.id) ? "text-primary" : "text-muted-foreground"}`}>
+                                        <ThumbsUp className={`h-4 w-4 ${likedComments.has(comment.id) ? "fill-current" : ""}`} />
+                                        <span className="text-xs">{comment.likes}</span>
+                                      </button>
+                                      <button onClick={() => handleDislikeComment(comment.id)} className={`hover:bg-muted rounded-full p-1 transition-colors ${dislikedComments.has(comment.id) ? "text-destructive" : "text-muted-foreground"}`}>
+                                        <ThumbsDown className={`h-4 w-4 ${dislikedComments.has(comment.id) ? "fill-current" : ""}`} />
+                                      </button>
+                                      <button onClick={() => handleReply(comment.id)} className="text-xs text-muted-foreground hover:bg-muted rounded-full px-2.5 py-1 transition-colors">Reply</button>
+                                    </div>
+                                    {comment.replies && comment.replies.length > 0 && (
+                                      <div className="mt-2">
+                                        {comment.replies.map((reply: any) => (
+                                          <ReplyItem
+                                            key={reply.id}
+                                            reply={reply}
+                                            onLike={handleLikeComment}
+                                            onDislike={handleDislikeComment}
+                                            onReply={handleReply}
+                                            isLiked={likedComments.has(reply.id)}
+                                            isDisliked={dislikedComments.has(reply.id)}
+                                          />
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </DrawerContent>
+                      </Drawer>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Search inside playlist */}
-            {!collapsed && (
-              <div className="p-3 border-b flex-shrink-0">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Search in playlist"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-8 py-1.5 bg-muted/50 rounded-full text-sm outline-none focus:bg-muted transition-colors"
-                  />
-                  {searchQuery && (
-                    <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Scrollable video list */}
-            {!collapsed && (
-              <div
-                className={cn(
-                  "divide-y",
-                  isMobile
-                    ? "flex-1 overflow-y-auto"
-                    : "max-h-[calc(100vh-10rem)] overflow-y-auto"
-                )}
-              >
-                {filteredVideos.map((video, index) => (
-                  <Link
-                    key={video.id}
-                    href={`/videos/${video.channel}/${video.id}`}
-                    className="flex items-center gap-2 px-3 py-2 hover:bg-muted/30 transition-colors group"
-                    draggable
-                    onDragStart={() => handleDragStart(index)}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDragEnd={handleDragEnd}
-                  >
-                    {/* Combined index & drag handle */}
-                    <div className="flex items-center justify-center w-8 text-center relative cursor-grab">
-                      <span className="text-xs text-muted-foreground font-mono group-hover:opacity-0 transition-opacity">
-                        {index === 0 ? "▶" : index + 1}
+            {/* Right: Playlist panel */}
+            <div
+              className={cn(
+                "rounded-xl border bg-card overflow-hidden",
+                isMobile
+                  ? "flex-1 min-h-0 flex flex-col"
+                  : "lg:w-[450px] flex-shrink-0"
+              )}
+            >
+              <div className="p-4 border-b flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-lg">
+                      <Link href={`/playlists/${playlist.slug}/${playlist.id}`} className="hover:text-primary">
+                        {playlist.name}
+                      </Link>
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <span className="flex items-center gap-1">
+                        {playlist.isPublic ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                        {playlist.isPublic ? "Public" : "Private"}
                       </span>
-                      <GripVertical className="absolute inset-0 m-auto h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span>•</span>
+                      <span>{videos.length} videos</span>
                     </div>
-
-                    <div className="relative w-24 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-black">
-                      <Image src={video.thumbnail} alt={video.title} fill className="object-cover" />
-                      <div className="absolute bottom-0.5 right-0.5 bg-black/80 text-white text-[10px] px-1 rounded font-medium">
-                        {video.duration}
-                      </div>
-                      {index === 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/30">
-                          <div className="h-full bg-red-600" style={{ width: "60%" }} />
-                        </div>
-                      )}
+                  </div>
+                  <button onClick={toggleCollapse} className="p-1 rounded-full hover:bg-muted">
+                    <ChevronDown className={cn("h-5 w-5 transition-transform", collapsed ? "rotate-180" : "")} />
+                  </button>
+                </div>
+                {!collapsed && (
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => toast.info("Loop toggled (demo)")}>
+                        <Repeat className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => {
+                        if (videos.length) {
+                          const random = videos[Math.floor(Math.random() * videos.length)];
+                          handleSelectVideo(videos.indexOf(random));
+                        }
+                      }}>
+                        <Shuffle className="h-4 w-4" />
+                      </Button>
                     </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium line-clamp-2 group-hover:text-primary">{video.title}</h4>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <Avatar className="h-4 w-4">
-                          <AvatarImage src={video.channelAvatar} />
-                          <AvatarFallback className="text-[8px]">{video.channel?.charAt(0) || "C"}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs text-muted-foreground">{video.channel}</span>
-                        <span className="text-xs text-muted-foreground">•</span>
-                        <span className="text-xs text-muted-foreground">{video.timeAgo}</span>
-                      </div>
-                    </div>
-
+                    <div className="flex-1" />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-1 rounded-full hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.preventDefault()}>
-                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                        </button>
+                        <Button variant="ghost" size="icon" className="rounded-full">
+                          <MoreVertical className="h-5 w-5" />
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                        <DropdownMenuItem onClick={() => router.push(`/videos/${video.channel}/${video.id}`)}>
-                          <Play className="h-4 w-4 mr-2" /> Play now
+                        {playlist.isPublic && (
+                          <DropdownMenuItem className="cursor-pointer" onClick={handleShare}>
+                            <Share className="h-4 w-4 mr-2" /> Share
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => toast("Edit playlist (prototype)")}>
+                          <Edit className="h-4 w-4 mr-2" /> Edit playlist
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-500 dark:text-red-400" onClick={() => toast("Remove from playlist (demo)")}>
-                          <Trash2 className="h-4 w-4 mr-2" /> Remove
+                        <DropdownMenuItem className="cursor-pointer text-red-500 dark:text-red-400" onClick={() => toast("Delete playlist (prototype)")}>
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete playlist
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </Link>
-                ))}
+                  </div>
+                )}
               </div>
-            )}
+
+              {!collapsed && (
+                <div className="p-3 border-b flex-shrink-0">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search in playlist"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-8 py-1.5 bg-muted/50 rounded-full text-sm outline-none focus:bg-muted transition-colors"
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!collapsed && (
+                <div
+                  className={cn(
+                    "divide-y",
+                    isMobile
+                      ? "flex-1 overflow-y-auto"
+                      : "max-h-[calc(100vh-10rem)] overflow-y-auto"
+                  )}
+                >
+                  {filteredVideos.map((video, index) => (
+                    <button
+                      key={video.id}
+                      onClick={() => handleSelectVideo(index)}
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/30 transition-colors group cursor-pointer"
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <div className="flex items-center justify-center w-8 text-center relative cursor-grab">
+                        <span className="text-xs text-muted-foreground font-mono group-hover:opacity-0 transition-opacity">
+                          {index === currentVideoIndex ? "▶" : index + 1}
+                        </span>
+                        <GripVertical className="absolute inset-0 m-auto h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+
+                      <div className="relative w-24 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-black">
+                        <Image
+                          src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                          alt={video.title}
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute bottom-0.5 right-0.5 bg-black/80 text-white text-[10px] px-1 rounded font-medium">
+                          {video.duration}
+                        </div>
+                        {index === currentVideoIndex && (
+                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/30">
+                            <div className="h-full bg-red-600" style={{ width: "60%" }} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium line-clamp-2 group-hover:text-primary text-left">
+                          {video.title}
+                        </h4>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Avatar className="h-4 w-4">
+                            <AvatarImage src={video.channelAvatar} />
+                            <AvatarFallback className="text-[8px]">{video.channel?.charAt(0) || "C"}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground">{video.channel}</span>
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <span className="text-xs text-muted-foreground">{video.timeAgo}</span>
+                        </div>
+                      </div>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="p-1 rounded-full hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                          <DropdownMenuItem onClick={() => handleSelectVideo(index)}>
+                            <Play className="h-4 w-4 mr-2" /> Play now
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-500 dark:text-red-400" onClick={() => toast("Remove from playlist (demo)")}>
+                            <Trash2 className="h-4 w-4 mr-2" /> Remove
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Share Modal */}
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} videoUrl={shareUrl} />
-
-      <MobileNav />
     </div>
   );
 }

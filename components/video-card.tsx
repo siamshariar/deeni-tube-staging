@@ -1,3 +1,4 @@
+// components/video-card.tsx
 "use client";
 
 import { MoreVertical, Clock, Bookmark, Share, UserX, Ban, Flag, BookmarkCheck, EyeOff } from "lucide-react";
@@ -44,7 +45,7 @@ export default function VideoCard({
 }: VideoCardProps) {
   const [open, setOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [hidden, setHidden] = useState(false); // for "Not interested"
+  const [hidden, setHidden] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const { addToWatchLater, removeFromWatchLater, isInWatchLater } = useWatchLater();
   const { toggleFollowChannel, isFollowed } = useFeedPreferences();
@@ -106,7 +107,7 @@ export default function VideoCard({
 
   const videoUrl = `${window.location.origin}/videos/${channel}/${videoId}`;
 
-  if (hidden) return null; // don't render if hidden
+  if (hidden) return null;
 
   const menuItems = (
     <>
@@ -157,6 +158,7 @@ export default function VideoCard({
   const channelLink = `/channel-new/${channelId}`;
 
   if (isHorizontal) {
+    // Mobile horizontal list – unchanged
     return (
       <div className="flex flex-col p-3">
         <Link href={videoLink} className="block">
@@ -206,49 +208,53 @@ export default function VideoCard({
     );
   }
 
+  // Desktop grid card – new style matching playlist cards
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-card">
       <Link href={videoLink} className="block">
         <div className="relative aspect-video w-full">
-          <Image src={thumbnail} alt={title} fill className="object-cover rounded-lg" />
+          <Image src={thumbnail} alt={title} fill className="object-cover" />
           <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 py-0.5 rounded">{duration}</div>
         </div>
       </Link>
-      <div className="flex mt-2 gap-2">
-        <Link href={channelLink} className="flex-shrink-0">
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={channelAvatar} />
-            <AvatarFallback>{channel.charAt(0)}</AvatarFallback>
-          </Avatar>
-        </Link>
-        <div className="flex-1 min-w-0">
-          <Link href={videoLink} className="line-clamp-2 font-medium text-sm">{title}</Link>
-          <Link href={channelLink} className="text-muted-foreground text-xs mt-1 block">{channel}</Link>
-          <div className="text-muted-foreground text-xs">
-            <span>{views}</span><span> • </span><span>{timestamp}</span>
-          </div>
+      <div className="p-3 space-y-1">
+        {/* Title + three‑dot menu */}
+        <div className="flex items-start justify-between gap-1">
+          <Link href={videoLink} className="line-clamp-2 font-medium text-sm hover:text-primary transition-colors flex-1">
+            {title}
+          </Link>
+          {isDesktop ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 -mr-1" onClick={e => e.stopPropagation()}>
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[240px] p-0 rounded-xl">{menuItems}</DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Drawer open={open} onOpenChange={setOpen}>
+              <DrawerTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 -mr-1" onClick={e => { e.stopPropagation(); setOpen(true); }}>
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="px-0 max-h-[70vh]">
+                <div className="mt-2 pb-6">{menuItems}</div>
+              </DrawerContent>
+            </Drawer>
+          )}
         </div>
-        {isDesktop ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full self-start" onClick={e => e.stopPropagation()}>
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[240px] p-0 rounded-xl">{menuItems}</DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Drawer open={open} onOpenChange={setOpen}>
-            <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full self-start" onClick={e => { e.stopPropagation(); setOpen(true); }}>
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="px-0 max-h-[70vh]">
-              <div className="mt-2 pb-6">{menuItems}</div>
-            </DrawerContent>
-          </Drawer>
-        )}
+
+        {/* Channel name */}
+        <Link href={channelLink} className="text-muted-foreground text-xs block hover:text-foreground transition-colors">
+          {channel}
+        </Link>
+
+        {/* Views and time */}
+        <div className="text-muted-foreground text-xs flex items-center gap-1">
+          <span>{views}</span><span>•</span><span>{timestamp}</span>
+        </div>
       </div>
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} videoUrl={videoUrl} />
     </div>

@@ -21,7 +21,6 @@ import {
   Send,
   Reply,
 } from "lucide-react";
-import AppHeader from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -444,7 +443,7 @@ export default function VideoPlayPage() {
     if (found) {
       setMainVideo(found);
       setRelatedVideos(videoData.filter((v) => v.id !== found.id));
-      setShowFullDescription(false); // reset expansion on video change
+      setShowFullDescription(false);
     }
   }, [params]);
 
@@ -551,16 +550,16 @@ export default function VideoPlayPage() {
     toast("Reply input opened (demo)");
   };
 
-  // Auto-play URL
+  // Auto-play URL – standard YouTube controls visible
   const videoSrc = `https://www.youtube.com/embed/${mainVideo.videoId}?autoplay=1`;
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader />
-
-      {/* Mobile back button – fixed below header, consistent layout */}
+    // md:-ml-[240px] removes the root layout’s sidebar padding,
+    // then px-4 adds back a small left padding aligned with header logo/hamburger.
+    <div className="min-h-screen bg-background md:-ml-[240px]">
+      {/* Mobile back button – sticky below global header */}
       {isMobile && (
-        <div className="fixed top-[56px] left-0 right-0 z-10 bg-background/95 backdrop-blur-sm border-b">
+        <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-1.5 px-4 py-2 w-full"
@@ -573,11 +572,11 @@ export default function VideoPlayPage() {
         </div>
       )}
 
-      {/* Main layout */}
-      <div className="pt-0 md:pt-[72px] pb-6" style={isMobile ? { paddingTop: 0 } : {}}>
-        {/* Mobile: full-width video */}
+      {/* Main content – md:pt-4 provides top gap on desktop/tablet; mobile has small pt-2 */}
+      <div className="md:pt-4 pb-6">
+        {/* Mobile: full-width video with a small top padding */}
         {isMobile && (
-          <div className="w-full bg-black" style={{ marginTop: "calc(56px + 48px)" }}>
+          <div className="w-full bg-black pt-12">
             <div className="relative w-full aspect-video">
               <iframe
                 src={videoSrc}
@@ -590,7 +589,8 @@ export default function VideoPlayPage() {
           </div>
         )}
 
-        <div className="px-4 md:px-6">
+        {/* Content with standard small left padding */}
+        <div className="px-4 lg:pt-12 md:pt-12 sm:pt-2 md:px-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 min-w-0">
               {/* Desktop video player */}
@@ -608,7 +608,7 @@ export default function VideoPlayPage() {
                 </div>
               )}
 
-              {/* Video info */}
+              {/* Video info (unchanged) */}
               <div className="mt-2">
                 <h1 className="text-lg md:text-xl font-bold leading-tight">
                   {mainVideo.title}
@@ -724,7 +724,7 @@ export default function VideoPlayPage() {
                   )}
                 </div>
 
-                {/* Comments */}
+                {/* Comments (unchanged) */}
                 <div className="mt-4">
                   {!isMobile ? (
                     <div>
@@ -928,7 +928,7 @@ export default function VideoPlayPage() {
             {/* Related Videos – Desktop */}
             {!isMobile && (
               <div className="lg:w-[450px] flex-shrink-0">
-                <h3 className="font-semibold text-base mb-4">Related Videos</h3>
+                <h3 className="font-semibold text-base mb-2">Related Videos</h3>
                 <div className="space-y-3">
                   {relatedVideos.map((v) => (
                     <Link

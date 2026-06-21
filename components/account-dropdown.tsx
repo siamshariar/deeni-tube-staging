@@ -1,6 +1,7 @@
+// components/account-dropdown.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -58,10 +59,10 @@ export default function AccountDropdown() {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [userData, setUserData] = useState({
-    name: "Tamzid Muhammad",
-    email: "muhammad.tamzid@sun-asterisk.com",
+    name: "Guest",
+    email: "",
     avatar: "",
-    initials: "TM",
+    initials: "G",
   });
   const [showSwitchAccount, setShowSwitchAccount] = useState(false);
   const [showAddAccount, setShowAddAccount] = useState(false);
@@ -73,7 +74,6 @@ export default function AccountDropdown() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const isMounted = useRef(false);
 
   useEffect(() => {
     try {
@@ -88,7 +88,6 @@ export default function AccountDropdown() {
         });
       }
     } catch {}
-    isMounted.current = true;
   }, []);
 
   const handleThemeChange = (newTheme: ThemeMode) => {
@@ -169,8 +168,6 @@ export default function AccountDropdown() {
       default: return <Monitor className="h-5 w-5" />;
     }
   };
-
-  if (!isMounted.current) return null;
 
   return (
     <>

@@ -1,5 +1,5 @@
 // app/shorts/page.tsx
-// Updated: integrated ReportDialog and feedback modal, other UI unchanged.
+// Updated: integrated ReportDialog and feedback modal, removed AppHeader.
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -10,7 +10,6 @@ import {
   ThumbsUp, ThumbsDown, MoreVertical, Send, Eye, Clock, Copy, Check,
   ChevronLeft, ChevronRight,
 } from "lucide-react"
-import AppHeader from "@/components/app-header"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -74,7 +73,6 @@ function saveIds(key: string, ids: string[]) {
   localStorage.setItem(key, JSON.stringify(ids))
 }
 
-// Persistent data
 let commentsByVideo = loadComments()
 
 const descriptionsByVideo: Record<string, { title: string; views: string; timeAgo: string; description: string; hashtags: string[] }> = {
@@ -629,8 +627,6 @@ export default function ShortsPage() {
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
-
-      <div className="relative z-50"><AppHeader /></div>
 
       {/* Share Modal */}
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} />

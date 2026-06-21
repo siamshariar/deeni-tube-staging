@@ -15,9 +15,6 @@ import {
   AlertCircle,
   Check,
 } from "lucide-react";
-import AppHeader from "@/components/app-header";
-import MobileNav from "@/components/mobile-nav";
-import DesktopSidebar from "@/components/desktop-sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +29,6 @@ import {
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { toast } from "sonner";
 
-// Help topics (mock)
 const helpTopics = [
   {
     icon: BookOpen,
@@ -117,105 +113,94 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader />
-      <div className="flex">
-        <DesktopSidebar className="hidden md:block" />
-        <div className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px] pb-nav-safe md:pb-6">
-          {/* Mobile header – consistent with other pages */}
-          <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-            <button
-              onClick={() => router.back()}
-              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="font-semibold text-lg">Help & Support</h1>
-          </div>
-
-          <div className="px-4 md:px-6 py-4 md:py-6">
-            {/* Page header – desktop only */}
-            {!isMobile && (
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold">Help & Support</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Find answers or contact our support team.
-                </p>
-              </div>
-            )}
-
-            {isLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 border rounded-xl">
-                    <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-48" />
-                      <Skeleton className="h-3 w-64" />
-                    </div>
-                    <Skeleton className="h-5 w-5 flex-shrink-0" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Help topics list – style consistent with settings/more */}
-                <div className="space-y-2">
-                  {helpTopics.map((topic) => (
-                    <button
-                      key={topic.label}
-                      onClick={() => {
-                        if (topic.href !== "#") router.push(topic.href);
-                        else toast.info("This help article will be available soon.");
-                      }}
-                      className="w-full flex items-center gap-4 p-4 bg-card hover:bg-muted/50 rounded-xl border transition-colors text-left group"
-                    >
-                      <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-                        <topic.icon className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium group-hover:text-primary transition-colors">
-                          {topic.label}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {topic.description}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    </button>
-                  ))}
-                </div>
-
-                {/* Contact support card */}
-                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-6 md:p-8 text-center border border-blue-100 dark:border-blue-900">
-                  <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <MessageCircle className="h-7 w-7 text-blue-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">Still need help?</h3>
-                  <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-                    Our support team is here to assist you.
-                  </p>
-                  <Button
-                    className="rounded-full px-6"
-                    size="lg"
-                    onClick={() => setShowSupportDialog(true)}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" /> Contact Support
-                  </Button>
-                </div>
-
-                <div className="text-center py-4">
-                  <p className="text-xs text-muted-foreground">
-                    Deeni.tube v1.0.0
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Mobile header */}
+      <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="font-semibold text-lg">Help & Support</h1>
       </div>
-      <MobileNav />
 
-      {/* Support Dialog */}
+      <div className="px-4 md:px-6 py-4 md:py-6">
+        {!isMobile && (
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">Help & Support</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Find answers or contact our support team.
+            </p>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 border rounded-xl">
+                <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-64" />
+                </div>
+                <Skeleton className="h-5 w-5 flex-shrink-0" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              {helpTopics.map((topic) => (
+                <button
+                  key={topic.label}
+                  onClick={() => {
+                    if (topic.href !== "#") router.push(topic.href);
+                    else toast.info("This help article will be available soon.");
+                  }}
+                  className="w-full flex items-center gap-4 p-4 bg-card hover:bg-muted/50 rounded-xl border transition-colors text-left group"
+                >
+                  <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                    <topic.icon className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium group-hover:text-primary transition-colors">
+                      {topic.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {topic.description}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-6 md:p-8 text-center border border-blue-100 dark:border-blue-900">
+              <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <MessageCircle className="h-7 w-7 text-blue-500" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Still need help?</h3>
+              <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+                Our support team is here to assist you.
+              </p>
+              <Button
+                className="rounded-full px-6"
+                size="lg"
+                onClick={() => setShowSupportDialog(true)}
+              >
+                <MessageCircle className="h-4 w-4 mr-2" /> Contact Support
+              </Button>
+            </div>
+
+            <div className="text-center py-4">
+              <p className="text-xs text-muted-foreground">
+                Deeni.tube v1.0.0
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
       <Dialog open={showSupportDialog} onOpenChange={setShowSupportDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -251,7 +236,6 @@ export default function HelpPage() {
                   <AlertCircle className="h-3 w-3" /> {errors.name}
                 </p>
               )}
-
               <Input
                 type="email"
                 placeholder="Your email *"
@@ -267,7 +251,6 @@ export default function HelpPage() {
                   <AlertCircle className="h-3 w-3" /> {errors.email}
                 </p>
               )}
-
               <Input
                 type="text"
                 placeholder="Subject *"
@@ -283,7 +266,6 @@ export default function HelpPage() {
                   <AlertCircle className="h-3 w-3" /> {errors.subject}
                 </p>
               )}
-
               <Textarea
                 placeholder="Describe your issue... *"
                 value={supportForm.message}
@@ -300,9 +282,7 @@ export default function HelpPage() {
                   <AlertCircle className="h-3 w-3" /> {errors.message}
                 </p>
               )}
-
               <p className="text-xs text-muted-foreground">* Required fields</p>
-
               <Button className="w-full rounded-full" onClick={handleSubmitSupport}>
                 <Send className="h-4 w-4 mr-2" /> Send Message
               </Button>
