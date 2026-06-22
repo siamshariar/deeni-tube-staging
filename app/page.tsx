@@ -7,7 +7,7 @@ import VideoCard from "@/components/video-card";
 import LanguagePrompt from "@/components/language-prompt";
 import { videoData, VideoItem } from "@/lib/video-data";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useHeader } from "@/app/contexts/header-context";
+import { useHeader } from "@/app/contexts/header-context";   // ✅ fixed path
 import { cn } from "@/lib/utils";
 
 export default function Home() {

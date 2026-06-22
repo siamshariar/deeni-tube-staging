@@ -46,6 +46,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShareModal } from "@/components/share-modal";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -280,7 +286,7 @@ export default function PlaylistDetailPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [collapsed, setCollapsed] = useState(false);
-  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);   // ✅ added
 
   const [dragItem, setDragItem] = useState<number | null>(null);
 
@@ -479,7 +485,7 @@ export default function PlaylistDetailPage() {
 
   return (
     <div className="min-h-screen bg-background md:-ml-[240px] mt-16">
-      {/* Mobile back button + title – exactly like video details */}
+      {/* Mobile back button + title */}
       {isMobile && (
         <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">
           <button
@@ -494,7 +500,7 @@ export default function PlaylistDetailPage() {
         </div>
       )}
 
-      {/* Mobile: full-width video (edge-to-edge) – no top padding */}
+      {/* Mobile: full-width video (edge-to-edge) */}
       {isMobile && (
         <div className="w-full bg-black">
           <div className="relative w-full aspect-video">
@@ -594,20 +600,20 @@ export default function PlaylistDetailPage() {
                     </div>
                   </div>
 
-                  {/* Description – inline expand on mobile */}
+                  {/* Description – modal on mobile, inline on desktop */}
                   <div className="mt-2 bg-muted/40 rounded-xl p-3 md:p-4">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="font-medium">{currentVideo.views}</span>
                       <span className="text-muted-foreground">•</span>
                       <span className="text-muted-foreground">{currentVideo.timeAgo}</span>
                     </div>
-                    {isMobile && !showFullDescription ? (
+                    {isMobile ? (
                       <>
                         <p className="text-sm mt-1 line-clamp-2">
                           {currentVideo.description}
                         </p>
                         <button
-                          onClick={() => setShowFullDescription(true)}
+                          onClick={() => setDescriptionModalOpen(true)}
                           className="text-sm text-primary hover:underline font-medium mt-1"
                         >
                           Read more
@@ -616,17 +622,29 @@ export default function PlaylistDetailPage() {
                     ) : (
                       <p className="text-sm mt-1 whitespace-pre-wrap">
                         {currentVideo.description}
-                        {isMobile && showFullDescription && (
-                          <button
-                            onClick={() => setShowFullDescription(false)}
-                            className="text-primary ml-1 hover:underline font-medium text-sm"
-                          >
-                            Show less
-                          </button>
-                        )}
                       </p>
                     )}
                   </div>
+
+                  {/* Description Modal for Mobile */}
+                  <Dialog open={descriptionModalOpen} onOpenChange={setDescriptionModalOpen}>
+                    <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto [&>button.absolute]:hidden">
+                      <button
+                        onClick={() => setDescriptionModalOpen(false)}
+                        className="rounded-full p-1 hover:bg-muted transition-colors z-10"
+                        style={{ position: "absolute", top: "10px", right: "10px" }}
+                        aria-label="Close"
+                      >
+                        <X className="h-6 w-6" />
+                      </button>
+                      <DialogHeader>
+                        <DialogTitle>Description</DialogTitle>
+                      </DialogHeader>
+                      <div className="text-sm whitespace-pre-wrap leading-relaxed">
+                        {currentVideo.description}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
 
                   {/* Comments */}
                   <div className="mt-4">

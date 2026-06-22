@@ -42,22 +42,12 @@ import { extendedPlaylists, PlaylistItem } from "@/lib/playlist-data";
 import { videoData } from "@/lib/video-data";
 import Image from "next/image";
 
-const SCHOLAR_PLAYLIST_IDS = ["pl-islamic-1", "pl-islamic-2"];
-
-const chipFilters = [
-  { key: "playlists", label: "Playlists" },
-  { key: "saved", label: "Saved" },
-];
-
 export default function PlaylistsPage() {
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState("playlists");
   const [sortOrder, setSortOrder] = useState<"recent" | "asc" | "desc">("recent");
-  const [playlists, setPlaylists] = useState<PlaylistItem[]>(() =>
-    extendedPlaylists.filter((pl) => SCHOLAR_PLAYLIST_IDS.includes(pl.id))
-  );
+  const [playlists, setPlaylists] = useState<PlaylistItem[]>(extendedPlaylists);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -85,26 +75,24 @@ export default function PlaylistsPage() {
       pl.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    if (activeFilter === "playlists") {
-      list = list.filter((pl) => pl.type === "playlist");
-    } else if (activeFilter === "saved") {
-      list = list.filter((pl) => pl.type === "saved");
-    }
+    // “Watch Later” always comes first, then sort the rest
+    const watchLater = list.find(p => p.id === "pl-watch-later");
+    const others = list.filter(p => p.id !== "pl-watch-later");
 
     if (sortOrder === "recent") {
-      list.sort((a, b) => {
+      others.sort((a, b) => {
         if (a.updatedAt === "Just now") return -1;
         if (b.updatedAt === "Just now") return 1;
         return b.updatedAt.localeCompare(a.updatedAt);
       });
     } else if (sortOrder === "asc") {
-      list.sort((a, b) => a.name.localeCompare(b.name));
+      others.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortOrder === "desc") {
-      list.sort((a, b) => b.name.localeCompare(a.name));
+      others.sort((a, b) => b.name.localeCompare(a.name));
     }
 
-    return list;
-  }, [playlists, searchQuery, activeFilter, sortOrder]);
+    return watchLater ? [watchLater, ...others] : others;
+  }, [playlists, searchQuery, sortOrder]);
 
   const handleCreatePlaylist = () => {
     if (!newPlaylistName.trim()) {
@@ -181,13 +169,10 @@ export default function PlaylistsPage() {
         <h1 className="font-semibold text-lg">Playlists</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-2 md:py-6 mt-16">
+      <div className="px-4 md:px-6 py-2 md:py-6 mt-12">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             {!isMobile && <h1 className="text-2xl font-bold">Playlists</h1>}
-            {/* <p className="text-sm text-muted-foreground mt-1">
-              {playlists.length} playlist{playlists.length !== 1 ? "s" : ""}
-            </p> */}
           </div>
           <div className="flex items-center gap-2">
             <div className="relative flex-1 sm:w-64">
@@ -222,7 +207,7 @@ export default function PlaylistsPage() {
           </div>
         </div>
 
-        {/* Chip bar */}
+        {/* Sort chips only */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -250,21 +235,6 @@ export default function PlaylistsPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {chipFilters.map((chip) => (
-            <button
-              key={chip.key}
-              onClick={() => setActiveFilter(chip.key)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                activeFilter === chip.key
-                  ? "bg-foreground text-background"
-                  : "bg-muted hover:bg-muted/80 text-foreground"
-              )}
-            >
-              {chip.label}
-            </button>
-          ))}
         </div>
 
         {/* Playlist grid */}
@@ -320,7 +290,6 @@ export default function PlaylistsPage() {
 
                   {/* Metadata */}
                   <div className="p-4 space-y-1">
-                    {/* Title + three‑dot menu aligned top‑right */}
                     <div className="flex items-start justify-between gap-1">
                       <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors flex-1">
                         {playlist.name}

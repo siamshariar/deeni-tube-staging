@@ -13,14 +13,10 @@ import {
   Settings,
   HelpCircle,
   MessageSquare,
-  ShieldAlert,
-  Keyboard,
   User,
   Monitor,
   Sun,
   Check,
-  Plus,
-  Users,
   Send,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,10 +33,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import LanguagePrompt from "@/components/language-prompt";
-import { mockAccounts } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 function getInitials(name: string): string {
@@ -64,12 +58,6 @@ export default function AccountDropdown() {
     avatar: "",
     initials: "G",
   });
-  const [showSwitchAccount, setShowSwitchAccount] = useState(false);
-  const [showAddAccount, setShowAddAccount] = useState(false);
-  const [newAccountName, setNewAccountName] = useState("");
-  const [newAccountEmail, setNewAccountEmail] = useState("");
-  const [accounts, setAccounts] = useState(mockAccounts);
-  const [currentAccountId, setCurrentAccountId] = useState("acc1");
   const [showLanguagePrompt, setShowLanguagePrompt] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
@@ -81,10 +69,10 @@ export default function AccountDropdown() {
       if (storedUser) {
         const parsed = JSON.parse(storedUser);
         setUserData({
-          name: parsed.name || "Tamzid Muhammad",
-          email: parsed.email || "muhammad.tamzid@sun-asterisk.com",
+          name: parsed.name || "Guest",
+          email: parsed.email || "",
           avatar: parsed.avatar || "",
-          initials: parsed.initials || getInitials(parsed.name || "Tamzid Muhammad"),
+          initials: parsed.initials || getInitials(parsed.name || "Guest"),
         });
       }
     } catch {}
@@ -95,51 +83,21 @@ export default function AccountDropdown() {
   };
 
   const handleSignOut = () => {
-    localStorage.setItem("deeni-language-prefs", JSON.stringify({
+    localStorage.setItem("deeni-lang-prefs", JSON.stringify({
       languages: ["en"],
       hasSelected: false,
       isGuest: true,
     }));
     localStorage.removeItem("deeni-user-data");
     setOpen(false);
+    // Dispatch event so header updates instantly
+    window.dispatchEvent(new Event("auth-changed"));
     router.push("/signin");
   };
 
   const handleNavigate = (path: string) => {
     setOpen(false);
     router.push(path);
-  };
-
-  const handleSwitchAccount = (accountId: string) => {
-    const account = accounts.find((a) => a.id === accountId);
-    if (account) {
-      setUserData({
-        name: account.name,
-        email: account.email,
-        avatar: account.avatar || "",
-        initials: account.initials,
-      });
-      setCurrentAccountId(accountId);
-      toast.success(`Switched to ${account.name}`);
-    }
-    setShowSwitchAccount(false);
-    setOpen(false);
-  };
-
-  const handleAddAccount = () => {
-    if (!newAccountName.trim() || !newAccountEmail.trim()) return;
-    const newAccount = {
-      id: `acc${Date.now()}`,
-      name: newAccountName.trim(),
-      email: newAccountEmail.trim(),
-      avatar: "",
-      initials: getInitials(newAccountName.trim()),
-    };
-    setAccounts((prev) => [...prev, newAccount]);
-    setNewAccountName("");
-    setNewAccountEmail("");
-    setShowAddAccount(false);
-    handleSwitchAccount(newAccount.id);
   };
 
   const handleSendFeedback = () => {
@@ -184,6 +142,7 @@ export default function AccountDropdown() {
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-80 p-0 mr-4" align="end" sideOffset={8}>
+          {/* User info header */}
           <div className="flex items-center gap-3 p-4 border-b">
             <Avatar className="h-10 w-10">
               {userData.avatar ? (
@@ -197,14 +156,20 @@ export default function AccountDropdown() {
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{userData.name}</p>
               <p className="text-xs text-muted-foreground truncate">{userData.email}</p>
-              <p className="text-xs text-muted-foreground">Switch account ↓</p>
             </div>
           </div>
 
           <DropdownMenuGroup>
-            <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => setShowSwitchAccount(true)}>
-              <Users className="mr-3 h-5 w-5" />
-              <span>Switch account</span>
+            {/* Preferences */}
+            <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/you-new")}>
+              <User className="mr-3 h-5 w-5" />
+              <span>Preferences</span>
+            </DropdownMenuItem>
+
+            {/* Channel Preferences */}
+            <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/channels")}>
+              <Settings className="mr-3 h-5 w-5" />
+              <span>Channel Preferences</span>
               <ChevronRight className="ml-auto h-4 w-4" />
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -212,19 +177,7 @@ export default function AccountDropdown() {
           <DropdownMenuSeparator />
 
           <DropdownMenuGroup>
-            <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/you-new")}>
-              <User className="mr-3 h-5 w-5" />
-              <span>Your channel</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="py-3 cursor-pointer" onClick={handleSignOut}>
-              <LogOut className="mr-3 h-5 w-5" />
-              <span>Sign out</span>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuGroup>
+            {/* Appearance */}
             <DropdownMenuSub>
               <DropdownMenuSubTrigger className="py-3 cursor-pointer">
                 {getThemeIcon()}
@@ -249,6 +202,7 @@ export default function AccountDropdown() {
               </DropdownMenuSubContent>
             </DropdownMenuSub>
 
+            {/* Language */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => { setOpen(false); setShowLanguagePrompt(true); }}>
               <Globe className="mr-3 h-5 w-5" />
               <span>Language</span>
@@ -259,66 +213,36 @@ export default function AccountDropdown() {
           <DropdownMenuSeparator />
 
           <DropdownMenuGroup>
+            {/* Settings */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/settings")}>
               <Settings className="mr-3 h-5 w-5" />
               <span>Settings</span>
             </DropdownMenuItem>
+
+            {/* Help */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/help")}>
               <HelpCircle className="mr-3 h-5 w-5" />
               <span>Help</span>
             </DropdownMenuItem>
+
+            {/* Send feedback */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => { setOpen(false); setShowFeedbackDialog(true); }}>
               <MessageSquare className="mr-3 h-5 w-5" />
               <span>Send feedback</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuGroup>
+            {/* Sign out */}
+            <DropdownMenuItem className="py-3 cursor-pointer" onClick={handleSignOut}>
+              <LogOut className="mr-3 h-5 w-5" />
+              <span>Sign out</span>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* Switch Account Dialog */}
-      <Dialog open={showSwitchAccount} onOpenChange={setShowSwitchAccount}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Switch Account</DialogTitle>
-            <DialogDescription>Choose an account to continue using Deeni.tube.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-4">
-            {accounts.map((acc) => (
-              <button
-                key={acc.id}
-                onClick={() => handleSwitchAccount(acc.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                  currentAccountId === acc.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
-                }`}
-              >
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-muted text-foreground font-medium">{acc.initials}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">{acc.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{acc.email}</p>
-                </div>
-                {currentAccountId === acc.id && <Check className="h-5 w-5 text-primary flex-shrink-0" />}
-              </button>
-            ))}
-            <Button variant="outline" className="w-full rounded-xl border-dashed flex items-center gap-2" onClick={() => { setShowSwitchAccount(false); setShowAddAccount(true); }}>
-              <Plus className="h-4 w-4" /><span>Add account</span>
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Account Dialog */}
-      <Dialog open={showAddAccount} onOpenChange={setShowAddAccount}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-primary" /> Add Account</DialogTitle><DialogDescription>Enter the details of the account you want to add.</DialogDescription></DialogHeader>
-          <div className="space-y-4 py-4">
-            <Input placeholder="Full name" value={newAccountName} onChange={(e) => setNewAccountName(e.target.value)} className="h-10" />
-            <Input type="email" placeholder="Email address" value={newAccountEmail} onChange={(e) => setNewAccountEmail(e.target.value)} className="h-10" />
-            <div className="flex gap-3"><Button variant="outline" className="flex-1" onClick={() => setShowAddAccount(false)}>Cancel</Button><Button className="flex-1" onClick={handleAddAccount} disabled={!newAccountName.trim() || !newAccountEmail.trim()}>Add & Switch</Button></div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Language Prompt */}
       <LanguagePrompt

@@ -1,3 +1,4 @@
+// app/signin/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -36,9 +37,13 @@ export default function SignInPage() {
     setShowLanguagePopup(false);
   };
 
+  const notifyAuthChange = () => {
+    // Dispatch a custom event so the header updates instantly
+    window.dispatchEvent(new Event("auth-changed"));
+  };
+
   const handleGoogleSignIn = () => {
     setIsLoading(true);
-    // Simulate Google sign in with mock account
     setTimeout(() => {
       const mockUser = mockAccounts[0];
       localStorage.setItem("deeni-user-data", JSON.stringify({
@@ -47,13 +52,14 @@ export default function SignInPage() {
         initials: mockUser.initials,
         avatar: mockUser.avatar || "",
       }));
-      localStorage.setItem("deeni-language-prefs", JSON.stringify({
+      localStorage.setItem("deeni-lang-prefs", JSON.stringify({
         languages: selectedLanguages,
         hasSelected: true,
         isGuest: false,
       }));
       setIsLoading(false);
       toast.success(`Signed in as ${mockUser.name}`);
+      notifyAuthChange();
       router.push("/");
     }, 1200);
   };
@@ -69,13 +75,14 @@ export default function SignInPage() {
         initials: mockUser.initials,
         avatar: mockUser.avatar || "",
       }));
-      localStorage.setItem("deeni-language-prefs", JSON.stringify({
+      localStorage.setItem("deeni-lang-prefs", JSON.stringify({
         languages: selectedLanguages,
         hasSelected: true,
         isGuest: false,
       }));
       setIsLoading(false);
       toast.success(`Signed in as ${mockUser.name}`);
+      notifyAuthChange();
       router.push("/");
     }, 1200);
   };

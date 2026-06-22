@@ -1,3 +1,4 @@
+// components/mobile-sidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -5,17 +6,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  Search,
   PlaySquare,
   BookMarked,
-  Clock,
-  ThumbsUp,
   History,
   Users,
   GraduationCap,
   FolderOpen,
   Settings,
-  Flag,
   HelpCircle,
   Globe,
 } from "lucide-react";
@@ -53,15 +50,13 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         <div className="border-t py-2">
           <MobileSidebarItem href="/you-new" icon={<UserIcon className="h-5 w-5" />} label="You" active={pathname === "/you-new"} onClick={onClose} />
           <MobileSidebarItem href="/history" icon={<History className="h-5 w-5" />} label="History" onClick={onClose} />
-          <MobileSidebarItem href="/watch-later" icon={<Clock className="h-5 w-5" />} label="Watch later" onClick={onClose} />
-          <MobileSidebarItem href="/liked-videos" icon={<ThumbsUp className="h-5 w-5" />} label="Liked videos" onClick={onClose} />
-          <MobileSidebarItem href="/playlists" icon={<BookMarked className="h-5 w-5" />} label="Playlists" active={pathname === "/playlists"} onClick={onClose} />
         </div>
 
         <div className="border-t py-2">
-          <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Explore</h3>
-          <MobileSidebarItem href="/search-new" icon={<Search className="h-5 w-5" />} label="Search" active={pathname === "/search-new"} onClick={onClose} />
+          <MobileSidebarItem href="/playlists" icon={<BookMarked className="h-5 w-5" />} label="Playlists" active={pathname === "/playlists"} onClick={onClose} />
         </div>
+
+        {/* ❌ Removed Explore section with duplicate Search */}
 
         <div className="border-t py-2">
           <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Deeni.tube</h3>
@@ -77,7 +72,6 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
         <div className="border-t py-2">
           <MobileSidebarItem href="/settings" icon={<Settings className="h-5 w-5" />} label="Settings" onClick={onClose} />
-          {/* <MobileSidebarItem href="/report" icon={<Flag className="h-5 w-5" />} label="Report history" onClick={onClose} /> */}
           <MobileSidebarItem href="/help" icon={<HelpCircle className="h-5 w-5" />} label="Help" onClick={onClose} />
         </div>
 

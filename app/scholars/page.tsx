@@ -10,6 +10,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { scholarData, ScholarItem } from "@/lib/scholar-data";
+import { videoData, VideoItem } from "@/lib/video-data";   // <-- import video data
 import { SortDropdown, SortOption } from "@/components/sort-dropdown";
 
 function ScholarSkeleton() {
@@ -30,17 +31,35 @@ const sortOptions: SortOption[] = [
   { label: "Name (Z-A)", value: "name-desc" },
 ];
 
+const languageOptions = [
+  { code: "bn", name: "Bangla" },
+  { code: "en", name: "English" },
+  { code: "ar", name: "Arabic" },
+  { code: "ur", name: "Urdu" },
+];
+
 export default function ScholarsPage() {
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [sortValue, setSortValue] = useState("default");
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["bn"]); // default Bangla
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(timer);
   }, []);
+
+  const toggleLanguage = (code: string) => {
+    setSelectedLanguages((prev) =>
+      prev.includes(code)
+        ? prev.length > 1
+          ? prev.filter((l) => l !== code)
+          : prev
+        : [...prev, code]
+    );
+  };
 
   const sortScholars = (scholars: ScholarItem[]) => {
     switch (sortValue) {
@@ -53,13 +72,23 @@ export default function ScholarsPage() {
     }
   };
 
+  // Filter scholars based on whether they have videos in the selected languages
   const filteredScholars: ScholarItem[] = sortScholars(
-    scholarData.filter(
-      (scholar: ScholarItem) =>
-        !searchQuery ||
-        scholar.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        scholar.designation.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    scholarData
+      .filter((scholar: ScholarItem) => {
+        // Check if scholar has at least one video in any of the selected languages
+        return videoData.some(
+          (v: VideoItem) =>
+            v.channelId === scholar.channelId &&
+            selectedLanguages.includes(v.language)
+        );
+      })
+      .filter(
+        (scholar: ScholarItem) =>
+          !searchQuery ||
+          scholar.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          scholar.designation.toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
 
   return (
@@ -76,9 +105,9 @@ export default function ScholarsPage() {
       </div>
 
       {/* Content area – same spacing as Channels page */}
-      <div className="px-4 md:px-6 py-4 md:py-6">
-        {/* Title + search – mt-12 provides top clearance after sticky back button */}
-        <div className="flex flex-col mt-16 sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
+        {/* Title + search */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="hidden md:block">
             <h1 className="text-2xl font-bold">Scholars</h1>
             <p className="text-sm text-muted-foreground mt-1">
@@ -113,9 +142,27 @@ export default function ScholarsPage() {
           </div>
         </div>
 
+        {/* Language filter chips */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+          {languageOptions.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => toggleLanguage(lang.code)}
+              className={cn(
+                "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                selectedLanguages.includes(lang.code)
+                  ? "bg-foreground text-background"
+                  : "bg-muted hover:bg-muted/80 text-foreground"
+              )}
+            >
+              {lang.name}
+            </button>
+          ))}
+        </div>
+
         {isLoading ? (
           <div className="divide-y">
-            {Array.from({ length: 2 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <ScholarSkeleton key={i} />
             ))}
           </div>
@@ -125,7 +172,9 @@ export default function ScholarsPage() {
               <GraduationCap className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium mb-1">No scholars found</h3>
-            <p className="text-muted-foreground">Try different keywords</p>
+            <p className="text-muted-foreground">
+              Try different language or keywords
+            </p>
           </div>
         ) : (
           <div className="divide-y">

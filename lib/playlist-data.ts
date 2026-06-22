@@ -8,11 +8,27 @@ export interface PlaylistItem {
   videoIds: string[];
   updatedAt: string;
   isPublic: boolean;
-  type: "playlist" | "saved";
+  type: "playlist";           // all playlists are now “playlist”
   thumbnailColor: string;
 }
 
+// Consistent colour palette
+const palette = ["#5A7A8C", "#8C6B5A", "#7A8C5A", "#6A5A8C", "#4A6A8C", "#8C4A6A", "#6A8C4A"];
+
 export const extendedPlaylists: PlaylistItem[] = [
+  // 🔹 Watch Later – always first
+  {
+    id: "pl-watch-later",
+    slug: "watch-later",
+    name: "Watch Later",
+    videoIds: videoData.slice(0, 4).map(v => v.id),   // sample videos
+    updatedAt: "Just now",
+    isPublic: false,
+    type: "playlist",
+    thumbnailColor: palette[0],
+  },
+
+  // Scholar playlists
   {
     id: "pl-islamic-1",
     slug: "monzur-lectures",
@@ -21,7 +37,7 @@ export const extendedPlaylists: PlaylistItem[] = [
     updatedAt: "2 weeks ago",
     isPublic: true,
     type: "playlist",
-    thumbnailColor: "#5A7A8C",
+    thumbnailColor: palette[1],
   },
   {
     id: "pl-islamic-2",
@@ -31,8 +47,10 @@ export const extendedPlaylists: PlaylistItem[] = [
     updatedAt: "1 month ago",
     isPublic: true,
     type: "playlist",
-    thumbnailColor: "#8C6B5A",
+    thumbnailColor: palette[2],
   },
+
+  // Extra playlists
   {
     id: "pl-islamic-3",
     slug: "favorites",
@@ -41,28 +59,7 @@ export const extendedPlaylists: PlaylistItem[] = [
     updatedAt: "3 days ago",
     isPublic: false,
     type: "playlist",
-    thumbnailColor: "#7A8C5A",
-  },
-  {
-    id: "pl-islamic-4",
-    slug: "quran-studies",
-    name: "Quran Studies",
-    videoIds: ["v1", "v2", "v6", "v7"],
-    updatedAt: "Yesterday",
-    isPublic: true,
-    type: "playlist",
-    thumbnailColor: "#6A5A8C",
-  },
-  // Extra playlists (e.g., saved, music, study) from the original extended list
-  {
-    id: "pl-extra-1",
-    slug: "saved-for-later",
-    name: "Saved for later",
-    videoIds: Array.from({ length: 12 }, () => videoData[Math.floor(Math.random() * videoData.length)]?.id || "v1"),
-    updatedAt: "2 weeks ago",
-    isPublic: false,
-    type: "saved",
-    thumbnailColor: "#4A6A8C",
+    thumbnailColor: palette[3],
   },
   {
     id: "pl-extra-2",
@@ -72,7 +69,7 @@ export const extendedPlaylists: PlaylistItem[] = [
     updatedAt: "1 month ago",
     isPublic: true,
     type: "playlist",
-    thumbnailColor: "#8C4A6A",
+    thumbnailColor: palette[4],
   },
   {
     id: "pl-extra-3",
@@ -82,7 +79,7 @@ export const extendedPlaylists: PlaylistItem[] = [
     updatedAt: "3 days ago",
     isPublic: false,
     type: "playlist",
-    thumbnailColor: "#6A8C4A",
+    thumbnailColor: palette[5],
   },
   {
     id: "pl-extra-4",
@@ -92,6 +89,6 @@ export const extendedPlaylists: PlaylistItem[] = [
     updatedAt: "Yesterday",
     isPublic: true,
     type: "playlist",
-    thumbnailColor: "#4A6A8C",
+    thumbnailColor: palette[6],
   },
 ];

@@ -1,3 +1,4 @@
+// lib/video-data.ts
 export interface VideoItem {
   id: string;
   videoId: string;
@@ -17,13 +18,15 @@ const MONZUR_AVATAR =
   "https://yt3.googleusercontent.com/ytc/AIdro_lLp3SxQeehJxSmd_QCmSxpFBj4k-7X-brif7v9Jz0rBg=s160-c-k-c0x00ffffff-no-rj";
 const ABDULLAH_AVATAR =
   "https://yt3.googleusercontent.com/stJnVilfKhMtBiIq_hXTu-9DnanUT0GNtmsRePmQvLAi6c7bhXoIIHGlYL0HqUrdEjrL0KFs7Q=s160-c-k-c0x00ffffff-no-rj";
+const ZAKIR_AVATAR =
+  "https://yt3.googleusercontent.com/ytc/AIdro_kgWD-o3akIt5SI_BWvWHc6mHyPRm3BA5t69TAZlqQcpIF6=s176-c-k-c0x00ffffff-no-rj-mo";
 
 export const videoData: VideoItem[] = [
+  // Monzur-E-Elahi
   {
     id: "v1",
     videoId: "XVscS6piz9A",
-    title:
-      "Islamic Halaka : শেষ জামানার ফিতনা ।। Prof. Dr. Mohammad Monzur-E-Elahi",
+    title: "Islamic Halaka : শেষ জামানার ফিতনা ।। Prof. Dr. Mohammad Monzur-E-Elahi",
     channel: "Dr. Mohammad Monzur-E-Elahi",
     channelId: "monzur",
     channelAvatar: MONZUR_AVATAR,
@@ -99,6 +102,8 @@ export const videoData: VideoItem[] = [
     language: "bn",
     category: "Islamic Lecture",
   },
+
+  // Abdullah Jahangir
   {
     id: "v6",
     videoId: "908GzCFuysY",
@@ -175,6 +180,103 @@ export const videoData: VideoItem[] = [
     timeAgo: "10 months ago",
     description:
       "আল্লাহুয়াকবার! কি প্রাণচঞ্চল একটি আলোচনা! আখিরাতের চিন্তা এবং আব্দুল কাদের জিলানী রহমতুল্লাহি আলাইহির জীবনী। Amazing Islamic Lecture by Dr. Khondokar Abdullah Jahangir.",
+    language: "bn",
+    category: "Islamic Lecture",
+  },
+
+  // Zakir Naik – English
+  {
+    id: "v11",
+    videoId: "XNojvAddjL8",
+    title: "How to Enter Paradise in the Eyes of Islam – Talk by Dr Zakir Naik",
+    channel: "Dr Zakir Naik",
+    channelId: "zakir-naik",
+    channelAvatar: ZAKIR_AVATAR,
+    duration: "2:30:15",
+    views: "1.5M views",
+    timeAgo: "2 weeks ago",
+    description:
+      "How to Enter Paradise in the Eyes of Islam\nTalk by Dr Zakir Naik\nAt Hotel Royal Chulan Ballroom, Kuala Lumpur, Malaysia.\n20th June 2026",
+    language: "en",
+    category: "Islamic Lecture",
+  },
+  {
+    id: "v12",
+    videoId: "72-todksmcs",
+    title: "Muslim's Power is in Unity and Closeness to Allah - Dr Zakir Naik",
+    channel: "Dr Zakir Naik",
+    channelId: "zakir-naik",
+    channelAvatar: ZAKIR_AVATAR,
+    duration: "1:45:30",
+    views: "980K views",
+    timeAgo: "1 month ago",
+    description:
+      "Muslim's Power is in Unity and Closeness to Allah - Dr Zakir Naik",
+    language: "en",
+    category: "Islamic Lecture",
+  },
+  {
+    id: "v13",
+    videoId: "ZD6p-op93EI",
+    title: "Overwhelmingly Intellectual Answers to an Atheist by Dr Zakir Naik",
+    channel: "Dr Zakir Naik",
+    channelId: "zakir-naik",
+    channelAvatar: ZAKIR_AVATAR,
+    duration: "2:10:45",
+    views: "2.3M views",
+    timeAgo: "3 weeks ago",
+    description:
+      "Dr Zakir Naik Convincingly Answered all Intellectual Questions posed by an Atheist\nLecture Name: Ask Dr Zakir (Dubai - Part 1)",
+    language: "en",
+    category: "Islamic Lecture",
+  },
+
+  // Zakir Naik – Bengali
+  {
+    id: "v14",
+    videoId: "wli20ZZztF4",
+    title:
+      "খ্রিস্টান শিক্ষক VS ডাঃ জাকির নায়েক - কে জিতবে এই তর্কে! | DR ZAKIR NAIK | বাংলা লেকচার",
+    channel: "Dr Zakir Naik",
+    channelId: "zakir-naik",
+    channelAvatar: ZAKIR_AVATAR,
+    duration: "1:20:10",
+    views: "1.1M views",
+    timeAgo: "5 months ago",
+    description:
+      "খ্রিস্টান শিক্ষক VS ডাঃ জাকির নায়েক - কে জিতবে এই তর্কে! | DR ZAKIR NAIK | ডাঃ জাকির নায়েক",
+    language: "bn",
+    category: "Islamic Lecture",
+  },
+  {
+    id: "v15",
+    videoId: "7NMRiv2IqPw",
+    title:
+      "আমাদের জীবনের উদ্দেশ্য কি? Dr. Zakir Naik What is the Purpose of Our Life? New Bangla Lecture 2018",
+    channel: "Dr Zakir Naik",
+    channelId: "zakir-naik",
+    channelAvatar: ZAKIR_AVATAR,
+    duration: "2:05:00",
+    views: "780K views",
+    timeAgo: "1 year ago",
+    description:
+      "আমাদের জীবনের উদ্দেশ্য কি?\nDr. Zakir Naik\n(পর্ব ১-৬)\nসম্পূর্ণ লেকচার (প্রশ্নোত্তর ছাড়া)\nপিস টিভি বাংলা\nPeace TV Bangla",
+    language: "bn",
+    category: "Islamic Lecture",
+  },
+  {
+    id: "v16",
+    videoId: "Nc4Iid3pSa8",
+    title:
+      "Historical International Lecture Dr Zakir Naik Bangla #drzakirnaik #zakirnaik #islamicscholar",
+    channel: "Dr Zakir Naik",
+    channelId: "zakir-naik",
+    channelAvatar: ZAKIR_AVATAR,
+    duration: "1:55:30",
+    views: "1.3M views",
+    timeAgo: "2 months ago",
+    description:
+      "Historical International Lecture Dr Zakir Naik Bangla #drzakirnaik #zakirnaik #islamicscholar",
     language: "bn",
     category: "Islamic Lecture",
   },

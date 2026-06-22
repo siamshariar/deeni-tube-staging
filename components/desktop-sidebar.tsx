@@ -6,9 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  Search,
-  Clock,
-  ThumbsUp,
   History,
   PlaySquare,
   Settings,
@@ -26,11 +23,11 @@ export default function DesktopSidebar() {
   const { headerVisible } = useHeader();
   const pathname = usePathname();
 
-  // Hide sidebar on video watch, playlist detail, and shorts pages
   if (
     pathname?.startsWith("/videos/") ||
     pathname?.startsWith("/playlists/") ||
-    pathname === "/shorts"                     // ← hides sidebar on shorts page
+    pathname === "/shorts" ||
+    pathname === "/signin"
   ) {
     return null;
   }
@@ -62,108 +59,35 @@ export default function DesktopSidebar() {
       )}
     >
       <div className="w-full py-2">
-        <SidebarItem
-          href="/"
-          icon={<Home className="h-5 w-5" />}
-          label="Home"
-          active={pathname === "/"}
-        />
-        <SidebarItem
-          href="/shorts"
-          icon={<PlaySquare className="h-5 w-5" />}
-          label="Shorts"
-          active={pathname === "/shorts"}
-        />
+        <SidebarItem href="/" icon={<Home className="h-5 w-5" />} label="Home" active={pathname === "/"} />
+        <SidebarItem href="/shorts" icon={<PlaySquare className="h-5 w-5" />} label="Shorts" active={pathname === "/shorts"} />
 
         <div className="border-t py-2 mt-2">
-          <SidebarItem
-            href="/you-new"
-            icon={<UserIcon className="h-5 w-5" />}
-            label="You"
-            active={pathname === "/you-new"}
-          />
-          <SidebarItem
-            href="/history"
-            icon={<History className="h-5 w-5" />}
-            label="History"
-          />
-          <SidebarItem
-            href="/watch-later"
-            icon={<Clock className="h-5 w-5" />}
-            label="Watch later"
-          />
-          <SidebarItem
-            href="/liked-videos"
-            icon={<ThumbsUp className="h-5 w-5" />}
-            label="Liked videos"
-          />
-          <SidebarItem
-            href="/playlists"
-            icon={<BookMarked className="h-5 w-5" />}
-            label="Playlists"
-            active={pathname === "/playlists"}
-          />
+          <SidebarItem href="/you-new" icon={<UserIcon className="h-5 w-5" />} label="You" active={pathname === "/you-new"} />
+          <SidebarItem href="/history" icon={<History className="h-5 w-5" />} label="History" />
         </div>
 
         <div className="border-t py-2 mt-2">
-          <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Explore
-          </h3>
-          <SidebarItem
-            href="/search-new"
-            icon={<Search className="h-5 w-5" />}
-            label="Search"
-            active={pathname === "/search-new"}
-          />
+          <SidebarItem href="/playlists" icon={<BookMarked className="h-5 w-5" />} label="Playlists" active={pathname === "/playlists"} />
+        </div>
+
+        {/* ❌ Removed Explore section with duplicate Search */}
+
+        <div className="border-t py-2 mt-2">
+          <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Deeni.tube</h3>
+          <SidebarItem href="/channels" icon={<Users className="h-5 w-5" />} label="Channels" active={pathname === "/channels"} />
+          <SidebarItem href="/scholars" icon={<GraduationCap className="h-5 w-5" />} label="Scholars" active={pathname === "/scholars"} />
+          <SidebarItem href="/categories" icon={<FolderOpen className="h-5 w-5" />} label="Categories" active={pathname === "/categories"} />
         </div>
 
         <div className="border-t py-2 mt-2">
-          <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Deeni.tube
-          </h3>
-          <SidebarItem
-            href="/channels"
-            icon={<Users className="h-5 w-5" />}
-            label="Channels"
-            active={pathname === "/channels"}
-          />
-          <SidebarItem
-            href="/scholars"
-            icon={<GraduationCap className="h-5 w-5" />}
-            label="Scholars"
-            active={pathname === "/scholars"}
-          />
-          <SidebarItem
-            href="/categories"
-            icon={<FolderOpen className="h-5 w-5" />}
-            label="Categories"
-            active={pathname === "/categories"}
-          />
+          <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">More</h3>
+          <SidebarItem href="/more" icon={<Globe className="h-5 w-5" />} label="More" active={pathname === "/more"} />
         </div>
 
         <div className="border-t py-2 mt-2">
-          <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            More
-          </h3>
-          <SidebarItem
-            href="/more"
-            icon={<Globe className="h-5 w-5" />}
-            label="More"
-            active={pathname === "/more"}
-          />
-        </div>
-
-        <div className="border-t py-2 mt-2">
-          <SidebarItem
-            href="/settings"
-            icon={<Settings className="h-5 w-5" />}
-            label="Settings"
-          />
-          <SidebarItem
-            href="/help"
-            icon={<HelpCircle className="h-5 w-5" />}
-            label="Help"
-          />
+          <SidebarItem href="/settings" icon={<Settings className="h-5 w-5" />} label="Settings" />
+          <SidebarItem href="/help" icon={<HelpCircle className="h-5 w-5" />} label="Help" />
         </div>
       </div>
     </aside>

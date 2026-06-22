@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import AppHeader from "@/components/app-header";
 import DesktopSidebar from "@/components/desktop-sidebar";
 import MobileNav from "@/components/mobile-nav";
-import { HeaderProvider } from "@/app/contexts/header-context";
+import { HeaderProvider } from "@/app/contexts/header-context";   // ✅ fixed path
 
 const inter = Inter({ subsets: ["latin"] });
 

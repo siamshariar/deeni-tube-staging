@@ -13,6 +13,8 @@ import {
   Ban,
   Play,
   X,
+  Clock,
+  Bookmark,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,6 +38,13 @@ import { ShareModal } from "@/components/share-modal";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+const allLanguageOptions = [
+  { code: "bn", name: "Bangla" },
+  { code: "en", name: "English" },
+  { code: "ar", name: "Arabic" },
+  { code: "ur", name: "Urdu" },
+];
+
 function ScholarSkeleton() {
   return (
     <div className="min-h-screen bg-background">
@@ -49,14 +58,12 @@ function ScholarSkeleton() {
       </div>
       <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex flex-col">
-            <Skeleton className="aspect-video w-full rounded-xl" />
-            <div className="flex mt-2 gap-2">
-              <Skeleton className="h-9 w-9 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-3 w-3/4" />
-              </div>
+          <div key={i} className="flex flex-col border rounded-xl overflow-hidden shadow-sm bg-card">
+            <Skeleton className="aspect-video w-full" />
+            <div className="p-3 space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
             </div>
           </div>
         ))}
@@ -82,14 +89,30 @@ export default function ScholarDetailPage() {
     );
   }
 
-  const scholarVideos: VideoItem[] = videoData.filter(
+  const allScholarVideos: VideoItem[] = videoData.filter(
     (v) => v.channelId === scholar.channelId
   );
 
+  const availableLanguages = Array.from(
+    new Set(allScholarVideos.map((v) => v.language))
+  );
+
+  const languageOptions = allLanguageOptions.filter((lang) =>
+    availableLanguages.includes(lang.code)
+  );
+
+  const defaultSelected = scholar.languages.filter((lang) =>
+    availableLanguages.includes(lang)
+  );
+  const initialSelected =
+    defaultSelected.length > 0 ? defaultSelected : availableLanguages.slice(0, 1);
+
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(initialSelected);
   const [isLoading, setIsLoading] = useState(true);
   const [bioModalOpen, setBioModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [bioExpanded, setBioExpanded] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -101,13 +124,27 @@ export default function ScholarDetailPage() {
     setShareModalOpen(true);
   };
 
+  const toggleLanguage = (code: string) => {
+    setSelectedLanguages((prev) =>
+      prev.includes(code)
+        ? prev.length > 1
+          ? prev.filter((l) => l !== code)
+          : prev
+        : [...prev, code]
+    );
+  };
+
+  const scholarVideos = allScholarVideos.filter((v) =>
+    selectedLanguages.includes(v.language)
+  );
+
   if (isLoading) {
     return <ScholarSkeleton />;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile back button (sticky below global header) */}
+      {/* Mobile back button */}
       {isMobile && (
         <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">
           <button
@@ -122,7 +159,7 @@ export default function ScholarDetailPage() {
         </div>
       )}
 
-      {/* Scholar Profile Section – mt-16 on mobile clears the sticky back button */}
+      {/* Scholar Profile Section */}
       <div className="px-4 py-6 mt-16 border-b">
         <div className="flex items-start gap-4">
           <Avatar
@@ -141,17 +178,32 @@ export default function ScholarDetailPage() {
             <h1 className="text-xl md:text-2xl font-bold">{scholar.name}</h1>
             <p className="text-sm text-muted-foreground mt-1">{scholar.designation}</p>
 
-            {/* Bio / Description */}
+            {/* Bio */}
             <div className="mt-3 max-w-2xl">
-              <p className="text-sm text-muted-foreground line-clamp-3">
+              <p
+                className={cn(
+                  "text-sm text-muted-foreground",
+                  !isMobile && !bioExpanded && "line-clamp-3"
+                )}
+              >
                 {scholar.description}
               </p>
               {scholar.description && scholar.description.length > 150 && (
                 <button
-                  onClick={() => setBioModalOpen(true)}
+                  onClick={() => {
+                    if (isMobile) {
+                      setBioModalOpen(true);
+                    } else {
+                      setBioExpanded(!bioExpanded);
+                    }
+                  }}
                   className="text-sm text-primary hover:underline font-medium mt-1"
                 >
-                  Read full bio
+                  {isMobile
+                    ? "Read more bio"
+                    : bioExpanded
+                    ? "Show less"
+                    : "Read more bio"}
                 </button>
               )}
             </div>
@@ -210,93 +262,155 @@ export default function ScholarDetailPage() {
         <h2 className="font-semibold text-lg mb-3">
           {scholarVideos.length} Videos
         </h2>
-        <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {scholarVideos.map((video) => (
-            <div key={video.id} className="flex flex-col group">
-              <Link
-                href={`/videos/${video.channel}/${video.videoId}`}
-                className="relative aspect-video w-full"
+
+        {/* Language chips */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+          {languageOptions.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => toggleLanguage(lang.code)}
+              className={cn(
+                "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                selectedLanguages.includes(lang.code)
+                  ? "bg-foreground text-background"
+                  : "bg-muted hover:bg-muted/80 text-foreground"
+              )}
+            >
+              {lang.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Desktop grid */}
+        {scholarVideos.length > 0 ? (
+          <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {scholarVideos.map((video) => (
+              <div
+                key={video.id}
+                className="flex flex-col border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-card"
               >
-                <Image
-                  src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
-                  alt={video.title}
-                  fill
-                  className="object-cover rounded-xl"
-                />
-                <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                  {video.duration}
-                </div>
-                <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="bg-black/60 rounded-full p-2">
-                    <Play className="h-5 w-5 text-white fill-white" />
+                {/* ✅ Fixed URL – uses video.channel (full name) */}
+                <Link
+                  href={`/videos/${video.channel}/${video.videoId}`}
+                  className="relative aspect-video w-full"
+                >
+                  <Image
+                    src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                    alt={video.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                    {video.duration}
                   </div>
-                </div>
-              </Link>
-              <div className="flex mt-3 gap-2">
-                <Avatar className="h-9 w-9 flex-shrink-0">
-                  <AvatarImage src={video.channelAvatar} />
-                  <AvatarFallback>{video.channel.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <Link href={`/videos/${video.channel}/${video.videoId}`}>
-                    <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                  <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="bg-black/60 rounded-full p-2">
+                      <Play className="h-5 w-5 text-white fill-white" />
+                    </div>
+                  </div>
+                </Link>
+                <div className="p-3 space-y-1">
+                  <div className="flex items-start justify-between gap-1">
+                    <Link
+                      href={`/videos/${video.channel}/${video.videoId}`}
+                      className="text-sm font-medium line-clamp-2 hover:text-primary transition-colors flex-1"
+                    >
                       {video.title}
-                    </h3>
-                  </Link>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {video.channel}
-                  </p>
+                    </Link>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="p-1 rounded-full hover:bg-muted transition-colors -mr-1 flex-shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => toast("Save to Watch later (demo)")}
+                        >
+                          <Clock className="h-4 w-4 mr-2" /> Save to Watch later
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => toast("Save to playlist (demo)")}
+                        >
+                          <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => {
+                            setShareUrl(
+                              `${window.location.origin}/videos/${video.channel}/${video.videoId}`
+                            );
+                            setShareModalOpen(true);
+                          }}
+                        >
+                          <Share className="h-4 w-4 mr-2" /> Share
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{video.channel}</p>
                   <p className="text-xs text-muted-foreground">
                     {video.views} • {video.timeAgo}
                   </p>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground">No videos in selected languages.</p>
+          </div>
+        )}
 
-        {/* Mobile video list */}
-        <div className="flex flex-col md:hidden">
-          {scholarVideos.map((video) => (
-            <div key={video.id} className="flex gap-3 py-3 border-b last:border-0 group">
-              <Link
-                href={`/videos/${video.channel}/${video.videoId}`}
-                className="relative w-40 aspect-video flex-shrink-0"
-              >
-                <Image
-                  src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
-                  alt={video.title}
-                  fill
-                  className="object-cover rounded-lg"
-                />
-                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 py-0.5 rounded font-medium">
-                  {video.duration}
-                </div>
-              </Link>
-              <div className="flex-1 min-w-0">
-                <Link href={`/videos/${video.channel}/${video.videoId}`}>
-                  <h3 className="font-medium text-sm line-clamp-2">
-                    {video.title}
-                  </h3>
+        {/* Mobile list */}
+        {scholarVideos.length > 0 && (
+          <div className="flex flex-col md:hidden">
+            {scholarVideos.map((video) => (
+              <div key={video.id} className="flex gap-3 py-3 border-b last:border-0 group">
+                <Link
+                  href={`/videos/${video.channel}/${video.videoId}`}
+                  className="relative w-40 aspect-video flex-shrink-0"
+                >
+                  <Image
+                    src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                    alt={video.title}
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                  <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 py-0.5 rounded font-medium">
+                    {video.duration}
+                  </div>
                 </Link>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <Avatar className="h-4 w-4">
-                    <AvatarImage src={video.channelAvatar} />
-                    <AvatarFallback className="text-[8px]">
-                      {video.channel.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-[11px] text-muted-foreground">
-                    {video.channel}
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <Link href={`/videos/${video.channel}/${video.videoId}`}>
+                    <h3 className="font-medium text-sm line-clamp-2">
+                      {video.title}
+                    </h3>
+                  </Link>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Avatar className="h-4 w-4">
+                      <AvatarImage src={video.channelAvatar} />
+                      <AvatarFallback className="text-[8px]">
+                        {video.channel.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-[11px] text-muted-foreground">
+                      {video.channel}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {video.views} • {video.timeAgo}
+                  </p>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {video.views} • {video.timeAgo}
-                </p>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Share Modal */}
