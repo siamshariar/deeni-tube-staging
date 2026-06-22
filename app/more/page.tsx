@@ -116,7 +116,7 @@ export default function MorePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile header */}
+      {/* Mobile header – sticky below global header */}
       <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
         <button
           onClick={() => router.back()}
@@ -127,7 +127,8 @@ export default function MorePage() {
         <h1 className="font-semibold text-lg">More</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-6">
+      {/* Content – mt-16 clears the sticky back button */}
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
         {!isMobile && (
           <div className="mb-4">
             <h1 className="text-2xl font-bold">More</h1>

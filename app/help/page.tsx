@@ -124,7 +124,7 @@ export default function HelpPage() {
         <h1 className="font-semibold text-lg">Help & Support</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-6">
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
         {!isMobile && (
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Help & Support</h1>

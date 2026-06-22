@@ -135,7 +135,7 @@ export default function ChannelsPage() {
       </div>
 
       <div className="px-4 md:px-6 py-6">
-        <div className="flex flex-col mt-12 sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex flex-col mt-16 sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="hidden md:block">
             <h1 className="text-2xl font-bold">Channels</h1>
             <p className="text-sm text-muted-foreground mt-1">

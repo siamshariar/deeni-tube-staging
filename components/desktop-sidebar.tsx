@@ -26,17 +26,17 @@ export default function DesktopSidebar() {
   const { headerVisible } = useHeader();
   const pathname = usePathname();
 
-  // Hide on video watch pages and playlist detail pages
+  // Hide sidebar on video watch, playlist detail, and shorts pages
   if (
     pathname?.startsWith("/videos/") ||
-    pathname?.startsWith("/playlists/")
+    pathname?.startsWith("/playlists/") ||
+    pathname === "/shorts"                     // ← hides sidebar on shorts page
   ) {
     return null;
   }
 
   const isHome = pathname === "/";
 
-  // On home page, header + chip bar = 104px; other pages only header (56px)
   const top = isHome
     ? headerVisible
       ? "top-[104px]"

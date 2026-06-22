@@ -446,7 +446,7 @@ export default function PlaylistDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background md:-ml-[240px]">
+      <div className="min-h-screen bg-background md:-ml-[240px] mt-12">
         <div className="flex flex-col lg:flex-row gap-4 px-4 pt-2 md:pt-4">
           <div className="flex-1 min-w-0">
             <Skeleton className="aspect-[4/3] md:aspect-video w-full rounded-xl" />
@@ -478,7 +478,7 @@ export default function PlaylistDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background md:-ml-[240px]">
+    <div className="min-h-screen bg-background md:-ml-[240px] mt-16">
       {/* Mobile back button + title – exactly like video details */}
       {isMobile && (
         <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">

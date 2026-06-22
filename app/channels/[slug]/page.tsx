@@ -216,7 +216,7 @@ export default function ChannelDetailPage() {
         <div className="flex items-start gap-4">
           <Avatar
             className={cn(
-              "flex-shrink-0 ring-4 ring-background -mt-10 md:-mt-12 relative z-10",
+              "flex-shrink-0 ring-4 ring-background -mt-10 md:-mt-16 relative z-10",
               isMobile ? "h-16 w-16" : "h-20 w-20"
             )}
           >

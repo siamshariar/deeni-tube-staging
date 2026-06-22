@@ -20,6 +20,7 @@ import {
   EyeOff,
   Send,
   Reply,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,6 +38,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ShareModal } from "@/components/share-modal";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { toast } from "sonner";
@@ -423,6 +430,7 @@ export default function VideoPlayPage() {
   const [commentText, setCommentText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
   const [commentsDrawerOpen, setCommentsDrawerOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
@@ -690,39 +698,77 @@ export default function VideoPlayPage() {
                   </div>
                 </div>
 
-                {/* Description – inline expand on mobile */}
+                {/* Description – inline expand on desktop, modal on mobile */}
                 <div className="mt-2 bg-muted/40 rounded-xl p-3 md:p-4">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="font-medium">{mainVideo.views}</span>
                     <span className="text-muted-foreground">•</span>
                     <span className="text-muted-foreground">{mainVideo.timeAgo}</span>
                   </div>
-                  {isMobile && !showFullDescription ? (
+                  {isMobile ? (
                     <>
                       <p className="text-sm mt-1 line-clamp-2">
                         {mainVideo.description}
                       </p>
                       <button
-                        onClick={() => setShowFullDescription(true)}
+                        onClick={() => setDescriptionModalOpen(true)}
                         className="text-sm text-primary hover:underline font-medium mt-1"
                       >
                         Read more
                       </button>
                     </>
                   ) : (
-                    <p className="text-sm mt-1 whitespace-pre-wrap">
-                      {mainVideo.description}
-                      {isMobile && showFullDescription && (
-                        <button
-                          onClick={() => setShowFullDescription(false)}
-                          className="text-primary ml-1 hover:underline font-medium text-sm"
-                        >
-                          Show less
-                        </button>
+                    <>
+                      {showFullDescription ? (
+                        <p className="text-sm mt-1 whitespace-pre-wrap">
+                          {mainVideo.description}
+                          <button
+                            onClick={() => setShowFullDescription(false)}
+                            className="text-primary ml-1 hover:underline font-medium text-sm"
+                          >
+                            Show less
+                          </button>
+                        </p>
+                      ) : (
+                        <>
+                          <p className="text-sm mt-1 line-clamp-2">
+                            {mainVideo.description?.slice(0, 150)}
+                            {mainVideo.description && mainVideo.description.length > 150 && "..."}
+                          </p>
+                          {mainVideo.description && mainVideo.description.length > 150 && (
+                            <button
+                              onClick={() => setShowFullDescription(true)}
+                              className="text-sm text-primary hover:underline font-medium mt-1"
+                            >
+                              Read more
+                            </button>
+                          )}
+                        </>
                       )}
-                    </p>
+                    </>
                   )}
                 </div>
+{/* Description Modal for Mobile */}
+<Dialog open={descriptionModalOpen} onOpenChange={setDescriptionModalOpen}>
+  <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto [&>button.absolute]:hidden">
+    {/* Custom close button – larger, no border, top‑right corner */}
+    <button
+      onClick={() => setDescriptionModalOpen(false)}
+      className="rounded-full p-1 hover:bg-muted transition-colors z-10"
+      style={{ position: "absolute", top: "12px", right: "12px" }}
+      aria-label="Close"
+    >
+      <X className="h-6 w-6" />
+    </button>
+
+    <DialogHeader>
+      <DialogTitle>Description</DialogTitle>
+    </DialogHeader>
+    <div className="text-sm whitespace-pre-wrap leading-relaxed">
+      {mainVideo.description}
+    </div>
+  </DialogContent>
+</Dialog>
 
                 {/* Comments (unchanged) */}
                 <div className="mt-4">

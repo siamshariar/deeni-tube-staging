@@ -171,7 +171,7 @@ export default function HistoryPage() {
 
       <div className="px-4 md:px-4 py-4 md:py-6 max-w-full">
         {isLoading ? (
-          <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex flex-col md:flex-row gap-6 mt-16">
             <Skeleton className="w-full md:w-[340px] h-[60vh] rounded-xl" />
             <div className="flex-1 space-y-4">
               <Skeleton className="h-8 w-48" />
@@ -203,7 +203,7 @@ export default function HistoryPage() {
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col md:flex-row gap-0 md:gap-6">
+          <div className="flex flex-col md:flex-row gap-0 md:gap-6 mt-16">
             {/* LEFT COLUMN – Fixed card with last watched video */}
             <div className="md:w-[340px] flex-shrink-0 md:sticky md:top-[80px] md:self-start md:h-[calc(100vh-80px)] md:overflow-hidden">
               <div className="relative h-full rounded-xl overflow-hidden bg-card border shadow-sm">

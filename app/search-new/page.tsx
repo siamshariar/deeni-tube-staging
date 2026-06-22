@@ -566,7 +566,7 @@ export default function SearchNewPage() {
         </Button>
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-6">
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
         {/* Desktop search bar – smaller width */}
         <div className="hidden md:flex items-center gap-3 mb-6">
           <div className="relative w-full max-w-md">
