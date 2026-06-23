@@ -3,14 +3,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Search, X, GraduationCap } from "lucide-react";
+import { Search, X, GraduationCap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { scholarData, ScholarItem } from "@/lib/scholar-data";
-import { videoData, VideoItem } from "@/lib/video-data";   // <-- import video data
+import { videoData, VideoItem } from "@/lib/video-data";
 import { SortDropdown, SortOption } from "@/components/sort-dropdown";
 
 function ScholarSkeleton() {
@@ -44,7 +44,7 @@ export default function ScholarsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [sortValue, setSortValue] = useState("default");
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["bn"]); // default Bangla
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["bn"]);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -72,11 +72,9 @@ export default function ScholarsPage() {
     }
   };
 
-  // Filter scholars based on whether they have videos in the selected languages
   const filteredScholars: ScholarItem[] = sortScholars(
     scholarData
       .filter((scholar: ScholarItem) => {
-        // Check if scholar has at least one video in any of the selected languages
         return videoData.some(
           (v: VideoItem) =>
             v.channelId === scholar.channelId &&
@@ -93,26 +91,12 @@ export default function ScholarsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile back button (sticky below global header) */}
-      <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="font-semibold text-lg">Scholars</h1>
-      </div>
-
-      {/* Content area – same spacing as Channels page */}
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
-        {/* Title + search */}
+      {/* Content area */}
+      <div className="px-4 md:px-6 py-2 md:py-6 mt-16">
+        {/* Title + search — desktop only */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="hidden md:block">
+          <div className=" md:block">
             <h1 className="text-2xl font-bold">Scholars</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {filteredScholars.length} scholar{filteredScholars.length !== 1 ? "s" : ""}
-            </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 min-w-0">

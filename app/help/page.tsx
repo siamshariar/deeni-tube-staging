@@ -34,25 +34,25 @@ const helpTopics = [
     icon: BookOpen,
     label: "Get Started with Deeni.tube",
     description: "Learn the basics of using the platform",
-    href: "#",
+    href: "/help/get-started",
   },
   {
     icon: Shield,
     label: "Privacy & Safety",
     description: "How we handle your data and keep you safe",
-    href: "#",
+    href: "/help/privacy",
   },
   {
     icon: FileText,
     label: "Terms of Service",
     description: "Read our terms and conditions",
-    href: "#",
+    href: "/help/terms",
   },
   {
     icon: HelpCircle,
     label: "Community Guidelines",
     description: "Rules and expectations for our community",
-    href: "#",
+    href: "/help/guidelines",
   },
 ];
 
@@ -113,26 +113,13 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile header */}
-      <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="font-semibold text-lg">Help & Support</h1>
-      </div>
-
       <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
-        {!isMobile && (
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Help & Support</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Find answers or contact our support team.
             </p>
           </div>
-        )}
 
         {isLoading ? (
           <div className="space-y-3">
@@ -149,14 +136,12 @@ export default function HelpPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Help topic cards – links to real pages */}
             <div className="space-y-2">
               {helpTopics.map((topic) => (
                 <button
                   key={topic.label}
-                  onClick={() => {
-                    if (topic.href !== "#") router.push(topic.href);
-                    else toast.info("This help article will be available soon.");
-                  }}
+                  onClick={() => router.push(topic.href)}
                   className="w-full flex items-center gap-4 p-4 bg-card hover:bg-muted/50 rounded-xl border transition-colors text-left group"
                 >
                   <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
@@ -175,6 +160,7 @@ export default function HelpPage() {
               ))}
             </div>
 
+            {/* Contact support card */}
             <div className="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-6 md:p-8 text-center border border-blue-100 dark:border-blue-900">
               <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto mb-3">
                 <MessageCircle className="h-7 w-7 text-blue-500" />
@@ -201,6 +187,7 @@ export default function HelpPage() {
         )}
       </div>
 
+      {/* Support Dialog */}
       <Dialog open={showSupportDialog} onOpenChange={setShowSupportDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -236,6 +223,7 @@ export default function HelpPage() {
                   <AlertCircle className="h-3 w-3" /> {errors.name}
                 </p>
               )}
+
               <Input
                 type="email"
                 placeholder="Your email *"
@@ -251,6 +239,7 @@ export default function HelpPage() {
                   <AlertCircle className="h-3 w-3" /> {errors.email}
                 </p>
               )}
+
               <Input
                 type="text"
                 placeholder="Subject *"
@@ -266,6 +255,7 @@ export default function HelpPage() {
                   <AlertCircle className="h-3 w-3" /> {errors.subject}
                 </p>
               )}
+
               <Textarea
                 placeholder="Describe your issue... *"
                 value={supportForm.message}
@@ -282,7 +272,9 @@ export default function HelpPage() {
                   <AlertCircle className="h-3 w-3" /> {errors.message}
                 </p>
               )}
+
               <p className="text-xs text-muted-foreground">* Required fields</p>
+
               <Button className="w-full rounded-full" onClick={handleSubmitSupport}>
                 <Send className="h-4 w-4 mr-2" /> Send Message
               </Button>

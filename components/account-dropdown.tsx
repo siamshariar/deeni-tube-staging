@@ -18,6 +18,8 @@ import {
   Sun,
   Check,
   Send,
+  Heart,
+  X,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -34,6 +36,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import LanguagePrompt from "@/components/language-prompt";
 import { toast } from "sonner";
 
@@ -51,6 +54,7 @@ type ThemeMode = "system" | "light" | "dark";
 export default function AccountDropdown() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const [open, setOpen] = useState(false);
   const [userData, setUserData] = useState({
     name: "Guest",
@@ -60,6 +64,7 @@ export default function AccountDropdown() {
   });
   const [showLanguagePrompt, setShowLanguagePrompt] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [showAppearanceDialog, setShowAppearanceDialog] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
 
@@ -80,6 +85,9 @@ export default function AccountDropdown() {
 
   const handleThemeChange = (newTheme: ThemeMode) => {
     setTheme(newTheme);
+    if (isMobile) {
+      setShowAppearanceDialog(false);
+    }
   };
 
   const handleSignOut = () => {
@@ -90,7 +98,6 @@ export default function AccountDropdown() {
     }));
     localStorage.removeItem("deeni-user-data");
     setOpen(false);
-    // Dispatch event so header updates instantly
     window.dispatchEvent(new Event("auth-changed"));
     router.push("/signin");
   };
@@ -125,6 +132,14 @@ export default function AccountDropdown() {
       case "dark": return <Moon className="h-5 w-5" />;
       default: return <Monitor className="h-5 w-5" />;
     }
+  };
+
+  const handleAppearanceClick = () => {
+    if (isMobile) {
+      setOpen(false);
+      setTimeout(() => setShowAppearanceDialog(true), 100);
+    }
+    // On desktop, the DropdownMenuSub handles it natively
   };
 
   return (
@@ -165,6 +180,12 @@ export default function AccountDropdown() {
               <User className="mr-3 h-5 w-5" />
               <span>Preferences</span>
             </DropdownMenuItem>
+            {/* Donate */}
+            <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/donate")}>
+              <Heart className="mr-3 h-5 w-5 text-red-500" />
+              <span>Donate</span>
+              <ChevronRight className="ml-auto h-4 w-4" />
+            </DropdownMenuItem>
 
             {/* Channel Preferences */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/channels")}>
@@ -177,30 +198,38 @@ export default function AccountDropdown() {
           <DropdownMenuSeparator />
 
           <DropdownMenuGroup>
-            {/* Appearance */}
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="py-3 cursor-pointer">
+            {/* Appearance — submenu on desktop, dialog on mobile */}
+            {isMobile ? (
+              <DropdownMenuItem className="py-3 cursor-pointer" onClick={handleAppearanceClick}>
                 {getThemeIcon()}
                 <span className="ml-3">Appearance: {getThemeLabel()}</span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-48">
-                <DropdownMenuItem onClick={() => handleThemeChange("system")} className="py-2.5 cursor-pointer">
-                  <Monitor className="mr-3 h-5 w-5" />
-                  <span>Device theme</span>
-                  {theme === "system" && <Check className="ml-auto h-4 w-4" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleThemeChange("light")} className="py-2.5 cursor-pointer">
-                  <Sun className="mr-3 h-5 w-5" />
-                  <span>Light theme</span>
-                  {theme === "light" && <Check className="ml-auto h-4 w-4" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleThemeChange("dark")} className="py-2.5 cursor-pointer">
-                  <Moon className="mr-3 h-5 w-5" />
-                  <span>Dark theme</span>
-                  {theme === "dark" && <Check className="ml-auto h-4 w-4" />}
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
+                <ChevronRight className="ml-auto h-4 w-4" />
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="py-3 cursor-pointer">
+                  {getThemeIcon()}
+                  <span className="ml-3">Appearance: {getThemeLabel()}</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-48">
+                  <DropdownMenuItem onClick={() => handleThemeChange("system")} className="py-2.5 cursor-pointer">
+                    <Monitor className="mr-3 h-5 w-5" />
+                    <span>Device theme</span>
+                    {theme === "system" && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleThemeChange("light")} className="py-2.5 cursor-pointer">
+                    <Sun className="mr-3 h-5 w-5" />
+                    <span>Light theme</span>
+                    {theme === "light" && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleThemeChange("dark")} className="py-2.5 cursor-pointer">
+                    <Moon className="mr-3 h-5 w-5" />
+                    <span>Dark theme</span>
+                    {theme === "dark" && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
 
             {/* Language */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => { setOpen(false); setShowLanguagePrompt(true); }}>
@@ -243,6 +272,77 @@ export default function AccountDropdown() {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Appearance Dialog — Mobile only */}
+      <Dialog open={showAppearanceDialog} onOpenChange={setShowAppearanceDialog}>
+        <DialogContent className="sm:max-w-md [&>button.absolute]:hidden">
+          <button
+            onClick={() => setShowAppearanceDialog(false)}
+            className="rounded-full p-1 hover:bg-muted transition-colors z-10"
+            style={{ position: "absolute", top: "12px", right: "12px" }}
+            aria-label="Close"
+          >
+            <X className="h-7 w-7" />
+          </button>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5" /> Appearance
+            </DialogTitle>
+            <DialogDescription>
+              Choose how Deeni.tube looks to you
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-4">
+            <button
+              onClick={() => handleThemeChange("system")}
+              className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
+                theme === "system" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+              }`}
+            >
+              <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                <Monitor className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Device theme</p>
+                <p className="text-xs text-muted-foreground">Follow your device settings</p>
+              </div>
+              {theme === "system" && <Check className="h-5 w-5 text-primary flex-shrink-0" />}
+            </button>
+
+            <button
+              onClick={() => handleThemeChange("light")}
+              className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
+                theme === "light" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+              }`}
+            >
+              <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                <Sun className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Light theme</p>
+                <p className="text-xs text-muted-foreground">Always use light mode</p>
+              </div>
+              {theme === "light" && <Check className="h-5 w-5 text-primary flex-shrink-0" />}
+            </button>
+
+            <button
+              onClick={() => handleThemeChange("dark")}
+              className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
+                theme === "dark" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+              }`}
+            >
+              <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                <Moon className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Dark theme</p>
+                <p className="text-xs text-muted-foreground">Always use dark mode</p>
+              </div>
+              {theme === "dark" && <Check className="h-5 w-5 text-primary flex-shrink-0" />}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Language Prompt */}
       <LanguagePrompt

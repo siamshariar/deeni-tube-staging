@@ -158,21 +158,10 @@ export default function PlaylistsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile header */}
-      <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="font-semibold text-lg">Playlists</h1>
-      </div>
-
-      <div className="px-4 md:px-6 py-2 md:py-6 mt-12">
+      <div className="px-4 md:px-6 py-2 md:py-6 mt-16">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            {!isMobile && <h1 className="text-2xl font-bold">Playlists</h1>}
+            <h1 className="text-2xl font-bold">Playlists</h1>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative flex-1 sm:w-64">

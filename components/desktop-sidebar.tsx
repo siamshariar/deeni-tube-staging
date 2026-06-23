@@ -63,7 +63,7 @@ export default function DesktopSidebar() {
         <SidebarItem href="/shorts" icon={<PlaySquare className="h-5 w-5" />} label="Shorts" active={pathname === "/shorts"} />
 
         <div className="border-t py-2 mt-2">
-          <SidebarItem href="/you-new" icon={<UserIcon className="h-5 w-5" />} label="You" active={pathname === "/you-new"} />
+          <SidebarItem href="/you" icon={<UserIcon className="h-5 w-5" />} label="You" active={pathname === "/you"} />
           <SidebarItem href="/history" icon={<History className="h-5 w-5" />} label="History" />
         </div>
 

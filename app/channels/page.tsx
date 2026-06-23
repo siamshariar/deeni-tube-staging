@@ -123,25 +123,14 @@ export default function ChannelsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile back button + title (sticky below global header) */}
-      <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="font-semibold text-lg">Channels</h1>
-      </div>
-
-      <div className="px-4 md:px-6 py-6">
-        <div className="flex flex-col mt-16 sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="hidden md:block">
+      <div className="px-4 md:px-6 py-2 md:py-6 mt-16">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="md:block">
             <h1 className="text-2xl font-bold">Channels</h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            {/* <p className="text-sm text-muted-foreground mt-1">
               {filteredChannels.length} channel
               {filteredChannels.length !== 1 ? "s" : ""}
-            </p>
+            </p> */}
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">

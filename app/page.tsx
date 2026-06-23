@@ -7,7 +7,7 @@ import VideoCard from "@/components/video-card";
 import LanguagePrompt from "@/components/language-prompt";
 import { videoData, VideoItem } from "@/lib/video-data";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useHeader } from "@/app/contexts/header-context";   // ✅ fixed path
+import { useHeader } from "@/app/contexts/header-context";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
@@ -87,15 +87,24 @@ export default function Home() {
     saveLanguagePrefs(["en"], true);
   };
 
+  // Scroll handler — hide/show both header and chip bar
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
       const isScrollingDown = currentScrollPos > prevScrollPos;
-      if (isScrollingDown && currentScrollPos > 150) {
+      const isNearTop = currentScrollPos < 56; // header height threshold
+
+      if (isNearTop) {
+        // Always show at the very top
+        setHeaderVisible(true);
+      } else if (isScrollingDown && currentScrollPos > 150) {
+        // Hide when scrolling down past threshold
         setHeaderVisible(false);
-      } else {
+      } else if (!isScrollingDown) {
+        // Show when scrolling up
         setHeaderVisible(true);
       }
+
       setPrevScrollPos(currentScrollPos);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -112,6 +121,7 @@ export default function Home() {
       ? filteredVideos
       : filteredVideos.filter((v: VideoItem) => v.category === activeChip);
 
+  // Chip bar position: follows header visibility
   const chipBarTop = headerVisible ? "top-[56px]" : "top-0";
   const contentMarginTop = headerVisible ? "104px" : "48px";
 
@@ -124,11 +134,13 @@ export default function Home() {
         initialSelected={["en"]}
       />
 
+      {/* Category chip bar — hides/shows with header */}
       <div
         className={cn(
           "fixed z-20 h-12 border-b bg-background w-full transition-all duration-300",
           "md:left-[240px] md:w-[calc(100%-240px)]",
-          chipBarTop
+          chipBarTop,
+          !headerVisible && "-translate-y-full opacity-0 pointer-events-none"
         )}
       >
         <div
@@ -159,7 +171,11 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ marginTop: contentMarginTop }}>
+      {/* Content area */}
+      <div
+        style={{ marginTop: contentMarginTop }}
+        className="transition-[margin-top] duration-300"
+      >
         {hasSelected && preferredLanguages.length > 0 && (
           <div className="px-4 py-1.5 text-xs text-muted-foreground bg-muted/30 border-b hidden md:block">
             Content: {preferredLanguages.map((l: string) => l.toUpperCase()).join(", ")}

@@ -4,7 +4,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Search,
   X,
   MoreVertical,
@@ -158,17 +157,6 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile header */}
-      <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="font-semibold text-lg">History</h1>
-      </div>
-
       <div className="px-4 md:px-4 py-4 md:py-6 max-w-full">
         {isLoading ? (
           <div className="flex flex-col md:flex-row gap-6 mt-16">
@@ -189,7 +177,7 @@ export default function HistoryPage() {
             </div>
           </div>
         ) : videos.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-16 mt-16">
             <History className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
             <h2 className="text-xl font-semibold mb-2">History is empty</h2>
             <p className="text-muted-foreground">

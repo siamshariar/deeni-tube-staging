@@ -48,22 +48,20 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         </div>
 
         <div className="border-t py-2">
-          <MobileSidebarItem href="/you-new" icon={<UserIcon className="h-5 w-5" />} label="You" active={pathname === "/you-new"} onClick={onClose} />
+          <MobileSidebarItem href="/you" icon={<UserIcon className="h-5 w-5" />} label="You" active={pathname === "/you"} onClick={onClose} />
           <MobileSidebarItem href="/history" icon={<History className="h-5 w-5" />} label="History" onClick={onClose} />
         </div>
 
-        <div className="border-t py-2">
+        {/* <div className="border-t py-2">
           <MobileSidebarItem href="/playlists" icon={<BookMarked className="h-5 w-5" />} label="Playlists" active={pathname === "/playlists"} onClick={onClose} />
-        </div>
+        </div> */}
 
-        {/* ❌ Removed Explore section with duplicate Search */}
-
-        <div className="border-t py-2">
+        {/* <div className="border-t py-2">
           <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Deeni.tube</h3>
           <MobileSidebarItem href="/channels" icon={<Users className="h-5 w-5" />} label="Channels" active={pathname === "/channels"} onClick={onClose} />
           <MobileSidebarItem href="/scholars" icon={<GraduationCap className="h-5 w-5" />} label="Scholars" active={pathname === "/scholars"} onClick={onClose} />
           <MobileSidebarItem href="/categories" icon={<FolderOpen className="h-5 w-5" />} label="Categories" active={pathname === "/categories"} onClick={onClose} />
-        </div>
+        </div> */}
 
         <div className="border-t py-2">
           <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">More</h3>

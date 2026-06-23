@@ -93,24 +93,11 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile header */}
-      <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="font-semibold text-lg">Settings</h1>
-      </div>
-
       <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
-        {!isMobile && (
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Settings</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage your app preferences</p>
           </div>
-        )}
 
         <div className="divide-y">
           {/* General */}
