@@ -92,16 +92,13 @@ export default function Home() {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
       const isScrollingDown = currentScrollPos > prevScrollPos;
-      const isNearTop = currentScrollPos < 56; // header height threshold
+      const isNearTop = currentScrollPos < 56;
 
       if (isNearTop) {
-        // Always show at the very top
         setHeaderVisible(true);
-      } else if (isScrollingDown && currentScrollPos > 150) {
-        // Hide when scrolling down past threshold
+      } else if (isScrollingDown && currentScrollPos > 100) {
         setHeaderVisible(false);
       } else if (!isScrollingDown) {
-        // Show when scrolling up
         setHeaderVisible(true);
       }
 

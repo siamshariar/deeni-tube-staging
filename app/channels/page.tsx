@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Search, X, Tv, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Search, X, Users, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -127,10 +127,6 @@ export default function ChannelsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="md:block">
             <h1 className="text-2xl font-bold">Channels</h1>
-            {/* <p className="text-sm text-muted-foreground mt-1">
-              {filteredChannels.length} channel
-              {filteredChannels.length !== 1 ? "s" : ""}
-            </p> */}
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -189,7 +185,7 @@ export default function ChannelsPage() {
         ) : filteredChannels.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <Tv className="h-8 w-8 text-muted-foreground" />
+              <Users className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium mb-1">No channels found</h3>
             <p className="text-muted-foreground">

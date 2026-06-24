@@ -71,8 +71,6 @@ export default function DesktopSidebar() {
           <SidebarItem href="/playlists" icon={<BookMarked className="h-5 w-5" />} label="Playlists" active={pathname === "/playlists"} />
         </div>
 
-        {/* ❌ Removed Explore section with duplicate Search */}
-
         <div className="border-t py-2 mt-2">
           <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Deeni.tube</h3>
           <SidebarItem href="/channels" icon={<Users className="h-5 w-5" />} label="Channels" active={pathname === "/channels"} />

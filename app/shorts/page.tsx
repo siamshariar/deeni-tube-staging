@@ -1,14 +1,14 @@
 // app/shorts/page.tsx
-// Updated: integrated ReportDialog and feedback modal, removed AppHeader.
+// Updated: Fixed YouTube player loading overlay issue
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   ChevronUp, ChevronDown, Heart, MessageCircle, Share2, Bookmark, Flag,
   Volume2, VolumeX, Pause, Play, List, Ban, MessageSquare, X,
   ThumbsUp, ThumbsDown, MoreVertical, Send, Eye, Clock, Copy, Check,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, ExternalLink, Loader2,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -20,28 +20,11 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { ReportDialog } from "@/components/report-dialog"
 import { toast } from "sonner"
+import { shortsVideos, initialCommentsByVideo, descriptionsByVideo, getYouTubeEmbedUrl, getYouTubeWatchUrl } from "@/lib/shorts-data"
 
 // ============ DATA & STORAGE ============
 
-const initialCommentsByVideo: Record<string, any[]> = {
-  s1: [
-    { id: "s1c1", user: "Ahmad Khan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 hours ago", content: "MashaAllah, beautiful recitation! May Allah bless you.", likes: 245, dislikes: 12, replies: [] },
-    { id: "s1c2", user: "Fatima Hassan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "5 hours ago", content: "This brought tears to my eyes. SubhanAllah!", likes: 567, dislikes: 23, replies: [] },
-    { id: "s1c3", user: "Omar Farooq", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 day ago", content: "The best recitation I've heard. JazakAllah khair!", likes: 189, dislikes: 8, replies: [] },
-    { id: "s1c4", user: "Aisha Begum", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 days ago", content: "I listen to this every morning. So peaceful.", likes: 123, dislikes: 5, replies: [] },
-    { id: "s1c5", user: "Ibrahim Malik", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "3 days ago", content: "May Allah reward you for sharing this beautiful recitation.", likes: 78, dislikes: 2, replies: [] },
-    { id: "s1c6", user: "Khadija Omar", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "4 days ago", content: "This is exactly what I needed today. Thank you!", likes: 312, dislikes: 15, replies: [] },
-  ],
-  s2: [
-    { id: "s2c1", user: "Yusuf Ahmed", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 hour ago", content: "Powerful message! Don't lose hope, Allah is always with us.", likes: 456, dislikes: 8, replies: [] },
-    { id: "s2c2", user: "Zainab Hassan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "3 hours ago", content: "JazakAllah khair for this reminder. I really needed this today.", likes: 234, dislikes: 5, replies: [] },
-    { id: "s2c3", user: "Mohammed Ali", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "6 hours ago", content: "SubhanAllah! Such a beautiful message of hope.", likes: 678, dislikes: 12, replies: [] },
-  ],
-  s3: [
-    { id: "s3c1", user: "Hamza Yusuf", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "30 minutes ago", content: "The adhan from Masjid Al-Haram is always so powerful.", likes: 567, dislikes: 3, replies: [] },
-    { id: "s3c2", user: "Noor Fatima", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 hours ago", content: "Goosebumps every time I hear this beautiful adhan.", likes: 432, dislikes: 6, replies: [] },
-  ],
-}
+const shortsData = shortsVideos
 
 const STORAGE_COMMENTS = 'shorts_comments'
 const STORAGE_LIKED = 'shorts_liked_ids'
@@ -75,19 +58,225 @@ function saveIds(key: string, ids: string[]) {
 
 let commentsByVideo = loadComments()
 
-const descriptionsByVideo: Record<string, { title: string; views: string; timeAgo: string; description: string; hashtags: string[] }> = {
-  s1: { title: "Surah Al Baqarah - Beautiful Recitation", views: "15,234", timeAgo: "2 weeks ago", description: "Experience the beautiful recitation of Surah Al Baqarah.", hashtags: ["#quran", "#surahalbaqarah"] },
-  s2: { title: "Powerful Reminder - Don't Lose Hope", views: "25,890", timeAgo: "3 days ago", description: "A powerful reminder for those who feel lost.", hashtags: ["#islamicreminder", "#hope"] },
-  s3: { title: "Beautiful Adhan - Masjid Al-Haram", views: "50,123", timeAgo: "1 week ago", description: "Listen to the beautiful Adhan from Makkah.", hashtags: ["#adhan", "#makkah"] }
-}
-
-const shortsData = [
-  { id: "s1", title: "Surah Al Baqarah - Beautiful Recitation", channel: "Islamic Recitation", channelAvatar: "/placeholder.svg?height=36&width=36", likes: "15K", comments: "1.2K", isSubscribed: false },
-  { id: "s2", title: "Powerful Reminder - Don't Lose Hope", channel: "Daily Dawah", channelAvatar: "/placeholder.svg?height=36&width=36", likes: "25K", comments: "2.1K", isSubscribed: true },
-  { id: "s3", title: "Beautiful Adhan - Masjid Al-Haram", channel: "Islamic Sounds", channelAvatar: "/placeholder.svg?height=36&width=36", likes: "50K", comments: "3.5K", isSubscribed: false },
-]
-
 type PanelType = "comments" | "description" | null
+
+// ============ YOUTUBE SHORTS PLAYER ============
+
+function YouTubeShortsPlayer({ 
+  videoId, 
+  isActive, 
+  isMuted, 
+  volume,
+  onPlayStateChange,
+}: { 
+  videoId: string
+  isActive: boolean
+  isMuted: boolean
+  volume: number
+  onPlayStateChange: (playing: boolean) => void
+}) {
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [showLoading, setShowLoading] = useState(true)
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const loadedRef = useRef(false)
+
+  // Reset states when videoId changes
+  useEffect(() => {
+    setIsLoaded(false)
+    setHasError(false)
+    setShowLoading(true)
+    loadedRef.current = false
+    
+    // Clear any existing timeout
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current)
+    }
+    
+    // Hide loading after 5 seconds even if not loaded (fallback)
+    loadingTimeoutRef.current = setTimeout(() => {
+      if (!loadedRef.current) {
+        setShowLoading(false)
+      }
+    }, 5000)
+    
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current)
+      }
+    }
+  }, [videoId])
+
+  // Build YouTube embed URL
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?${new URLSearchParams({
+    autoplay: isActive ? '1' : '0',
+    mute: isMuted ? '1' : '0',
+    loop: '1',
+    playlist: videoId,
+    controls: '0',
+    modestbranding: '1',
+    rel: '0',
+    showinfo: '0',
+    fs: '0',
+    iv_load_policy: '3',
+    disablekb: '1',
+    playsinline: '1',
+    enablejsapi: '1',
+    origin: typeof window !== 'undefined' ? window.location.origin : '',
+    widgetid: '1',
+  }).toString()}`
+
+  // Handle YouTube API messages
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (!event.origin.includes('youtube.com')) return
+      
+      try {
+        const data = JSON.parse(event.data)
+        
+        switch (data.event) {
+          case 'onReady':
+            setIsLoaded(true)
+            setShowLoading(false)
+            loadedRef.current = true
+            if (loadingTimeoutRef.current) {
+              clearTimeout(loadingTimeoutRef.current)
+            }
+            break
+            
+          case 'onStateChange':
+            // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: video cued
+            if (data.info === 1) {
+              // Video is playing
+              setShowLoading(false)
+              loadedRef.current = true
+            }
+            onPlayStateChange(data.info === 1)
+            break
+            
+          case 'onError':
+            setHasError(true)
+            setShowLoading(false)
+            loadedRef.current = true
+            if (loadingTimeoutRef.current) {
+              clearTimeout(loadingTimeoutRef.current)
+            }
+            break
+            
+          case 'initialDelivery':
+            // Video started loading
+            if (data.info?.apiInterface === 'http' && data.info?.videoData?.videoId === videoId) {
+              // Video data received, will play soon
+              setTimeout(() => {
+                if (!loadedRef.current) {
+                  setShowLoading(false)
+                }
+              }, 2000)
+            }
+            break
+        }
+      } catch (e) {
+        // Ignore non-JSON messages
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [videoId, onPlayStateChange])
+
+  // Send commands to iframe
+  const sendCommand = useCallback((command: string, args: any[] = []) => {
+    if (iframeRef.current?.contentWindow && isLoaded) {
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: command, args }),
+        '*'
+      )
+    }
+  }, [isLoaded])
+
+  // Sync mute state
+  useEffect(() => {
+    if (isLoaded) {
+      sendCommand(isMuted ? 'mute' : 'unMute')
+    }
+  }, [isMuted, isLoaded, sendCommand])
+
+  // Sync volume
+  useEffect(() => {
+    if (isLoaded) {
+      sendCommand('setVolume', [volume])
+    }
+  }, [volume, isLoaded, sendCommand])
+
+  // Control playback based on active state
+  useEffect(() => {
+    if (isLoaded) {
+      if (isActive) {
+        sendCommand('playVideo')
+      } else {
+        sendCommand('pauseVideo')
+      }
+    }
+  }, [isActive, isLoaded, sendCommand])
+
+  // Try to detect video playing via iframe load event
+  const handleIframeLoad = useCallback(() => {
+    // Iframe loaded, video might start playing soon
+    setTimeout(() => {
+      if (!loadedRef.current && !hasError) {
+        setShowLoading(false)
+      }
+    }, 1500)
+  }, [hasError])
+
+  return (
+    <div className="w-full h-full relative bg-black">
+      {/* YouTube iframe - always rendered */}
+      <iframe
+        ref={iframeRef}
+        src={embedUrl}
+        className="w-full h-full absolute inset-0 z-10"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen={false}
+        style={{ border: 'none' }}
+        title="YouTube Shorts Player"
+        onLoad={handleIframeLoad}
+      />
+      
+      {/* Loading overlay - only shows briefly */}
+      {showLoading && !hasError && (
+        <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 text-white/60 animate-spin mx-auto mb-3" />
+            <p className="text-sm text-white/50">Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {hasError && (
+        <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
+          <div className="text-center px-6">
+            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Ban className="h-8 w-8 text-white/60" />
+            </div>
+            <p className="text-white font-medium mb-2">Video unavailable</p>
+            <p className="text-sm text-white/50 mb-4">This video may be private or unavailable.</p>
+            <a 
+              href={getYouTubeWatchUrl(videoId)} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium"
+            >
+              Watch on YouTube <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ============ ICON COMPONENTS ============
 
@@ -349,18 +538,18 @@ function CommentItem({ comment, onLikeComment, onDislikeComment, onReplyComment,
 // ============ SHARE MODAL ============
 
 const sharePlatforms = [
-  { name: "Facebook", icon: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><linearGradient id="fb5" x1="9.993%" x2="89.993%" y1="0%" y2="100%"><stop offset="0%" stopColor="#18B5FE"/><stop offset="100%" stopColor="#1277F2"/></linearGradient><path fill="url(#fb5)" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z"/><path fill="#fff" d="M26.707 36.301V25.5h3.613l.543-4.215h-4.156v-2.699c0-1.227.336-2.054 2.082-2.054h2.227V12.66c-.387-.047-1.707-.16-3.25-.16-3.207 0-5.41 1.957-5.41 5.559v3.102H19v4.215h3.656V36.3h4.051z"/></svg>) },
+  { name: "Facebook", icon: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><linearGradient id="fb6" x1="9.993%" x2="89.993%" y1="0%" y2="100%"><stop offset="0%" stopColor="#18B5FE"/><stop offset="100%" stopColor="#1277F2"/></linearGradient><path fill="url(#fb6)" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z"/><path fill="#fff" d="M26.707 36.301V25.5h3.613l.543-4.215h-4.156v-2.699c0-1.227.336-2.054 2.082-2.054h2.227V12.66c-.387-.047-1.707-.16-3.25-.16-3.207 0-5.41 1.957-5.41 5.559v3.102H19v4.215h3.656V36.3h4.051z"/></svg>) },
   { name: "WhatsApp", icon: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><path fill="#fff" d="M4.9 43.3l2.7-9.8C5.5 30.3 4.5 26.7 4.5 23 4.5 12.3 13.3 3.5 24 3.5S43.5 12.3 43.5 23 34.7 42.5 24 42.5c-3.5 0-6.9-.9-9.9-2.7l-9.2 3.5z"/><path fill="#25D366" d="M24 5c9.9 0 18 8.1 18 18s-8.1 18-18 18c-3.2 0-6.2-.8-8.9-2.4l-1-.6-5.5 2.1 1.5-5.3-.7-1.1C5.7 31.1 5 28.6 5 26 5 16.1 13.1 8 23 8h1v-3z"/><path fill="#fff" d="M35.5 26.8c-.4-.2-2.6-1.3-3-1.4-.4-.2-.7-.3-1 .2-.3.4-1.1 1.4-1.4 1.7-.3.3-.5.3-1 .1-.4-.2-1.9-.7-3.6-2.3-1.3-1.2-2.2-2.7-2.5-3.1-.3-.4 0-.7.2-.9.2-.2.4-.5.7-.8.2-.3.3-.5.5-.8.2-.3.1-.6 0-.8-.1-.2-.9-2.4-1.2-3.3-.3-.9-.7-.8-1-.8-.3 0-.6 0-.9 0-.3 0-.8.1-1.2.6-.4.5-1.6 1.5-1.6 3.7s1.6 4.3 1.8 4.6c.2.3 3.2 4.9 7.7 6.9 1.1.5 1.9.8 2.6 1 1.1.3 2.1.3 2.9.2.9-.1 2.6-1.1 3-2.1.4-1 .4-1.9.3-2.1-.2-.2-.4-.3-.8-.5z"/></svg>) },
   { name: "X", icon: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><path fill="#000" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z"/><path fill="#fff" d="M13 14h7.5l5.6 8 8.9-8h3.5l-10.3 9.3L38 34h-7.5l-6.3-9-9.2 9H11l10.8-9.8L13 14zm5 2.5h3l13 15h-3l-13-15z"/></svg>) },
 ]
 
-function ShareModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+function ShareModal({ isOpen, onClose, videoUrl }: { isOpen: boolean; onClose: () => void; videoUrl?: string }) {
   const [copied, setCopied] = useState(false)
   const shareContainerRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(true)
-  const videoUrl = typeof window !== 'undefined' ? window.location.href : "https://youtube.com/shorts/example"
-  const handleCopy = () => { navigator.clipboard.writeText(videoUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }) }
+  const shareUrl = videoUrl || (typeof window !== 'undefined' ? window.location.href : "https://youtube.com/shorts/example")
+  const handleCopy = () => { navigator.clipboard.writeText(shareUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }) }
   const checkScroll = () => { const el = shareContainerRef.current; if (!el) return; setShowLeftArrow(el.scrollLeft > 10); setShowRightArrow(el.scrollLeft < el.scrollWidth - el.clientWidth - 10) }
   useEffect(() => { const el = shareContainerRef.current; if (el) { el.addEventListener('scroll', checkScroll); checkScroll(); return () => el.removeEventListener('scroll', checkScroll) } }, [isOpen])
   const scrollShare = (d: 'left' | 'right') => { const el = shareContainerRef.current; if (!el) return; el.scrollBy({ left: d === 'left' ? -250 : 250, behavior: 'smooth' }) }
@@ -377,7 +566,7 @@ function ShareModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
             {sharePlatforms.map((p) => (<button key={p.name} className="flex flex-col items-center gap-2 flex-shrink-0 w-[72px] group"><div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform duration-200">{p.icon}</div><span className="text-xs text-muted-foreground group-hover:text-foreground text-center leading-tight truncate w-full">{p.name}</span></button>))}
           </div>
         </div>
-        <div className="px-5 pb-5"><div className="flex items-center gap-3 bg-muted rounded-xl p-3 border border-border"><input type="text" value={videoUrl} readOnly className="flex-1 bg-transparent text-sm text-foreground outline-none truncate" /><button onClick={handleCopy} className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${copied ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{copied ? 'Copied' : 'Copy'}</button></div></div>
+        <div className="px-5 pb-5"><div className="flex items-center gap-3 bg-muted rounded-xl p-3 border border-border"><input type="text" value={shareUrl} readOnly className="flex-1 bg-transparent text-sm text-foreground outline-none truncate" /><button onClick={handleCopy} className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${copied ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{copied ? 'Copied' : 'Copy'}</button></div></div>
       </div>
     </div>
   )
@@ -411,6 +600,7 @@ export default function ShortsPage() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [likedIds, setLikedIds] = useState<string[]>(() => loadIds(STORAGE_LIKED))
   const [dislikedIds, setDislikedIds] = useState<string[]>(() => loadIds(STORAGE_DISLIKED))
+  const [videoStates, setVideoStates] = useState<Record<string, boolean>>({})
   const centerPlayTimeout = useRef<NodeJS.Timeout | null>(null)
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null)
   const commentsTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -488,13 +678,25 @@ export default function ShortsPage() {
       if (activePanel || showShareModal) return
       if (e.key === "ArrowDown") { e.preventDefault(); scrollToVideo(currentIndex + 1) }
       if (e.key === "ArrowUp") { e.preventDefault(); scrollToVideo(currentIndex - 1) }
+      if (e.key === " " || e.key === "Spacebar") { e.preventDefault(); setIsPlaying(!isPlaying) }
     }
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h)
-  }, [currentIndex, activePanel, showShareModal])
+  }, [currentIndex, activePanel, showShareModal, isPlaying])
 
   const toggleLike = (id: string) => setIsLiked(p => ({ ...p, [id]: !p[id] }))
   const toggleFullscreen = () => { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); setIsFullscreen(true) } else { document.exitFullscreen().catch(() => {}); setIsFullscreen(false) } }
-  const handleTogglePlay = (e: React.MouseEvent) => { e.stopPropagation(); setIsPlaying(!isPlaying); setShowCenterPlayPause(true); if (centerPlayTimeout.current) clearTimeout(centerPlayTimeout.current); centerPlayTimeout.current = setTimeout(() => setShowCenterPlayPause(false), 600) }
+  
+  const handleTogglePlay = (e: React.MouseEvent) => { 
+    e.stopPropagation(); 
+    setIsPlaying(!isPlaying); 
+    setShowCenterPlayPause(true); 
+    if (centerPlayTimeout.current) clearTimeout(centerPlayTimeout.current); 
+    centerPlayTimeout.current = setTimeout(() => setShowCenterPlayPause(false), 600);
+  }
+
+  const handlePlayStateChange = useCallback((videoId: string, playing: boolean) => {
+    setVideoStates(prev => ({ ...prev, [videoId]: playing }))
+  }, [])
 
   // ---- COMMENT ACTIONS ----
   const persistComments = () => saveComments(commentsByVideo)
@@ -629,7 +831,11 @@ export default function ShortsPage() {
       `}</style>
 
       {/* Share Modal */}
-      <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} />
+      <ShareModal 
+        isOpen={showShareModal} 
+        onClose={() => setShowShareModal(false)} 
+        videoUrl={currentShort?.videoUrl} 
+      />
 
       {/* Feedback Dialog */}
       <Dialog open={showFeedbackDialog} onOpenChange={setShowFeedbackDialog}>
@@ -667,12 +873,13 @@ export default function ShortsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Navigation Arrows (Desktop) */}
       <div className="hidden md:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 flex-col gap-1 bg-background/80 dark:bg-[#b5abab66] rounded-full p-1.5 shadow-md">
         <button onClick={() => scrollToVideo(currentIndex - 1)} disabled={currentIndex === 0} className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronUp className="h-6 w-6" /></button>
         <button onClick={() => scrollToVideo(currentIndex + 1)} disabled={currentIndex === shortsData.length - 1} className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronDown className="h-6 w-6" /></button>
       </div>
 
-      {/* Desktop Panel – dark background as #212121 */}
+      {/* Desktop Panel */}
       {activePanel && (
         <div className="hidden md:flex fixed top-[56px] bottom-0 z-40 items-center" style={{ right: `${panelRight}px` }}>
           <div className="bg-card dark:bg-[#212121] rounded-2xl overflow-hidden flex flex-col shadow-2xl animate-fade-in-left h-[85vh]" style={{ width: `${panelWidth}px` }}>
@@ -754,7 +961,7 @@ export default function ShortsPage() {
         </div>
       )}
 
-      {/* Mobile Panel – dark background as #212121 */}
+      {/* Mobile Panel */}
       {activePanel && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60" onClick={() => setActivePanel(null)} />
@@ -841,61 +1048,67 @@ export default function ShortsPage() {
         {shortsData.map((short, index) => {
           const isActive = index === currentIndex
           const isHovered = hoveredVideoId === short.id
+          const isVideoPlaying = videoStates[short.id] ?? isActive
+          
           return (
-            <section key={short.id} className="relative h-[calc(95vh-56px)] w-full snap-start snap-always flex items-center justify-center bg-background">
+            <section key={short.id} className="relative h-[calc(95vh-56px)] w-full snap-start snap-always flex items-center justify-center bg-black">
               <div
-                className="relative w-full h-full md:max-h-[85vh] md:w-auto md:aspect-[9/16] md:rounded-2xl overflow-hidden mx-auto bg-muted"
+                className="relative w-full h-full md:max-h-[85vh] md:w-auto md:aspect-[9/16] md:rounded-2xl overflow-hidden mx-auto bg-black"
                 onMouseEnter={() => setHoveredVideoId(short.id)}
                 onMouseLeave={() => { setHoveredVideoId(null); setShowVolumeSlider(false); setShowMoreMenu(false) }}
+                onClick={(e) => {
+                  const target = e.target as HTMLElement
+                  if (target.closest('button') || target.closest('a') || target.closest('[data-controls]')) return
+                  handleTogglePlay(e)
+                }}
               >
-                {/* Video placeholder */}
-                <div className="w-full h-full bg-gradient-to-br from-muted via-muted/80 to-muted flex items-center justify-center cursor-pointer" onClick={handleTogglePlay}>
-                  <div className="text-center text-muted-foreground/30">
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" className="mx-auto mb-4 opacity-40">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
-                    </svg>
-                    <p className="text-sm opacity-50">Short Video</p>
-                  </div>
-                </div>
+                {/* YouTube Player */}
+                <YouTubeShortsPlayer
+                  videoId={short.youtubeId}
+                  isActive={isActive}
+                  isMuted={isMuted}
+                  volume={volume}
+                  onPlayStateChange={(playing) => handlePlayStateChange(short.id, playing)}
+                />
 
                 {/* Center play/pause overlay */}
-                <div className={`absolute inset-0 flex items-center justify-center z-25 pointer-events-none transition-opacity duration-200 ${showCenterPlayPause ? "opacity-100" : "opacity-0"}`}>
-                  <div className="w-16 h-16 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center">
-                    {isPlaying ? <Pause className="h-8 w-8 text-foreground" /> : <Play className="h-8 w-8 text-foreground" />}
+                <div className={`absolute inset-0 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200 ${showCenterPlayPause ? "opacity-100" : "opacity-0"}`}>
+                  <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                    {isVideoPlaying ? <Pause className="h-8 w-8 text-white" /> : <Play className="h-8 w-8 text-white" />}
                   </div>
                 </div>
 
                 {/* Gradient overlays */}
-                <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-background/90 via-background/50 to-transparent pointer-events-none" />
-                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/60 via-background/20 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-10" />
+                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 via-black/20 to-transparent pointer-events-none z-10" />
 
-                {/* Top controls (hover only) */}
-                <div className={`absolute top-0 left-0 right-0 z-30 px-4 pt-4 pb-16 transition-opacity duration-200 ${isHovered && !isScrolling && !isTransitioning ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+                {/* Top controls */}
+                <div className={`absolute top-0 left-0 right-0 z-30 px-4 pt-4 pb-16 transition-opacity duration-200 ${isHovered && !isScrolling && !isTransitioning ? "opacity-100" : "opacity-0 pointer-events-none"}`} data-controls="true">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button onClick={handleTogglePlay} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
-                        {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                      <button onClick={handleTogglePlay} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
+                        {isVideoPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                       </button>
                       <div className="relative flex items-center" onMouseEnter={() => setShowVolumeSlider(true)} onMouseLeave={() => setShowVolumeSlider(false)}>
-                        <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
+                        <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
                           {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                         </button>
                         {showVolumeSlider && (
-                          <div className="hidden md:flex items-center rounded-full px-3 py-2 ml-1 shadow-lg" style={{ backgroundColor: "#b5abab66" }}>
-                            <input type="range" min="0" max="100" value={isMuted ? 0 : volume} onChange={(e) => { setVolume(Number(e.target.value)); setIsMuted(false) }} className="w-20 h-1 accent-black dark:accent-white cursor-pointer" />
+                          <div className="hidden md:flex items-center rounded-full px-3 py-2 ml-1 shadow-lg" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
+                            <input type="range" min="0" max="100" value={isMuted ? 0 : volume} onChange={(e) => { setVolume(Number(e.target.value)); setIsMuted(false) }} className="w-20 h-1 accent-white cursor-pointer" />
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setCaptionsEnabled(!captionsEnabled)} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
+                      <button onClick={() => setCaptionsEnabled(!captionsEnabled)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
                         {captionsEnabled ? <CCIconOn className="h-5 w-5" /> : <CCIconOff className="h-5 w-5" />}
                       </button>
-                      <button onClick={toggleFullscreen} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
+                      <button onClick={toggleFullscreen} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
                         <FullscreenIcon className="h-5 w-5" />
                       </button>
                       <div className="relative">
-                        <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="w-10 h-10 rounded-full flex items-center justify-center text-black dark:text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "#b5abab66" }}>
+                        <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
                           <MoreIcon className="h-5 w-5" />
                         </button>
                         {showMoreMenu && (
@@ -919,7 +1132,6 @@ export default function ShortsPage() {
                                   <span>Report</span>
                                 </button>
                               </ReportDialog>
-
                               <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => { setShowMoreMenu(false); setShowFeedbackDialog(true); }}>
                                 <MessageSquare className="h-5 w-5" /> Send feedback
                               </button>
@@ -932,51 +1144,61 @@ export default function ShortsPage() {
                   </div>
                 </div>
 
-                {/* Bottom info & actions – dark mode text white */}
+                {/* Bottom info */}
                 <div className={`absolute bottom-6 left-4 right-20 z-20 transition-all duration-500 ${isActive && !isScrolling && !isTransitioning ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar className="h-10 w-10 border-2 border-white/20 flex-shrink-0">
                       <AvatarImage src={short.channelAvatar} />
-                      <AvatarFallback className="bg-muted text-black dark:text-white text-xs">{short.channel.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="bg-muted text-white text-xs">{short.channel.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <span className="text-black dark:text-white font-semibold text-sm truncate">{short.channel}</span>
+                    <span className="text-white font-semibold text-sm truncate drop-shadow-lg">{short.channel}</span>
                   </div>
                   <button onClick={() => openPanel("description")} className="text-left w-full">
-                    <p className="text-black/90 dark:text-white/90 text-sm leading-relaxed line-clamp-2 hover:text-black dark:hover:text-white transition-colors">{short.title}</p>
+                    <p className="text-white/90 text-sm leading-relaxed line-clamp-2 hover:text-white transition-colors drop-shadow-lg">{short.title}</p>
                   </button>
+                  <a 
+                    href={short.videoUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-blue-300 hover:text-blue-200 text-xs hover:underline mt-1 inline-flex items-center gap-1 drop-shadow-lg"
+                    data-controls="true"
+                  >
+                    Watch on YouTube <ExternalLink className="h-3 w-3" />
+                  </a>
                 </div>
 
+                {/* Right side actions */}
                 <div className={`absolute right-3 bottom-28 flex flex-col gap-6 items-center z-20 transition-all duration-500 ${isActive && !isScrolling && !isTransitioning ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"}`}>
-                  <button onClick={() => toggleLike(short.id)} className="flex flex-col items-center gap-1 group">
-                    <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all", isLiked[short.id] ? "scale-110" : "", "group-hover:bg-white/10 group-active:scale-95")} style={{ backgroundColor: isLiked[short.id] ? "rgba(255, 0, 0, 0.2)" : "#b5abab66" }}>
-                      <Heart className={cn("h-6 w-6", isLiked[short.id] ? "text-red-500 fill-red-500" : "text-black dark:text-white")} />
+                  <button onClick={() => toggleLike(short.id)} className="flex flex-col items-center gap-1 group" data-controls="true">
+                    <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all", isLiked[short.id] ? "scale-110" : "", "group-hover:bg-white/10 group-active:scale-95")} style={{ backgroundColor: isLiked[short.id] ? "rgba(255, 0, 0, 0.2)" : "rgba(181, 171, 171, 0.4)" }}>
+                      <Heart className={cn("h-6 w-6 drop-shadow-lg", isLiked[short.id] ? "text-red-500 fill-red-500" : "text-white")} />
                     </div>
-                    <span className="text-black dark:text-white text-xs font-medium">{short.likes}</span>
+                    <span className="text-white text-xs font-medium drop-shadow-lg">{short.likes}</span>
                   </button>
-                  <button onClick={() => openPanel("comments")} className="flex flex-col items-center gap-1 group">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
-                      <MessageCircle className="h-6 w-6 text-black dark:text-white" />
+                  <button onClick={() => openPanel("comments")} className="flex flex-col items-center gap-1 group" data-controls="true">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
+                      <MessageCircle className="h-6 w-6 text-white drop-shadow-lg" />
                     </div>
-                    <span className="text-black dark:text-white text-xs font-medium">{short.comments}</span>
+                    <span className="text-white text-xs font-medium drop-shadow-lg">{short.comments}</span>
                   </button>
-                  <button onClick={() => setShowShareModal(true)} className="flex flex-col items-center gap-1 group">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
-                      <Share2 className="h-6 w-6 text-black dark:text-white" />
+                  <button onClick={() => setShowShareModal(true)} className="flex flex-col items-center gap-1 group" data-controls="true">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
+                      <Share2 className="h-6 w-6 text-white drop-shadow-lg" />
                     </div>
-                    <span className="text-black dark:text-white text-xs font-medium">Share</span>
+                    <span className="text-white text-xs font-medium drop-shadow-lg">Share</span>
                   </button>
-                  <button className="flex flex-col items-center gap-1 group">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
-                      <Bookmark className="h-6 w-6 text-black dark:text-white" />
+                  <button className="flex flex-col items-center gap-1 group" data-controls="true">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
+                      <Bookmark className="h-6 w-6 text-white drop-shadow-lg" />
                     </div>
-                    <span className="text-black dark:text-white text-xs font-medium">Save</span>
+                    <span className="text-white text-xs font-medium drop-shadow-lg">Save</span>
                   </button>
                   <ReportDialog videoTitle={short.title} videoId={short.id}>
-                    <button className="flex flex-col items-center gap-1 group">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "#b5abab66" }}>
-                        <Flag className="h-6 w-6 text-black dark:text-white" />
+                    <button className="flex flex-col items-center gap-1 group" data-controls="true">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
+                        <Flag className="h-6 w-6 text-white drop-shadow-lg" />
                       </div>
-                      <span className="text-black dark:text-white text-xs font-medium">Report</span>
+                      <span className="text-white text-xs font-medium drop-shadow-lg">Report</span>
                     </button>
                   </ReportDialog>
                 </div>

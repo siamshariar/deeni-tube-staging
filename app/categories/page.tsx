@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Search, X, Folder } from "lucide-react";
+import { ArrowLeft, Search, X, FolderOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
@@ -78,9 +78,6 @@ export default function CategoriesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="md:block">
             <h1 className="text-2xl font-bold">Categories</h1>
-            {/* <p className="text-sm text-muted-foreground mt-1">
-              {filteredCategories.length} category{filteredCategories.length !== 1 ? "s" : ""}
-            </p> */}
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 min-w-0">
@@ -138,7 +135,7 @@ export default function CategoriesPage() {
         ) : filteredCategories.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <Folder className="h-8 w-8 text-muted-foreground" />
+              <FolderOpen className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium mb-1">No categories found</h3>
             <p className="text-muted-foreground">
@@ -154,7 +151,7 @@ export default function CategoriesPage() {
                 className="p-5 border rounded-xl hover:bg-muted/30 transition-colors group cursor-pointer flex items-start gap-3"
               >
                 <div className="flex-shrink-0 w-9 h-9 bg-muted rounded-full flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                  <Folder className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <FolderOpen className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-base group-hover:text-primary transition-colors truncate">

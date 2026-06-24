@@ -344,7 +344,7 @@ export default function PlaylistsPage() {
                       <span>•</span>
                       <span>Updated {playlist.updatedAt}</span>
                     </div>
-                    <div className="pt-1">
+                    {/* <div className="pt-1">
                       <button
                         className="text-xs font-medium text-primary hover:underline"
                         onClick={(e) => {
@@ -354,7 +354,7 @@ export default function PlaylistsPage() {
                       >
                         View full playlist
                       </button>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               );

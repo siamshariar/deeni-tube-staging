@@ -139,7 +139,6 @@ export default function AccountDropdown() {
       setOpen(false);
       setTimeout(() => setShowAppearanceDialog(true), 100);
     }
-    // On desktop, the DropdownMenuSub handles it natively
   };
 
   return (
@@ -175,19 +174,15 @@ export default function AccountDropdown() {
           </div>
 
           <DropdownMenuGroup>
-            {/* Preferences */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/you-new")}>
               <User className="mr-3 h-5 w-5" />
               <span>Preferences</span>
             </DropdownMenuItem>
-            {/* Donate */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/donate")}>
               <Heart className="mr-3 h-5 w-5 text-red-500" />
               <span>Donate</span>
               <ChevronRight className="ml-auto h-4 w-4" />
             </DropdownMenuItem>
-
-            {/* Channel Preferences */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/channels")}>
               <Settings className="mr-3 h-5 w-5" />
               <span>Channel Preferences</span>
@@ -213,17 +208,17 @@ export default function AccountDropdown() {
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-48">
                   <DropdownMenuItem onClick={() => handleThemeChange("system")} className="py-2.5 cursor-pointer">
-                    <Monitor className="mr-3 h-5 w-5" />
+                    <Monitor className="mr-2 h-4 w-4" />
                     <span>Device theme</span>
                     {theme === "system" && <Check className="ml-auto h-4 w-4" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleThemeChange("light")} className="py-2.5 cursor-pointer">
-                    <Sun className="mr-3 h-5 w-5" />
+                    <Sun className="mr-2 h-4 w-4" />
                     <span>Light theme</span>
                     {theme === "light" && <Check className="ml-auto h-4 w-4" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleThemeChange("dark")} className="py-2.5 cursor-pointer">
-                    <Moon className="mr-3 h-5 w-5" />
+                    <Moon className="mr-2 h-4 w-4" />
                     <span>Dark theme</span>
                     {theme === "dark" && <Check className="ml-auto h-4 w-4" />}
                   </DropdownMenuItem>
@@ -242,19 +237,14 @@ export default function AccountDropdown() {
           <DropdownMenuSeparator />
 
           <DropdownMenuGroup>
-            {/* Settings */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/settings")}>
               <Settings className="mr-3 h-5 w-5" />
               <span>Settings</span>
             </DropdownMenuItem>
-
-            {/* Help */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/help")}>
               <HelpCircle className="mr-3 h-5 w-5" />
               <span>Help</span>
             </DropdownMenuItem>
-
-            {/* Send feedback */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => { setOpen(false); setShowFeedbackDialog(true); }}>
               <MessageSquare className="mr-3 h-5 w-5" />
               <span>Send feedback</span>
@@ -264,7 +254,6 @@ export default function AccountDropdown() {
           <DropdownMenuSeparator />
 
           <DropdownMenuGroup>
-            {/* Sign out */}
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={handleSignOut}>
               <LogOut className="mr-3 h-5 w-5" />
               <span>Sign out</span>

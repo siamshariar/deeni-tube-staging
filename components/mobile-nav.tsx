@@ -2,13 +2,13 @@
 "use client"
 
 import Link from "next/link"
-import { Home, Tv, GraduationCap, LayoutGrid, ListVideo } from "lucide-react"
+import { Home, Users, GraduationCap, LayoutGrid, ListVideo } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
-  { href: "/channels", icon: Tv, label: "Channels" },
+  { href: "/channels", icon: Users, label: "Channels" },
   { href: "/categories", icon: LayoutGrid, label: "Categories" },
   { href: "/scholars", icon: GraduationCap, label: "Scholars" },
   { href: "/playlists", icon: ListVideo, label: "Playlists" },
@@ -18,13 +18,10 @@ export default function MobileNav() {
   const pathname = usePathname()
   const isMobile = useMediaQuery("(max-width: 768px)")
 
-  // Hide on desktop
   if (!isMobile) return null
 
-  // Hide on all detail pages:
-  //   /videos/... , /channels/[slug] , /scholars/[slug] ,
-  //   /categories/[slug] , /playlists/[slug]/[id]  (anything deeper than list)
-  const hideDetailPatterns = [
+  // Hide on detail pages
+  const detailPatterns = [
     "/videos/",
     "/channels/",
     "/scholars/",
@@ -32,13 +29,10 @@ export default function MobileNav() {
     "/playlists/",
   ]
 
-  // But keep navigation on exact list pages: /channels, /scholars, /categories, /playlists
-  const showListPages = ["/channels", "/scholars", "/categories", "/playlists"]
+  const listPages = ["/channels", "/scholars", "/categories", "/playlists"]
 
-  if (showListPages.includes(pathname)) {
-    // Show mobile nav on list pages
-  } else if (hideDetailPatterns.some(prefix => pathname?.startsWith(prefix))) {
-    // Hide on any sub‑route of those patterns (detail pages)
+  // Hide on detail pages, show on list pages
+  if (detailPatterns.some(prefix => pathname?.startsWith(prefix) && !listPages.includes(pathname))) {
     return null
   }
 

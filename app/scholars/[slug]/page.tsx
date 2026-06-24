@@ -246,7 +246,7 @@ export default function ScholarDetailPage() {
             style={{ position: "absolute", top: "12px", right: "12px" }}
             aria-label="Close"
           >
-            <X className="h-7 w-7" />
+            <X className="h-6 w-6" />
           </button>
           <DialogHeader>
             <DialogTitle>About {scholar.name}</DialogTitle>
