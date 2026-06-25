@@ -23,6 +23,7 @@ export default function MobileNav() {
   // Hide on detail pages
   const detailPatterns = [
     "/videos/",
+    "/shorts",
     "/channels/",
     "/scholars/",
     "/categories/",

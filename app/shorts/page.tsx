@@ -1,14 +1,14 @@
 // app/shorts/page.tsx
-// Updated: Fixed YouTube player loading overlay issue
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import {
   ChevronUp, ChevronDown, Heart, MessageCircle, Share2, Bookmark, Flag,
   Volume2, VolumeX, Pause, Play, List, Ban, MessageSquare, X,
   ThumbsUp, ThumbsDown, MoreVertical, Send, Eye, Clock, Copy, Check,
-  ChevronLeft, ChevronRight, ExternalLink, Loader2,
+  ChevronLeft, ChevronRight,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -20,11 +20,208 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { ReportDialog } from "@/components/report-dialog"
 import { toast } from "sonner"
-import { shortsVideos, initialCommentsByVideo, descriptionsByVideo, getYouTubeEmbedUrl, getYouTubeWatchUrl } from "@/lib/shorts-data"
 
-// ============ DATA & STORAGE ============
+// ============ SHORTS DATA ============
+const shortsData = [
+  {
+    id: "s1",
+    videoId: "MBxDbbkk0gQ",
+    title: "একমাত্র আল্লাহর রাজত্বই চিরস্থায়ী",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelId: "monzur",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_lLp3SxQeehJxSmd_QCmSxpFBj4k-7X-brif7v9Jz0rBg=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/MBxDbbkk0gQ/hqdefault.jpg",
+    likes: "15K",
+    comments: "1.2K",
+    isSubscribed: false,
+    description: `প্রফেসর ড. মোহাম্মদ মানজুরে ইলাহী
+পিএইচডি, শারী'আহ অনুষদ, মদীনা ইসলামী বিশ্ববিদ্যালয়
 
-const shortsData = shortsVideos
+অফিসিয়াল ইউটিউব চ্যানেল : https://www.youtube.com/@DrMohammadMonzurEElahi
+অফিসিয়াল ওয়েবসাইট লিংক : https://www.monzureelahi.com/
+অফিসিয়াল ফেসবুক পেইজ লিংক : https://www.facebook.com/drmonzureelahiofficial
+অফিসিয়াল টেলিগ্রাম চ্যানেল লিংক : https://t.me/monzureelahi
+গুরুত্বপূর্ণ আলোচনার অডিওসমূহ : https://drive.google.com/drive/u/8/folders/1MpmM1kponF81E8giNkkDPehprqk_Eflu
+হোয়াটসঅ্যাপ চ্যানেল : https://whatsapp.com/channel/0029Vafrb5Q6rsQkw6IVV510
+
+অর্গানাইজেশনসমূহ :
+ইমাম বুখারী ট্রাস্ট : https://www.facebook.com/imambukharitrustbd
+তাইবাহ একাডেমি : https://taibahacademy.com/
+কুল্লিয়াতুল কুরআন : https://www.facebook.com/kulliyatulquran
+তাইবাহ পাবলিসার্স : https://www.facebook.com/taibahpublishers`,
+    views: "15,234",
+    timeAgo: "2 weeks ago",
+    hashtags: ["#monzureelahi", "#allah", "#islamicreminder"]
+  },
+  {
+    id: "s2",
+    videoId: "goHfO28fE-A",
+    title: "যারা বলে আমাদের রব আল্লাহ",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelId: "monzur",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_lLp3SxQeehJxSmd_QCmSxpFBj4k-7X-brif7v9Jz0rBg=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/goHfO28fE-A/hqdefault.jpg",
+    likes: "25K",
+    comments: "2.1K",
+    isSubscribed: true,
+    description: `প্রফেসর ড. মোহাম্মদ মানজুরে ইলাহী
+পিএইচডি, শারী'আহ অনুষদ, মদীনা ইসলামী বিশ্ববিদ্যালয়
+
+অফিসিয়াল ইউটিউব চ্যানেল : https://www.youtube.com/@DrMohammadMonzurEElahi
+অফিসিয়াল ওয়েবসাইট লিংক : https://www.monzureelahi.com/
+অফিসিয়াল ফেসবুক পেইজ লিংক : https://www.facebook.com/drmonzureelahiofficial
+অফিসিয়াল টেলিগ্রাম চ্যানেল লিংক : https://t.me/monzureelahi
+গুরুত্বপূর্ণ আলোচনার অডিওসমূহ : https://drive.google.com/drive/u/8/folders/1MpmM1kponF81E8giNkkDPehprqk_Eflu
+হোয়াটসঅ্যাপ চ্যানেল : https://whatsapp.com/channel/0029Vafrb5Q6rsQkw6IVV510
+
+অর্গানাইজেশনসমূহ :
+ইমাম বুখারী ট্রাস্ট : https://www.facebook.com/imambukharitrustbd
+তাইবাহ একাডেমি : https://taibahacademy.com/
+কুল্লিয়াতুল কুরআন : https://www.facebook.com/kulliyatulquran
+তাইবাহ পাবলিসার্স : https://www.facebook.com/taibahpublishers`,
+    views: "25,890",
+    timeAgo: "3 days ago",
+    hashtags: ["#monzureelahi", "#allah", "#islamiclecture"]
+  },
+  {
+    id: "s3",
+    videoId: "8YfQCDjlQsc",
+    title: "ইমামের দূর্ব্যবহারের কারণে কেউ ওই মাসজিদে না গেলে কি অন্যায় হবে?",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelId: "monzur",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_lLp3SxQeehJxSmd_QCmSxpFBj4k-7X-brif7v9Jz0rBg=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/8YfQCDjlQsc/hqdefault.jpg",
+    likes: "50K",
+    comments: "3.5K",
+    isSubscribed: false,
+    description: "Dr. Mohammad Monzur-E-Elahi",
+    views: "50,123",
+    timeAgo: "1 week ago",
+    hashtags: ["#monzureelahi", "#masjid", "#islamicqa"]
+  },
+  {
+    id: "s4",
+    videoId: "o38RKuY_AUU",
+    title: "সিদ্দীকে আকবার রা.-এর দৃষ্টিতে প্রিয় নবী সা.",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelId: "monzur",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_lLp3SxQeehJxSmd_QCmSxpFBj4k-7X-brif7v9Jz0rBg=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/o38RKuY_AUU/hqdefault.jpg",
+    likes: "18K",
+    comments: "950",
+    isSubscribed: false,
+    description: "Dr. Mohammad Monzur-E-Elahi",
+    views: "18,456",
+    timeAgo: "5 days ago",
+    hashtags: ["#monzureelahi", "#seerah", "#prophetmuhammad"]
+  },
+  {
+    id: "s5",
+    videoId: "oEWnPbRvOrY",
+    title: "আল্লাহর পক্ষ থেকে তাওফীক প্রাপ্তি",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelId: "monzur",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_lLp3SxQeehJxSmd_QCmSxpFBj4k-7X-brif7v9Jz0rBg=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/oEWnPbRvOrY/hqdefault.jpg",
+    likes: "22K",
+    comments: "1.1K",
+    isSubscribed: false,
+    description: "Dr. Mohammad Monzur-E-Elahi",
+    views: "22,789",
+    timeAgo: "3 weeks ago",
+    hashtags: ["#monzureelahi", "#tawfiq", "#islamicreminder"]
+  },
+  {
+    id: "s6",
+    videoId: "PUwTf64igQk",
+    title: "এভাবে ঈমান নষ্ট করছেন নাতো?",
+    channel: "Dr. Khandaker Abdullah Jahangir Rh.",
+    channelId: "abdullah",
+    channelAvatar: "https://yt3.googleusercontent.com/stJnVilfKhMtBiIq_hXTu-9DnanUT0GNtmsRePmQvLAi6c7bhXoIIHGlYL0HqUrdEjrL0KFs7Q=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/PUwTf64igQk/hqdefault.jpg",
+    likes: "35K",
+    comments: "2.8K",
+    isSubscribed: true,
+    description: `SunnahTrust
+আস-সুন্নাহ ট্রাস্ট
+Assunnah trust
+Dr. Khandaker Abdullah Jahangir Rh Official`,
+    views: "35,678",
+    timeAgo: "4 days ago",
+    hashtags: ["#abdullahjahangir", "#iman", "#islamicreminder"]
+  },
+  {
+    id: "s7",
+    videoId: "hHpoYE-v6og",
+    title: "রোগ-ব্যাধিতে ধৈর্য ধারণ করা",
+    channel: "Dr. Khandaker Abdullah Jahangir Rh.",
+    channelId: "abdullah",
+    channelAvatar: "https://yt3.googleusercontent.com/stJnVilfKhMtBiIq_hXTu-9DnanUT0GNtmsRePmQvLAi6c7bhXoIIHGlYL0HqUrdEjrL0KFs7Q=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/hHpoYE-v6og/hqdefault.jpg",
+    likes: "28K",
+    comments: "1.9K",
+    isSubscribed: false,
+    description: `SunnahTrust
+আস-সুন্নাহ ট্রাস্ট
+Assunnah trust
+Dr. Khandaker Abdullah Jahangir Rh Official
+
+ভিডিও লিংক: https://youtube.com/shorts/hHpoYE-v6og`,
+    views: "28,901",
+    timeAgo: "1 week ago",
+    hashtags: ["#abdullahjahangir", "#sabr", "#patience"]
+  },
+  {
+    id: "s8",
+    videoId: "Kk1_-T-8MFU",
+    title: "মহান আল্লাহ'র কাছে চাওয়ার নিয়ম",
+    channel: "Dr. Khandaker Abdullah Jahangir Rh.",
+    channelId: "abdullah",
+    channelAvatar: "https://yt3.googleusercontent.com/stJnVilfKhMtBiIq_hXTu-9DnanUT0GNtmsRePmQvLAi6c7bhXoIIHGlYL0HqUrdEjrL0KFs7Q=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/Kk1_-T-8MFU/hqdefault.jpg",
+    likes: "42K",
+    comments: "3.2K",
+    isSubscribed: false,
+    description: "ড.খন্দকার আব্দুল্লাহ জাহাঙ্গীর (রঃ)",
+    views: "42,345",
+    timeAgo: "2 weeks ago",
+    hashtags: ["#abdullahjahangir", "#dua", "#islamicdua"]
+  }
+]
+
+// ============ COMMENTS DATA ============
+const initialCommentsByVideo: Record<string, any[]> = {
+  s1: [
+    { id: "s1c1", user: "Ahmad Khan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 hours ago", content: "MashaAllah, beautiful reminder! May Allah bless you.", likes: 245, dislikes: 12, replies: [] },
+    { id: "s1c2", user: "Fatima Hassan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "5 hours ago", content: "SubhanAllah! This is so true.", likes: 567, dislikes: 23, replies: [] },
+    { id: "s1c3", user: "Omar Farooq", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 day ago", content: "JazakAllah khair! Very important reminder.", likes: 189, dislikes: 8, replies: [] },
+  ],
+  s2: [
+    { id: "s2c1", user: "Yusuf Ahmed", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 hour ago", content: "Allahu Akbar! Beautiful reminder.", likes: 456, dislikes: 8, replies: [] },
+    { id: "s2c2", user: "Zainab Hassan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "3 hours ago", content: "JazakAllah khair. I really needed this today.", likes: 234, dislikes: 5, replies: [] },
+  ],
+  s3: [
+    { id: "s3c1", user: "Hamza Yusuf", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "30 minutes ago", content: "Very important ruling. May Allah guide us all.", likes: 567, dislikes: 3, replies: [] },
+    { id: "s3c2", user: "Noor Fatima", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 hours ago", content: "MashaAllah, clear explanation.", likes: 432, dislikes: 6, replies: [] },
+  ],
+  s4: [
+    { id: "s4c1", user: "Abdullah Rahman", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 day ago", content: "Beautiful seerah reminder. May Allah bless our Prophet.", likes: 312, dislikes: 4, replies: [] },
+  ],
+  s5: [
+    { id: "s5c1", user: "Khadija Omar", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "3 days ago", content: "MashaAllah, this is so beneficial. May Allah give us tawfiq.", likes: 278, dislikes: 2, replies: [] },
+  ],
+  s6: [
+    { id: "s6c1", user: "Ibrahim Malik", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "2 hours ago", content: "SubhanAllah, such a powerful reminder about faith.", likes: 523, dislikes: 7, replies: [] },
+    { id: "s6c2", user: "Aisha Begum", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "5 hours ago", content: "May Allah protect our faith. JazakAllah khair.", likes: 345, dislikes: 3, replies: [] },
+  ],
+  s7: [
+    { id: "s7c1", user: "Mohammed Ali", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "1 day ago", content: "SubhanAllah, patience is the key. May Allah grant us sabr.", likes: 456, dislikes: 5, replies: [] },
+  ],
+  s8: [
+    { id: "s8c1", user: "Yasmin Khan", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "3 hours ago", content: "Beautiful reminder about dua. May Allah accept our prayers.", likes: 678, dislikes: 9, replies: [] },
+    { id: "s8c2", user: "Bilal Ahmed", avatar: "/placeholder.svg?height=32&width=32", timeAgo: "6 hours ago", content: "JazakAllah khair for this important reminder.", likes: 234, dislikes: 2, replies: [] },
+  ],
+}
 
 const STORAGE_COMMENTS = 'shorts_comments'
 const STORAGE_LIKED = 'shorts_liked_ids'
@@ -57,226 +254,6 @@ function saveIds(key: string, ids: string[]) {
 }
 
 let commentsByVideo = loadComments()
-
-type PanelType = "comments" | "description" | null
-
-// ============ YOUTUBE SHORTS PLAYER ============
-
-function YouTubeShortsPlayer({ 
-  videoId, 
-  isActive, 
-  isMuted, 
-  volume,
-  onPlayStateChange,
-}: { 
-  videoId: string
-  isActive: boolean
-  isMuted: boolean
-  volume: number
-  onPlayStateChange: (playing: boolean) => void
-}) {
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [hasError, setHasError] = useState(false)
-  const [showLoading, setShowLoading] = useState(true)
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const loadedRef = useRef(false)
-
-  // Reset states when videoId changes
-  useEffect(() => {
-    setIsLoaded(false)
-    setHasError(false)
-    setShowLoading(true)
-    loadedRef.current = false
-    
-    // Clear any existing timeout
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current)
-    }
-    
-    // Hide loading after 5 seconds even if not loaded (fallback)
-    loadingTimeoutRef.current = setTimeout(() => {
-      if (!loadedRef.current) {
-        setShowLoading(false)
-      }
-    }, 5000)
-    
-    return () => {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current)
-      }
-    }
-  }, [videoId])
-
-  // Build YouTube embed URL
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?${new URLSearchParams({
-    autoplay: isActive ? '1' : '0',
-    mute: isMuted ? '1' : '0',
-    loop: '1',
-    playlist: videoId,
-    controls: '0',
-    modestbranding: '1',
-    rel: '0',
-    showinfo: '0',
-    fs: '0',
-    iv_load_policy: '3',
-    disablekb: '1',
-    playsinline: '1',
-    enablejsapi: '1',
-    origin: typeof window !== 'undefined' ? window.location.origin : '',
-    widgetid: '1',
-  }).toString()}`
-
-  // Handle YouTube API messages
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (!event.origin.includes('youtube.com')) return
-      
-      try {
-        const data = JSON.parse(event.data)
-        
-        switch (data.event) {
-          case 'onReady':
-            setIsLoaded(true)
-            setShowLoading(false)
-            loadedRef.current = true
-            if (loadingTimeoutRef.current) {
-              clearTimeout(loadingTimeoutRef.current)
-            }
-            break
-            
-          case 'onStateChange':
-            // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: video cued
-            if (data.info === 1) {
-              // Video is playing
-              setShowLoading(false)
-              loadedRef.current = true
-            }
-            onPlayStateChange(data.info === 1)
-            break
-            
-          case 'onError':
-            setHasError(true)
-            setShowLoading(false)
-            loadedRef.current = true
-            if (loadingTimeoutRef.current) {
-              clearTimeout(loadingTimeoutRef.current)
-            }
-            break
-            
-          case 'initialDelivery':
-            // Video started loading
-            if (data.info?.apiInterface === 'http' && data.info?.videoData?.videoId === videoId) {
-              // Video data received, will play soon
-              setTimeout(() => {
-                if (!loadedRef.current) {
-                  setShowLoading(false)
-                }
-              }, 2000)
-            }
-            break
-        }
-      } catch (e) {
-        // Ignore non-JSON messages
-      }
-    }
-
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [videoId, onPlayStateChange])
-
-  // Send commands to iframe
-  const sendCommand = useCallback((command: string, args: any[] = []) => {
-    if (iframeRef.current?.contentWindow && isLoaded) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: 'command', func: command, args }),
-        '*'
-      )
-    }
-  }, [isLoaded])
-
-  // Sync mute state
-  useEffect(() => {
-    if (isLoaded) {
-      sendCommand(isMuted ? 'mute' : 'unMute')
-    }
-  }, [isMuted, isLoaded, sendCommand])
-
-  // Sync volume
-  useEffect(() => {
-    if (isLoaded) {
-      sendCommand('setVolume', [volume])
-    }
-  }, [volume, isLoaded, sendCommand])
-
-  // Control playback based on active state
-  useEffect(() => {
-    if (isLoaded) {
-      if (isActive) {
-        sendCommand('playVideo')
-      } else {
-        sendCommand('pauseVideo')
-      }
-    }
-  }, [isActive, isLoaded, sendCommand])
-
-  // Try to detect video playing via iframe load event
-  const handleIframeLoad = useCallback(() => {
-    // Iframe loaded, video might start playing soon
-    setTimeout(() => {
-      if (!loadedRef.current && !hasError) {
-        setShowLoading(false)
-      }
-    }, 1500)
-  }, [hasError])
-
-  return (
-    <div className="w-full h-full relative bg-black">
-      {/* YouTube iframe - always rendered */}
-      <iframe
-        ref={iframeRef}
-        src={embedUrl}
-        className="w-full h-full absolute inset-0 z-10"
-        allow="autoplay; encrypted-media; picture-in-picture"
-        allowFullScreen={false}
-        style={{ border: 'none' }}
-        title="YouTube Shorts Player"
-        onLoad={handleIframeLoad}
-      />
-      
-      {/* Loading overlay - only shows briefly */}
-      {showLoading && !hasError && (
-        <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-10 w-10 text-white/60 animate-spin mx-auto mb-3" />
-            <p className="text-sm text-white/50">Loading...</p>
-          </div>
-        </div>
-      )}
-
-      {/* Error state */}
-      {hasError && (
-        <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
-          <div className="text-center px-6">
-            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Ban className="h-8 w-8 text-white/60" />
-            </div>
-            <p className="text-white font-medium mb-2">Video unavailable</p>
-            <p className="text-sm text-white/50 mb-4">This video may be private or unavailable.</p>
-            <a 
-              href={getYouTubeWatchUrl(videoId)} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium"
-            >
-              Watch on YouTube <ExternalLink className="h-4 w-4" />
-            </a>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ============ ICON COMPONENTS ============
 
@@ -538,18 +515,18 @@ function CommentItem({ comment, onLikeComment, onDislikeComment, onReplyComment,
 // ============ SHARE MODAL ============
 
 const sharePlatforms = [
-  { name: "Facebook", icon: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><linearGradient id="fb6" x1="9.993%" x2="89.993%" y1="0%" y2="100%"><stop offset="0%" stopColor="#18B5FE"/><stop offset="100%" stopColor="#1277F2"/></linearGradient><path fill="url(#fb6)" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z"/><path fill="#fff" d="M26.707 36.301V25.5h3.613l.543-4.215h-4.156v-2.699c0-1.227.336-2.054 2.082-2.054h2.227V12.66c-.387-.047-1.707-.16-3.25-.16-3.207 0-5.41 1.957-5.41 5.559v3.102H19v4.215h3.656V36.3h4.051z"/></svg>) },
+  { name: "Facebook", icon: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><linearGradient id="fb5" x1="9.993%" x2="89.993%" y1="0%" y2="100%"><stop offset="0%" stopColor="#18B5FE"/><stop offset="100%" stopColor="#1277F2"/></linearGradient><path fill="url(#fb5)" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z"/><path fill="#fff" d="M26.707 36.301V25.5h3.613l.543-4.215h-4.156v-2.699c0-1.227.336-2.054 2.082-2.054h2.227V12.66c-.387-.047-1.707-.16-3.25-.16-3.207 0-5.41 1.957-5.41 5.559v3.102H19v4.215h3.656V36.3h4.051z"/></svg>) },
   { name: "WhatsApp", icon: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><path fill="#fff" d="M4.9 43.3l2.7-9.8C5.5 30.3 4.5 26.7 4.5 23 4.5 12.3 13.3 3.5 24 3.5S43.5 12.3 43.5 23 34.7 42.5 24 42.5c-3.5 0-6.9-.9-9.9-2.7l-9.2 3.5z"/><path fill="#25D366" d="M24 5c9.9 0 18 8.1 18 18s-8.1 18-18 18c-3.2 0-6.2-.8-8.9-2.4l-1-.6-5.5 2.1 1.5-5.3-.7-1.1C5.7 31.1 5 28.6 5 26 5 16.1 13.1 8 23 8h1v-3z"/><path fill="#fff" d="M35.5 26.8c-.4-.2-2.6-1.3-3-1.4-.4-.2-.7-.3-1 .2-.3.4-1.1 1.4-1.4 1.7-.3.3-.5.3-1 .1-.4-.2-1.9-.7-3.6-2.3-1.3-1.2-2.2-2.7-2.5-3.1-.3-.4 0-.7.2-.9.2-.2.4-.5.7-.8.2-.3.3-.5.5-.8.2-.3.1-.6 0-.8-.1-.2-.9-2.4-1.2-3.3-.3-.9-.7-.8-1-.8-.3 0-.6 0-.9 0-.3 0-.8.1-1.2.6-.4.5-1.6 1.5-1.6 3.7s1.6 4.3 1.8 4.6c.2.3 3.2 4.9 7.7 6.9 1.1.5 1.9.8 2.6 1 1.1.3 2.1.3 2.9.2.9-.1 2.6-1.1 3-2.1.4-1 .4-1.9.3-2.1-.2-.2-.4-.3-.8-.5z"/></svg>) },
   { name: "X", icon: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><path fill="#000" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z"/><path fill="#fff" d="M13 14h7.5l5.6 8 8.9-8h3.5l-10.3 9.3L38 34h-7.5l-6.3-9-9.2 9H11l10.8-9.8L13 14zm5 2.5h3l13 15h-3l-13-15z"/></svg>) },
 ]
 
-function ShareModal({ isOpen, onClose, videoUrl }: { isOpen: boolean; onClose: () => void; videoUrl?: string }) {
+function ShareModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [copied, setCopied] = useState(false)
   const shareContainerRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(true)
-  const shareUrl = videoUrl || (typeof window !== 'undefined' ? window.location.href : "https://youtube.com/shorts/example")
-  const handleCopy = () => { navigator.clipboard.writeText(shareUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }) }
+  const videoUrl = typeof window !== 'undefined' ? window.location.href : "https://youtube.com/shorts/example"
+  const handleCopy = () => { navigator.clipboard.writeText(videoUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }) }
   const checkScroll = () => { const el = shareContainerRef.current; if (!el) return; setShowLeftArrow(el.scrollLeft > 10); setShowRightArrow(el.scrollLeft < el.scrollWidth - el.clientWidth - 10) }
   useEffect(() => { const el = shareContainerRef.current; if (el) { el.addEventListener('scroll', checkScroll); checkScroll(); return () => el.removeEventListener('scroll', checkScroll) } }, [isOpen])
   const scrollShare = (d: 'left' | 'right') => { const el = shareContainerRef.current; if (!el) return; el.scrollBy({ left: d === 'left' ? -250 : 250, behavior: 'smooth' }) }
@@ -566,7 +543,7 @@ function ShareModal({ isOpen, onClose, videoUrl }: { isOpen: boolean; onClose: (
             {sharePlatforms.map((p) => (<button key={p.name} className="flex flex-col items-center gap-2 flex-shrink-0 w-[72px] group"><div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform duration-200">{p.icon}</div><span className="text-xs text-muted-foreground group-hover:text-foreground text-center leading-tight truncate w-full">{p.name}</span></button>))}
           </div>
         </div>
-        <div className="px-5 pb-5"><div className="flex items-center gap-3 bg-muted rounded-xl p-3 border border-border"><input type="text" value={shareUrl} readOnly className="flex-1 bg-transparent text-sm text-foreground outline-none truncate" /><button onClick={handleCopy} className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${copied ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{copied ? 'Copied' : 'Copy'}</button></div></div>
+        <div className="px-5 pb-5"><div className="flex items-center gap-3 bg-muted rounded-xl p-3 border border-border"><input type="text" value={videoUrl} readOnly className="flex-1 bg-transparent text-sm text-foreground outline-none truncate" /><button onClick={handleCopy} className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${copied ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{copied ? 'Copied' : 'Copy'}</button></div></div>
       </div>
     </div>
   )
@@ -600,12 +577,12 @@ export default function ShortsPage() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [likedIds, setLikedIds] = useState<string[]>(() => loadIds(STORAGE_LIKED))
   const [dislikedIds, setDislikedIds] = useState<string[]>(() => loadIds(STORAGE_DISLIKED))
-  const [videoStates, setVideoStates] = useState<Record<string, boolean>>({})
   const centerPlayTimeout = useRef<NodeJS.Timeout | null>(null)
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null)
   const commentsTimerRef = useRef<NodeJS.Timeout | null>(null)
   const descTimerRef = useRef<NodeJS.Timeout | null>(null)
   const switchTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const videoRefs = useRef<Map<string, HTMLIFrameElement>>(new Map())
 
   // Feedback dialog state
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
@@ -649,6 +626,7 @@ export default function ShortsPage() {
 
   useEffect(() => { if (activePanel === "comments") loadCommentsForCurrentShort(); else if (activePanel === "description") loadDescriptionForCurrentShort() }, [currentIndex])
 
+  // Handle scroll to update current index and control video playback
   useEffect(() => {
     const container = containerRef.current; if (!container) return
     const handleScroll = () => {
@@ -657,17 +635,46 @@ export default function ShortsPage() {
       scrollTimeout.current = setTimeout(() => setIsScrolling(false), 400)
       const idx = Math.round(container.scrollTop / container.clientHeight)
       const newIdx = Math.min(idx, shortsData.length - 1)
-      if (newIdx !== currentIndex) { setIsTransitioning(true); if (switchTimerRef.current) clearTimeout(switchTimerRef.current); switchTimerRef.current = setTimeout(() => setIsTransitioning(false), 600) }
+      if (newIdx !== currentIndex) { 
+        setIsTransitioning(true); 
+        if (switchTimerRef.current) clearTimeout(switchTimerRef.current); 
+        switchTimerRef.current = setTimeout(() => setIsTransitioning(false), 600)
+        // Pause all videos except the active one
+        videoRefs.current.forEach((iframe, id) => {
+          if (id !== shortsData[newIdx]?.id) {
+            // Stop video by reloading with mute and autoplay off
+            iframe.src = iframe.src.replace('autoplay=1', 'autoplay=0')
+          }
+        })
+      }
       setCurrentIndex(newIdx)
     }
     container.addEventListener("scroll", handleScroll, { passive: true })
     return () => { container.removeEventListener("scroll", handleScroll); if (scrollTimeout.current) clearTimeout(scrollTimeout.current) }
   }, [currentIndex])
 
+  // Auto-play active video when index changes
+  useEffect(() => {
+    const activeShort = shortsData[currentIndex]
+    if (activeShort) {
+      const iframe = videoRefs.current.get(activeShort.id)
+      if (iframe) {
+        // Ensure autoplay is enabled for active video
+        if (!iframe.src.includes('autoplay=1')) {
+          iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1')
+        }
+      }
+    }
+  }, [currentIndex])
+
   const scrollToVideo = (i: number) => {
     const c = containerRef.current; if (!c) return
     const t = Math.max(0, Math.min(i, shortsData.length - 1))
-    if (t !== currentIndex) { setIsTransitioning(true); if (switchTimerRef.current) clearTimeout(switchTimerRef.current); switchTimerRef.current = setTimeout(() => setIsTransitioning(false), 600) }
+    if (t !== currentIndex) { 
+      setIsTransitioning(true); 
+      if (switchTimerRef.current) clearTimeout(switchTimerRef.current); 
+      switchTimerRef.current = setTimeout(() => setIsTransitioning(false), 600)
+    }
     c.scrollTo({ top: t * c.clientHeight, behavior: "smooth" })
   }
 
@@ -678,25 +685,13 @@ export default function ShortsPage() {
       if (activePanel || showShareModal) return
       if (e.key === "ArrowDown") { e.preventDefault(); scrollToVideo(currentIndex + 1) }
       if (e.key === "ArrowUp") { e.preventDefault(); scrollToVideo(currentIndex - 1) }
-      if (e.key === " " || e.key === "Spacebar") { e.preventDefault(); setIsPlaying(!isPlaying) }
     }
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h)
-  }, [currentIndex, activePanel, showShareModal, isPlaying])
+  }, [currentIndex, activePanel, showShareModal])
 
   const toggleLike = (id: string) => setIsLiked(p => ({ ...p, [id]: !p[id] }))
   const toggleFullscreen = () => { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); setIsFullscreen(true) } else { document.exitFullscreen().catch(() => {}); setIsFullscreen(false) } }
-  
-  const handleTogglePlay = (e: React.MouseEvent) => { 
-    e.stopPropagation(); 
-    setIsPlaying(!isPlaying); 
-    setShowCenterPlayPause(true); 
-    if (centerPlayTimeout.current) clearTimeout(centerPlayTimeout.current); 
-    centerPlayTimeout.current = setTimeout(() => setShowCenterPlayPause(false), 600);
-  }
-
-  const handlePlayStateChange = useCallback((videoId: string, playing: boolean) => {
-    setVideoStates(prev => ({ ...prev, [videoId]: playing }))
-  }, [])
+  const handleTogglePlay = (e: React.MouseEvent) => { e.stopPropagation(); setIsPlaying(!isPlaying); setShowCenterPlayPause(true); if (centerPlayTimeout.current) clearTimeout(centerPlayTimeout.current); centerPlayTimeout.current = setTimeout(() => setShowCenterPlayPause(false), 600) }
 
   // ---- COMMENT ACTIONS ----
   const persistComments = () => saveComments(commentsByVideo)
@@ -794,6 +789,7 @@ export default function ShortsPage() {
 
   const handleKeyPress = (e: React.KeyboardEvent) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAddComment() } }
   const openPanel = (type: PanelType) => { if (activePanel === type) { setActivePanel(null); return }; setActivePanel(type); setDescExpanded(false); if (type === "comments") { loadCommentsForCurrentShort(); setTimeout(() => commentInputRef.current?.focus(), 400) } else if (type === "description") loadDescriptionForCurrentShort() }
+  type PanelType = "comments" | "description" | null
   const panelTitle = activePanel === "comments" ? "Comments" : activePanel === "description" ? "Description" : ""
   const panelWidth = typeof window !== 'undefined' && window.innerWidth >= 1440 ? 480 : 380
   const panelRight = 96
@@ -801,8 +797,6 @@ export default function ShortsPage() {
 
   const currentComments2 = commentsByVideo[currentShort?.id] || []
   const totalCommentsCount = currentComments2.length + currentComments2.reduce((acc: number, c: any) => acc + (c.replies?.length || 0), 0)
-
-  const currentDesc = descriptionsByVideo[currentShort?.id]
 
   // ---- FEEDBACK HANDLING ----
   const handleSendFeedback = () => {
@@ -831,11 +825,7 @@ export default function ShortsPage() {
       `}</style>
 
       {/* Share Modal */}
-      <ShareModal 
-        isOpen={showShareModal} 
-        onClose={() => setShowShareModal(false)} 
-        videoUrl={currentShort?.videoUrl} 
-      />
+      <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} />
 
       {/* Feedback Dialog */}
       <Dialog open={showFeedbackDialog} onOpenChange={setShowFeedbackDialog}>
@@ -873,7 +863,7 @@ export default function ShortsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Navigation Arrows (Desktop) */}
+      {/* Desktop navigation arrows */}
       <div className="hidden md:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 flex-col gap-1 bg-background/80 dark:bg-[#b5abab66] rounded-full p-1.5 shadow-md">
         <button onClick={() => scrollToVideo(currentIndex - 1)} disabled={currentIndex === 0} className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronUp className="h-6 w-6" /></button>
         <button onClick={() => scrollToVideo(currentIndex + 1)} disabled={currentIndex === shortsData.length - 1} className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronDown className="h-6 w-6" /></button>
@@ -939,18 +929,18 @@ export default function ShortsPage() {
               <>
                 {descLoading ? (
                   <DescriptionSkeleton />
-                ) : currentDesc ? (
+                ) : currentShort ? (
                   <div className="flex-1 overflow-y-auto scrollbar-thin">
-                    <div className="px-4 py-3"><h4 className="text-foreground text-sm font-medium leading-relaxed">{currentDesc.title}</h4></div>
+                    <div className="px-4 py-3"><h4 className="text-foreground text-sm font-medium leading-relaxed">{currentShort.title}</h4></div>
                     <div className="px-4 pb-3 flex items-center gap-4">
-                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Eye className="h-4 w-4" /><span>{currentDesc.views} views</span></div>
-                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="h-4 w-4" /><span>{currentDesc.timeAgo}</span></div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Eye className="h-4 w-4" /><span>{currentShort.views} views</span></div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="h-4 w-4" /><span>{currentShort.timeAgo}</span></div>
                     </div>
                     <div className="px-4 pb-4">
-                      <div className={`text-sm text-foreground whitespace-pre-wrap leading-relaxed ${!descExpanded ? 'line-clamp-4' : ''}`}>{currentDesc.description}</div>
-                      {currentDesc.description.length > 200 && <button onClick={() => setDescExpanded(!descExpanded)} className="text-muted-foreground hover:text-foreground text-xs mt-1 font-medium">{descExpanded ? 'Show less' : '...more'}</button>}
+                      <div className={`text-sm text-foreground whitespace-pre-wrap leading-relaxed ${!descExpanded ? 'line-clamp-4' : ''}`}>{currentShort.description}</div>
+                      {currentShort.description && currentShort.description.length > 200 && <button onClick={() => setDescExpanded(!descExpanded)} className="text-muted-foreground hover:text-foreground text-xs mt-1 font-medium">{descExpanded ? 'Show less' : '...more'}</button>}
                     </div>
-                    <div className="px-4 pb-4 flex flex-wrap gap-2">{currentDesc.hashtags.map((tag: string) => <span key={tag} className="text-primary text-xs hover:text-primary/80 cursor-pointer">{tag}</span>)}</div>
+                    <div className="px-4 pb-4 flex flex-wrap gap-2">{currentShort.hashtags.map((tag: string) => <span key={tag} className="text-primary text-xs hover:text-primary/80 cursor-pointer">{tag}</span>)}</div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full"><p className="text-muted-foreground text-sm">No description available</p></div>
@@ -1017,18 +1007,18 @@ export default function ShortsPage() {
               <>
                 {descLoading ? (
                   <DescriptionSkeleton />
-                ) : currentDesc ? (
+                ) : currentShort ? (
                   <div className="flex-1 overflow-y-auto scrollbar-thin">
-                    <div className="px-4 py-3"><h4 className="text-foreground text-sm font-medium leading-relaxed">{currentDesc.title}</h4></div>
+                    <div className="px-4 py-3"><h4 className="text-foreground text-sm font-medium leading-relaxed">{currentShort.title}</h4></div>
                     <div className="px-4 pb-3 flex items-center gap-4">
-                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Eye className="h-4 w-4" /><span>{currentDesc.views} views</span></div>
-                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="h-4 w-4" /><span>{currentDesc.timeAgo}</span></div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Eye className="h-4 w-4" /><span>{currentShort.views} views</span></div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="h-4 w-4" /><span>{currentShort.timeAgo}</span></div>
                     </div>
                     <div className="px-4 pb-4">
-                      <div className={`text-sm text-foreground whitespace-pre-wrap leading-relaxed ${!descExpanded ? 'line-clamp-4' : ''}`}>{currentDesc.description}</div>
-                      {currentDesc.description.length > 200 && <button onClick={() => setDescExpanded(!descExpanded)} className="text-muted-foreground hover:text-foreground text-xs mt-1 font-medium">{descExpanded ? 'Show less' : '...more'}</button>}
+                      <div className={`text-sm text-foreground whitespace-pre-wrap leading-relaxed ${!descExpanded ? 'line-clamp-4' : ''}`}>{currentShort.description}</div>
+                      {currentShort.description && currentShort.description.length > 200 && <button onClick={() => setDescExpanded(!descExpanded)} className="text-muted-foreground hover:text-foreground text-xs mt-1 font-medium">{descExpanded ? 'Show less' : '...more'}</button>}
                     </div>
-                    <div className="px-4 pb-4 flex flex-wrap gap-2">{currentDesc.hashtags.map((tag: string) => <span key={tag} className="text-primary text-xs hover:text-primary/80 cursor-pointer">{tag}</span>)}</div>
+                    <div className="px-4 pb-4 flex flex-wrap gap-2">{currentShort.hashtags.map((tag: string) => <span key={tag} className="text-primary text-xs hover:text-primary/80 cursor-pointer">{tag}</span>)}</div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-32"><p className="text-muted-foreground text-sm">No description available</p></div>
@@ -1048,67 +1038,93 @@ export default function ShortsPage() {
         {shortsData.map((short, index) => {
           const isActive = index === currentIndex
           const isHovered = hoveredVideoId === short.id
-          const isVideoPlaying = videoStates[short.id] ?? isActive
-          
           return (
-            <section key={short.id} className="relative h-[calc(95vh-56px)] w-full snap-start snap-always flex items-center justify-center bg-black">
+            <section key={short.id} className="relative h-[calc(100vh-56px)] w-full snap-start snap-always flex items-center justify-center bg-background">
               <div
                 className="relative w-full h-full md:max-h-[85vh] md:w-auto md:aspect-[9/16] md:rounded-2xl overflow-hidden mx-auto bg-black"
                 onMouseEnter={() => setHoveredVideoId(short.id)}
                 onMouseLeave={() => { setHoveredVideoId(null); setShowVolumeSlider(false); setShowMoreMenu(false) }}
-                onClick={(e) => {
-                  const target = e.target as HTMLElement
-                  if (target.closest('button') || target.closest('a') || target.closest('[data-controls]')) return
-                  handleTogglePlay(e)
-                }}
               >
-                {/* YouTube Player */}
-                <YouTubeShortsPlayer
-                  videoId={short.youtubeId}
-                  isActive={isActive}
-                  isMuted={isMuted}
-                  volume={volume}
-                  onPlayStateChange={(playing) => handlePlayStateChange(short.id, playing)}
-                />
-
-                {/* Center play/pause overlay */}
-                <div className={`absolute inset-0 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200 ${showCenterPlayPause ? "opacity-100" : "opacity-0"}`}>
-                  <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                    {isVideoPlaying ? <Pause className="h-8 w-8 text-white" /> : <Play className="h-8 w-8 text-white" />}
-                  </div>
+                {/* Video Player - Only the active video plays, full screen on mobile */}
+                <div className="w-full h-full bg-black" onClick={handleTogglePlay}>
+                  {isActive ? (
+                    <iframe
+                      ref={(el) => {
+                        if (el) videoRefs.current.set(short.id, el)
+                      }}
+                      src={`https://www.youtube.com/embed/${short.videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${short.videoId}&modestbranding=1&rel=0&fs=1&playsinline=1`}
+                      title={short.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full"
+                      style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  ) : (
+                    // Thumbnail for non-active videos
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={short.thumbnail}
+                        alt={short.title}
+                        fill
+                        className="object-cover"
+                        priority={index < 2}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                          <Play className="h-8 w-8 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Gradient overlays */}
-                <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-10" />
-                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 via-black/20 to-transparent pointer-events-none z-10" />
+                {/* Center play/pause overlay - only for active video */}
+                {isActive && (
+                  <div className={`absolute inset-0 flex items-center justify-center z-25 pointer-events-none transition-opacity duration-200 ${showCenterPlayPause ? "opacity-100" : "opacity-0"}`}>
+                    <div className="w-16 h-16 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                      {isPlaying ? <Pause className="h-8 w-8 text-foreground" /> : <Play className="h-8 w-8 text-foreground" />}
+                    </div>
+                  </div>
+                )}
 
-                {/* Top controls */}
-                <div className={`absolute top-0 left-0 right-0 z-30 px-4 pt-4 pb-16 transition-opacity duration-200 ${isHovered && !isScrolling && !isTransitioning ? "opacity-100" : "opacity-0 pointer-events-none"}`} data-controls="true">
+                {/* Gradient overlays */}
+                <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
+                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 via-black/20 to-transparent pointer-events-none" />
+
+                {/* Top controls (hover only) */}
+                <div className={`absolute top-0 left-0 right-0 z-30 px-4 pt-4 pb-16 transition-opacity duration-200 ${(isHovered || isActive) && !isScrolling && !isTransitioning ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button onClick={handleTogglePlay} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
-                        {isVideoPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                      <button onClick={handleTogglePlay} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+                        {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                       </button>
                       <div className="relative flex items-center" onMouseEnter={() => setShowVolumeSlider(true)} onMouseLeave={() => setShowVolumeSlider(false)}>
-                        <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
+                        <button onClick={() => setIsMuted(!isMuted)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
                           {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                         </button>
                         {showVolumeSlider && (
-                          <div className="hidden md:flex items-center rounded-full px-3 py-2 ml-1 shadow-lg" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
+                          <div className="hidden md:flex items-center rounded-full px-3 py-2 ml-1 shadow-lg" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
                             <input type="range" min="0" max="100" value={isMuted ? 0 : volume} onChange={(e) => { setVolume(Number(e.target.value)); setIsMuted(false) }} className="w-20 h-1 accent-white cursor-pointer" />
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setCaptionsEnabled(!captionsEnabled)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
+                      <button onClick={() => setCaptionsEnabled(!captionsEnabled)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
                         {captionsEnabled ? <CCIconOn className="h-5 w-5" /> : <CCIconOff className="h-5 w-5" />}
                       </button>
-                      <button onClick={toggleFullscreen} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
+                      <button onClick={toggleFullscreen} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
                         <FullscreenIcon className="h-5 w-5" />
                       </button>
                       <div className="relative">
-                        <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }} data-controls="true">
+                        <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
                           <MoreIcon className="h-5 w-5" />
                         </button>
                         {showMoreMenu && (
@@ -1144,61 +1160,51 @@ export default function ShortsPage() {
                   </div>
                 </div>
 
-                {/* Bottom info */}
+                {/* Bottom info & actions */}
                 <div className={`absolute bottom-6 left-4 right-20 z-20 transition-all duration-500 ${isActive && !isScrolling && !isTransitioning ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar className="h-10 w-10 border-2 border-white/20 flex-shrink-0">
                       <AvatarImage src={short.channelAvatar} />
-                      <AvatarFallback className="bg-muted text-white text-xs">{short.channel.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="bg-muted text-black dark:text-white text-xs">{short.channel.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <span className="text-white font-semibold text-sm truncate drop-shadow-lg">{short.channel}</span>
+                    <span className="text-white font-semibold text-sm truncate">{short.channel}</span>
                   </div>
                   <button onClick={() => openPanel("description")} className="text-left w-full">
-                    <p className="text-white/90 text-sm leading-relaxed line-clamp-2 hover:text-white transition-colors drop-shadow-lg">{short.title}</p>
+                    <p className="text-white/90 text-sm leading-relaxed line-clamp-2 hover:text-white transition-colors">{short.title}</p>
                   </button>
-                  <a 
-                    href={short.videoUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-blue-300 hover:text-blue-200 text-xs hover:underline mt-1 inline-flex items-center gap-1 drop-shadow-lg"
-                    data-controls="true"
-                  >
-                    Watch on YouTube <ExternalLink className="h-3 w-3" />
-                  </a>
                 </div>
 
-                {/* Right side actions */}
                 <div className={`absolute right-3 bottom-28 flex flex-col gap-6 items-center z-20 transition-all duration-500 ${isActive && !isScrolling && !isTransitioning ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"}`}>
-                  <button onClick={() => toggleLike(short.id)} className="flex flex-col items-center gap-1 group" data-controls="true">
-                    <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all", isLiked[short.id] ? "scale-110" : "", "group-hover:bg-white/10 group-active:scale-95")} style={{ backgroundColor: isLiked[short.id] ? "rgba(255, 0, 0, 0.2)" : "rgba(181, 171, 171, 0.4)" }}>
-                      <Heart className={cn("h-6 w-6 drop-shadow-lg", isLiked[short.id] ? "text-red-500 fill-red-500" : "text-white")} />
+                  <button onClick={() => toggleLike(short.id)} className="flex flex-col items-center gap-1 group">
+                    <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all", isLiked[short.id] ? "scale-110" : "", "group-hover:bg-white/10 group-active:scale-95")} style={{ backgroundColor: isLiked[short.id] ? "rgba(255, 0, 0, 0.2)" : "rgba(0,0,0,0.4)" }}>
+                      <Heart className={cn("h-6 w-6", isLiked[short.id] ? "text-red-500 fill-red-500" : "text-white")} />
                     </div>
-                    <span className="text-white text-xs font-medium drop-shadow-lg">{short.likes}</span>
+                    <span className="text-white text-xs font-medium">{short.likes}</span>
                   </button>
-                  <button onClick={() => openPanel("comments")} className="flex flex-col items-center gap-1 group" data-controls="true">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
-                      <MessageCircle className="h-6 w-6 text-white drop-shadow-lg" />
+                  <button onClick={() => openPanel("comments")} className="flex flex-col items-center gap-1 group">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+                      <MessageCircle className="h-6 w-6 text-white" />
                     </div>
-                    <span className="text-white text-xs font-medium drop-shadow-lg">{short.comments}</span>
+                    <span className="text-white text-xs font-medium">{short.comments}</span>
                   </button>
-                  <button onClick={() => setShowShareModal(true)} className="flex flex-col items-center gap-1 group" data-controls="true">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
-                      <Share2 className="h-6 w-6 text-white drop-shadow-lg" />
+                  <button onClick={() => setShowShareModal(true)} className="flex flex-col items-center gap-1 group">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+                      <Share2 className="h-6 w-6 text-white" />
                     </div>
-                    <span className="text-white text-xs font-medium drop-shadow-lg">Share</span>
+                    <span className="text-white text-xs font-medium">Share</span>
                   </button>
-                  <button className="flex flex-col items-center gap-1 group" data-controls="true">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
-                      <Bookmark className="h-6 w-6 text-white drop-shadow-lg" />
+                  <button className="flex flex-col items-center gap-1 group">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+                      <Bookmark className="h-6 w-6 text-white" />
                     </div>
-                    <span className="text-white text-xs font-medium drop-shadow-lg">Save</span>
+                    <span className="text-white text-xs font-medium">Save</span>
                   </button>
                   <ReportDialog videoTitle={short.title} videoId={short.id}>
-                    <button className="flex flex-col items-center gap-1 group" data-controls="true">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(181, 171, 171, 0.4)" }}>
-                        <Flag className="h-6 w-6 text-white drop-shadow-lg" />
+                    <button className="flex flex-col items-center gap-1 group">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white/10 group-active:scale-95" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+                        <Flag className="h-6 w-6 text-white" />
                       </div>
-                      <span className="text-white text-xs font-medium drop-shadow-lg">Report</span>
+                      <span className="text-white text-xs font-medium">Report</span>
                     </button>
                   </ReportDialog>
                 </div>
