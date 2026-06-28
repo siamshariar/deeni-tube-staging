@@ -2,21 +2,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Search, X, FolderOpen } from "lucide-react";
+import { Search, X, FolderOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { mockCategories, mockLanguages } from "@/lib/mock-data";
+import { videoData, categoryData } from "@/lib/video-data";
 import { SortDropdown, SortOption } from "@/components/sort-dropdown";
 
 function CategorySkeleton() {
   return (
-    <div className="p-4 border rounded-xl space-y-3">
-      <Skeleton className="h-5 w-32" />
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-3/4" />
+    <div className="p-5 border rounded-xl space-y-3">
+      <div className="flex items-start gap-3">
+        <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      </div>
+      <Skeleton className="h-3 w-20" />
     </div>
   );
 }
@@ -25,14 +30,21 @@ const sortOptions: SortOption[] = [
   { label: "Default", value: "default" },
   { label: "Name (A-Z)", value: "name-asc" },
   { label: "Name (Z-A)", value: "name-desc" },
+  { label: "Most Videos", value: "most-videos" },
+];
+
+const languageOptions = [
+  { code: "bn", name: "Bangla" },
+  { code: "en", name: "English" },
+  { code: "ar", name: "Arabic" },
+  { code: "ur", name: "Urdu" },
 ];
 
 export default function CategoriesPage() {
-  const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["en"]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["bn"]);
   const [sortValue, setSortValue] = useState("default");
 
   useEffect(() => {
@@ -50,34 +62,43 @@ export default function CategoriesPage() {
     );
   };
 
-  const sortCategories = (categories: typeof mockCategories) => {
+  // Filter categories that have videos in selected languages
+  const availableCategories = categoryData.filter((cat) =>
+    cat.languages.some((lang) => selectedLanguages.includes(lang))
+  );
+
+  const sortCategories = (
+    categories: typeof categoryData
+  ) => {
     switch (sortValue) {
       case "name-asc":
         return [...categories].sort((a, b) => a.name.localeCompare(b.name));
       case "name-desc":
         return [...categories].sort((a, b) => b.name.localeCompare(a.name));
+      case "most-videos":
+        return [...categories].sort((a, b) => b.videoCount - a.videoCount);
       default:
         return categories;
     }
   };
 
-  const filteredCategories = sortCategories(
-    mockCategories
-      .filter((cat) => selectedLanguages.some((lang) => cat.languages.includes(lang)))
-      .filter(
-        (cat) =>
-          !searchQuery ||
-          cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          cat.description.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  const filteredCategories = sortCategories(availableCategories).filter(
+    (cat) =>
+      !searchQuery ||
+      cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      cat.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-background">
       <div className="px-4 md:px-6 py-2 md:py-6 mt-16">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="md:block">
+          <div className="">
             <h1 className="text-2xl font-bold">Categories</h1>
+            {/* <p className="text-sm text-muted-foreground mt-1">
+              {filteredCategories.length} categor{filteredCategories.length !== 1 ? "ies" : "y"}
+            </p> */}
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 min-w-0">
@@ -108,8 +129,8 @@ export default function CategoriesPage() {
         </div>
 
         {/* Language filter chips */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
-          {mockLanguages.map((lang) => (
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
+          {languageOptions.map((lang) => (
             <button
               key={lang.code}
               onClick={() => toggleLanguage(lang.code)}
@@ -128,7 +149,7 @@ export default function CategoriesPage() {
         {/* Category grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <CategorySkeleton key={i} />
             ))}
           </div>
@@ -146,23 +167,42 @@ export default function CategoriesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCategories.map((category) => (
               <Link
-                key={category.id}
+                key={category.slug}
                 href={`/categories/${category.slug}`}
-                className="p-5 border rounded-xl hover:bg-muted/30 transition-colors group cursor-pointer flex items-start gap-3"
+                className="p-5 border rounded-xl hover:bg-muted/30 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full"
               >
-                <div className="flex-shrink-0 w-9 h-9 bg-muted rounded-full flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                  <FolderOpen className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <div className="flex items-start gap-3 flex-1">
+                  <div className="flex-shrink-0 w-10 h-10 bg-muted rounded-full flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <FolderOpen className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base group-hover:text-primary transition-colors">
+                      {category.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {category.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-base group-hover:text-primary transition-colors truncate">
-                    {category.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                    {category.description}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {category.videoCount} video{category.videoCount !== 1 ? "s" : ""}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-2 font-medium">
-                    {category.videoCount} videos
-                  </p>
+                  <div className="flex gap-1">
+                    {category.languages.slice(0, 3).map((lang) => (
+                      <span
+                        key={lang}
+                        className="text-[10px] uppercase bg-muted px-1.5 py-0.5 rounded font-medium text-muted-foreground"
+                      >
+                        {lang}
+                      </span>
+                    ))}
+                    {category.languages.length > 3 && (
+                      <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-medium text-muted-foreground">
+                        +{category.languages.length - 3}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}

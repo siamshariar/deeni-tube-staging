@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   HelpCircle,
   BookOpen,
   Shield,
@@ -113,13 +112,14 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">Help & Support</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Find answers or contact our support team.
-            </p>
-          </div>
+      <div className="px-4 md:px-6 py-2 md:py-6 mt-16 max-w-3xl mx-auto">
+        {/* Desktop title */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Help & Support</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Find answers or contact our support team.
+          </p>
+        </div>
 
         {isLoading ? (
           <div className="space-y-3">
@@ -155,7 +155,7 @@ export default function HelpPage() {
                       {topic.description}
                     </p>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               ))}
             </div>
@@ -178,6 +178,7 @@ export default function HelpPage() {
               </Button>
             </div>
 
+            {/* Footer */}
             <div className="text-center py-4">
               <p className="text-xs text-muted-foreground">
                 Deeni.tube v1.0.0
@@ -208,70 +209,78 @@ export default function HelpPage() {
             </div>
           ) : (
             <div className="space-y-4 py-4">
-              <Input
-                type="text"
-                placeholder="Your name *"
-                value={supportForm.name}
-                onChange={(e) => {
-                  setSupportForm((prev) => ({ ...prev, name: e.target.value }));
-                  clearError("name");
-                }}
-                className={`h-10 ${errors.name ? "border-red-500" : ""}`}
-              />
-              {errors.name && (
-                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> {errors.name}
-                </p>
-              )}
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Your name *"
+                  value={supportForm.name}
+                  onChange={(e) => {
+                    setSupportForm((prev) => ({ ...prev, name: e.target.value }));
+                    clearError("name");
+                  }}
+                  className={`h-10 ${errors.name ? "border-red-500" : ""}`}
+                />
+                {errors.name && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {errors.name}
+                  </p>
+                )}
+              </div>
 
-              <Input
-                type="email"
-                placeholder="Your email *"
-                value={supportForm.email}
-                onChange={(e) => {
-                  setSupportForm((prev) => ({ ...prev, email: e.target.value }));
-                  clearError("email");
-                }}
-                className={`h-10 ${errors.email ? "border-red-500" : ""}`}
-              />
-              {errors.email && (
-                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> {errors.email}
-                </p>
-              )}
+              <div>
+                <Input
+                  type="email"
+                  placeholder="Your email *"
+                  value={supportForm.email}
+                  onChange={(e) => {
+                    setSupportForm((prev) => ({ ...prev, email: e.target.value }));
+                    clearError("email");
+                  }}
+                  className={`h-10 ${errors.email ? "border-red-500" : ""}`}
+                />
+                {errors.email && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {errors.email}
+                  </p>
+                )}
+              </div>
 
-              <Input
-                type="text"
-                placeholder="Subject *"
-                value={supportForm.subject}
-                onChange={(e) => {
-                  setSupportForm((prev) => ({ ...prev, subject: e.target.value }));
-                  clearError("subject");
-                }}
-                className={`h-10 ${errors.subject ? "border-red-500" : ""}`}
-              />
-              {errors.subject && (
-                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> {errors.subject}
-                </p>
-              )}
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Subject *"
+                  value={supportForm.subject}
+                  onChange={(e) => {
+                    setSupportForm((prev) => ({ ...prev, subject: e.target.value }));
+                    clearError("subject");
+                  }}
+                  className={`h-10 ${errors.subject ? "border-red-500" : ""}`}
+                />
+                {errors.subject && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {errors.subject}
+                  </p>
+                )}
+              </div>
 
-              <Textarea
-                placeholder="Describe your issue... *"
-                value={supportForm.message}
-                onChange={(e) => {
-                  setSupportForm((prev) => ({ ...prev, message: e.target.value }));
-                  clearError("message");
-                }}
-                className={`min-h-[120px] resize-none ${
-                  errors.message ? "border-red-500" : ""
-                }`}
-              />
-              {errors.message && (
-                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> {errors.message}
-                </p>
-              )}
+              <div>
+                <Textarea
+                  placeholder="Describe your issue... *"
+                  value={supportForm.message}
+                  onChange={(e) => {
+                    setSupportForm((prev) => ({ ...prev, message: e.target.value }));
+                    clearError("message");
+                  }}
+                  className={`min-h-[120px] resize-none ${
+                    errors.message ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.message && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {errors.message}
+                  </p>
+                )}
+              </div>
 
               <p className="text-xs text-muted-foreground">* Required fields</p>
 

@@ -1,9 +1,9 @@
-// app/you-new/page.tsx
+// app/you/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Globe, Tv, LogOut, Check, ChevronRight } from "lucide-react";
+import { Globe, Tv, LogOut, Check, ChevronRight, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -23,6 +23,7 @@ export default function YouPage() {
   const [userName, setUserName] = useState("User Name");
   const [userEmail, setUserEmail] = useState("user@example.com");
   const [userInitials, setUserInitials] = useState("UN");
+  const [userAvatar, setUserAvatar] = useState("");
   const [defaultLanguage, setDefaultLanguage] = useState("en");
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>(["ar", "bn", "hi"]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,6 +42,7 @@ export default function YouPage() {
         setUserName(parsed.name || "User Name");
         setUserEmail(parsed.email || "user@example.com");
         setUserInitials(parsed.initials || "UN");
+        setUserAvatar(parsed.avatar || "");
       } catch {}
     }
     const prefs = localStorage.getItem("deeni-lang-prefs");
@@ -75,22 +77,21 @@ export default function YouPage() {
   const handleSignOut = () => {
     localStorage.removeItem("deeni-user-data");
     localStorage.removeItem("deeni-lang-prefs");
+    window.dispatchEvent(new Event("auth-changed"));
     router.push("/signin");
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Mobile header skeleton */}
-        <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
-          <Skeleton className="h-9 w-9 rounded-full" />
-          <Skeleton className="h-6 w-16" />
-        </div>
-        <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
+        <div className="px-4 md:px-6 py-4 md:py-6 mt-16 max-w-3xl mx-auto">
+          {/* Desktop title skeleton */}
           <div className="hidden md:block mb-6">
-            <Skeleton className="h-8 w-32 mb-2" />
+            <Skeleton className="h-8 w-20 mb-2" />
             <Skeleton className="h-4 w-64" />
           </div>
+
+          {/* Profile card skeleton */}
           <div className="mb-6 rounded-xl border p-4 flex items-center gap-4">
             <Skeleton className="h-14 w-14 md:h-16 md:w-16 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -100,6 +101,8 @@ export default function YouPage() {
             </div>
             <Skeleton className="h-9 w-28 rounded-full" />
           </div>
+
+          {/* Language card skeleton */}
           <div className="mb-6 rounded-xl border overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 border-b">
               <Skeleton className="h-4 w-4 rounded" />
@@ -123,6 +126,8 @@ export default function YouPage() {
               <Skeleton className="h-10 w-full sm:w-auto rounded-full" />
             </div>
           </div>
+
+          {/* Channel card skeleton */}
           <div className="rounded-xl border overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 border-b">
               <Skeleton className="h-4 w-4 rounded" />
@@ -143,23 +148,29 @@ export default function YouPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">You</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage your profile and preferences
-            </p>
-          </div>
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-16 max-w-3xl mx-auto">
+        {/* Desktop title */}
+        <div className="hidden md:block mb-6">
+          <h1 className="text-2xl font-bold">You</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage your profile and preferences
+          </p>
+        </div>
+
         {/* User Profile Card */}
         <div className="mb-6 rounded-xl border shadow-sm overflow-hidden">
-          <div className="p-4 flex items-center gap-4">
-            <Avatar className="h-14 w-14 md:h-16 md:w-16 ring-2 ring-primary/10">
-              <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
-                {userInitials}
-              </AvatarFallback>
+          <div className="p-4 md:p-5 flex items-center gap-4">
+            <Avatar className="h-14 w-14 md:h-16 md:w-16 ring-2 ring-primary/10 flex-shrink-0">
+              {userAvatar ? (
+                <AvatarImage src={userAvatar} alt={userName} />
+              ) : (
+                <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
+                  {userInitials}
+                </AvatarFallback>
+              )}
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-base">{userName}</p>
+              <p className="font-semibold text-base truncate">{userName}</p>
               <p className="text-sm text-muted-foreground truncate">{userEmail}</p>
               <button
                 onClick={() => setShowSignOutDialog(true)}
@@ -169,7 +180,9 @@ export default function YouPage() {
               </button>
             </div>
             <Button variant="outline" size="sm" className="rounded-full flex-shrink-0" asChild>
-              <Link href={`/channel/${userName}`}>View channel</Link>
+              <Link href={`/channel/${userName}`}>
+                <User className="h-4 w-4 mr-1.5" /> View channel
+              </Link>
             </Button>
           </div>
         </div>
@@ -180,35 +193,40 @@ export default function YouPage() {
             <Globe className="h-4 w-4 text-primary" />
             <h2 className="font-semibold text-sm">Language preference</h2>
           </div>
-          <div className="p-4 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div className="p-4 md:p-5 space-y-5">
+            {/* Default language */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <p className="text-sm font-medium">Default language</p>
                 <p className="text-xs text-muted-foreground">Used across the app</p>
               </div>
-              <div className="w-full sm:w-auto">
-                <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
-                  <SelectTrigger className="w-full sm:w-44 h-10 rounded-full text-sm border bg-background hover:bg-muted/50 transition-colors [&>svg]:ml-auto [&>svg]:h-4 [&>svg]:w-4 [&>svg]:opacity-70">
-                    <SelectValue placeholder="Select language" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border shadow-lg">
-                    {mockLanguages.map((lang) => (
-                      <SelectItem
-                        key={lang.code}
-                        value={lang.code}
-                        className="cursor-pointer hover:bg-muted transition-colors focus:bg-muted"
-                      >
-                        {lang.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
+                <SelectTrigger className="w-full sm:w-44 h-10 rounded-full text-sm border bg-background hover:bg-muted/50 transition-colors [&>svg]:ml-auto [&>svg]:h-4 [&>svg]:w-4 [&>svg]:opacity-70">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border shadow-lg">
+                  {mockLanguages.map((lang) => (
+                    <SelectItem
+                      key={lang.code}
+                      value={lang.code}
+                      className="cursor-pointer hover:bg-muted transition-colors focus:bg-muted"
+                    >
+                      {lang.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Divider */}
+            <div className="border-t" />
 
             {/* Preferred languages */}
             <div>
               <p className="text-sm font-medium mb-3">Preferred languages</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Select languages for content in your feed
+              </p>
               <div className="border rounded-xl divide-y overflow-hidden">
                 {preferredLanguageOptions.map((lang) => {
                   const isSelected = preferredLanguages.includes(lang.code);
@@ -233,15 +251,13 @@ export default function YouPage() {
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Content shown in selected languages will appear in your feed
-              </p>
             </div>
 
-            <div className="flex justify-center sm:justify-start">
+            {/* Save button */}
+            <div className="flex justify-end">
               <Button
                 onClick={savePreferences}
-                className="w-full sm:w-auto rounded-full px-8 py-2.5 text-sm sm:text-base"
+                className="rounded-full px-8"
               >
                 Save preferences
               </Button>
@@ -263,7 +279,7 @@ export default function YouPage() {
               <p className="text-sm font-medium">Manage channels</p>
               <p className="text-xs text-muted-foreground">Customise your channel feed</p>
             </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all flex-shrink-0" />
           </Link>
         </div>
       </div>
@@ -273,14 +289,24 @@ export default function YouPage() {
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Sign out</DialogTitle>
-            <DialogDescription>Are you sure you want to sign out?</DialogDescription>
+            <DialogDescription>
+              Are you sure you want to sign out? Your preferences will be saved.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex gap-3 mt-2">
-            <Button variant="outline" onClick={() => setShowSignOutDialog(false)} className="flex-1 rounded-full">
+            <Button
+              variant="outline"
+              onClick={() => setShowSignOutDialog(false)}
+              className="flex-1 rounded-full"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleSignOut} className="flex-1 rounded-full">
-              Sign out
+            <Button
+              variant="destructive"
+              onClick={handleSignOut}
+              className="flex-1 rounded-full"
+            >
+              <LogOut className="h-4 w-4 mr-2" /> Sign out
             </Button>
           </div>
         </DialogContent>

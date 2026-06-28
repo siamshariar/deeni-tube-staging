@@ -22,7 +22,7 @@ const ZAKIR_AVATAR =
   "https://yt3.googleusercontent.com/ytc/AIdro_kgWD-o3akIt5SI_BWvWHc6mHyPRm3BA5t69TAZlqQcpIF6=s176-c-k-c0x00ffffff-no-rj-mo";
 
 export const videoData: VideoItem[] = [
-  // Monzur-E-Elahi
+  // Monzur-E-Elahi — Islamic Lecture
   {
     id: "v1",
     videoId: "XVscS6piz9A",
@@ -70,6 +70,8 @@ export const videoData: VideoItem[] = [
     language: "bn",
     category: "Islamic Lecture",
   },
+
+  // Monzur-E-Elahi — Quran
   {
     id: "v4",
     videoId: "rPEGK8WV1v4",
@@ -84,7 +86,7 @@ export const videoData: VideoItem[] = [
     description:
       "প্রফেসর ড. মোহাম্মদ মানজুরে ইলাহী\nপিএইচডি, শারী'আহ অনুষদ, মদীনা ইসলামী বিশ্ববিদ্যালয়",
     language: "bn",
-    category: "Islamic Lecture",
+    category: "Quran",
   },
   {
     id: "v5",
@@ -100,10 +102,10 @@ export const videoData: VideoItem[] = [
     description:
       "স্থান : মাসজিদ আত তাওহীদ ও ইসলামী কমপ্লেক্স খুতবাহ\nতারিখ : ১৯ এপ্রিল ২০২৪\n\nড. মোহাম্মদ মানজুরে ইলাহী\nপিএইচডি, শারী'আহ অনুষদ, মদীনা ইসলামী বিশ্ববিদ্যালয়",
     language: "bn",
-    category: "Islamic Lecture",
+    category: "Quran",
   },
 
-  // Abdullah Jahangir
+  // Abdullah Jahangir — Islamic Lecture
   {
     id: "v6",
     videoId: "908GzCFuysY",
@@ -116,7 +118,7 @@ export const videoData: VideoItem[] = [
     views: "3.1M views",
     timeAgo: "1 year ago",
     description:
-      "জীবন ঘনিষ্ঠ গুরুত্বপূর্ণ কিছু ইসলামিক প্রশ্নোত্তর। Islamic Question & Answer (Full Video) by Dr. Khondokar Abdullah Jahangir. বর্তমান সময়ের উপযোগী ডঃ খন্দকার আব্দুল্লাহ জাহাঙ্গীর (রহিমাহুল্লাহ) এর অতীব গুরুত্বপূর্ণ এবং তথ্যবহুল এই প্রশ্নোত্তরগুলি প্রতিটি মুসলিম নারী পুরুষকে অবশ্যই জেনে রাখা উচিৎ।",
+      "জীবন ঘনিষ্ঠ গুরুত্বপূর্ণ কিছু ইসলামিক প্রশ্নোত্তর। Islamic Question & Answer (Full Video) by Dr. Khondokar Abdullah Jahangir.",
     language: "bn",
     category: "Islamic Lecture",
   },
@@ -133,7 +135,7 @@ export const videoData: VideoItem[] = [
     timeAgo: "2 years ago",
     description: "ড.খন্দকার আব্দুল্লাহ জাহাঙ্গীর (রহ.)।",
     language: "bn",
-    category: "Islamic Lecture",
+    category: "Seerah",
   },
   {
     id: "v8",
@@ -147,10 +149,12 @@ export const videoData: VideoItem[] = [
     views: "1.9M views",
     timeAgo: "8 months ago",
     description:
-      "আসসালামু আলাইকুম,\nআজকের এই আধুনিক যুগে আমাদের চারপাশে সব ধরনের ভোগ-বিলাসের উপাদান থাকা সত্ত্বেও মানুষের মনে শান্তি নেই। সব পেয়েও যেন মানুষ এক চরম মানসিক অশান্তি ও শূন্যতায় ভুগছে। ড. আব্দুল্লাহ জাহাঙ্গীর (রাহিমাহুল্লাহ) এই ভিডিওতে কুরআন ও সুন্নাহর আলোকে আলোচনা করেছেন যে, মানুষের আত্মার আসল তৃপ্তি ও প্রশান্তি আসলে কোথায় লুকিয়ে আছে।",
+      "ড. আব্দুল্লাহ জাহাঙ্গীর (রাহিমাহুল্লাহ) এই ভিডিওতে কুরআন ও সুন্নাহর আলোকে আলোচনা করেছেন যে, মানুষের আত্মার আসল তৃপ্তি ও প্রশান্তি আসলে কোথায় লুকিয়ে আছে।",
     language: "bn",
-    category: "Islamic Lecture",
+    category: "Spirituality",
   },
+
+  // Abdullah Jahangir — Dua
   {
     id: "v9",
     videoId: "kVbpcXFFeWQ",
@@ -163,9 +167,9 @@ export const videoData: VideoItem[] = [
     views: "1.3M views",
     timeAgo: "5 months ago",
     description:
-      "হৃদয়স্পর্শী লেকচার || এত সুন্দর করে আর কে বুঝাবে  || খন্দকার আবদুল্লাহ জাহাঙ্গীর Abdullaha Jahangir, MAAS Islamic Media",
+      "হৃদয়স্পর্শী লেকচার || এত সুন্দর করে আর কে বুঝাবে || খন্দকার আবদুল্লাহ জাহাঙ্গীর",
     language: "bn",
-    category: "Islamic Lecture",
+    category: "Dua",
   },
   {
     id: "v10",
@@ -179,12 +183,12 @@ export const videoData: VideoItem[] = [
     views: "2.7M views",
     timeAgo: "10 months ago",
     description:
-      "আল্লাহুয়াকবার! কি প্রাণচঞ্চল একটি আলোচনা! আখিরাতের চিন্তা এবং আব্দুল কাদের জিলানী রহমতুল্লাহি আলাইহির জীবনী। Amazing Islamic Lecture by Dr. Khondokar Abdullah Jahangir.",
+      "আখিরাতের চিন্তা এবং আব্দুল কাদের জিলানী রহমতুল্লাহি আলাইহির জীবনী। Amazing Islamic Lecture by Dr. Khondokar Abdullah Jahangir.",
     language: "bn",
-    category: "Islamic Lecture",
+    category: "Dua",
   },
 
-  // Zakir Naik – English
+  // Zakir Naik — Islamic Lecture (English)
   {
     id: "v11",
     videoId: "XNojvAddjL8",
@@ -200,6 +204,8 @@ export const videoData: VideoItem[] = [
     language: "en",
     category: "Islamic Lecture",
   },
+
+  // Zakir Naik — Dawah (English)
   {
     id: "v12",
     videoId: "72-todksmcs",
@@ -213,7 +219,7 @@ export const videoData: VideoItem[] = [
     description:
       "Muslim's Power is in Unity and Closeness to Allah - Dr Zakir Naik",
     language: "en",
-    category: "Islamic Lecture",
+    category: "Dawah",
   },
   {
     id: "v13",
@@ -228,10 +234,10 @@ export const videoData: VideoItem[] = [
     description:
       "Dr Zakir Naik Convincingly Answered all Intellectual Questions posed by an Atheist\nLecture Name: Ask Dr Zakir (Dubai - Part 1)",
     language: "en",
-    category: "Islamic Lecture",
+    category: "Dawah",
   },
 
-  // Zakir Naik – Bengali
+  // Zakir Naik — Islamic Lecture (Bengali)
   {
     id: "v14",
     videoId: "wli20ZZztF4",
@@ -246,8 +252,10 @@ export const videoData: VideoItem[] = [
     description:
       "খ্রিস্টান শিক্ষক VS ডাঃ জাকির নায়েক - কে জিতবে এই তর্কে! | DR ZAKIR NAIK | ডাঃ জাকির নায়েক",
     language: "bn",
-    category: "Islamic Lecture",
+    category: "Dawah",
   },
+
+  // Zakir Naik — Aqeedah (Bengali)
   {
     id: "v15",
     videoId: "7NMRiv2IqPw",
@@ -262,8 +270,10 @@ export const videoData: VideoItem[] = [
     description:
       "আমাদের জীবনের উদ্দেশ্য কি?\nDr. Zakir Naik\n(পর্ব ১-৬)\nসম্পূর্ণ লেকচার (প্রশ্নোত্তর ছাড়া)\nপিস টিভি বাংলা\nPeace TV Bangla",
     language: "bn",
-    category: "Islamic Lecture",
+    category: "Aqeedah",
   },
+
+  // Zakir Naik — Comparative Religion (Bengali)
   {
     id: "v16",
     videoId: "Nc4Iid3pSa8",
@@ -278,6 +288,35 @@ export const videoData: VideoItem[] = [
     description:
       "Historical International Lecture Dr Zakir Naik Bangla #drzakirnaik #zakirnaik #islamicscholar",
     language: "bn",
-    category: "Islamic Lecture",
+    category: "Comparative Religion",
   },
 ];
+
+// Derived: all unique categories with video counts
+export const categoryData = Array.from(
+  new Set(videoData.map((v) => v.category))
+)
+  .filter(Boolean)
+  .map((name) => ({
+    name,
+    slug: name.toLowerCase().replace(/\s+/g, "-"),
+    description: getCategoryDescription(name),
+    videoCount: videoData.filter((v) => v.category === name).length,
+    languages: Array.from(
+      new Set(videoData.filter((v) => v.category === name).map((v) => v.language))
+    ),
+  }));
+
+function getCategoryDescription(category: string): string {
+  const descriptions: Record<string, string> = {
+    "Islamic Lecture": "General Islamic lectures from trusted scholars covering various topics",
+    "Quran": "Lectures focused on Quranic teachings, tafsir, and recitation guidance",
+    "Seerah": "Learn about the life and teachings of Prophet Muhammad (peace be upon him)",
+    "Dua": "Powerful supplications and their meanings from authentic sources",
+    "Spirituality": "Nurture your soul with lectures on spiritual growth and self-purification",
+    "Dawah": "Lectures on sharing Islam with wisdom and answering common questions",
+    "Aqeedah": "Understanding the core beliefs and creed of Islam",
+    "Comparative Religion": "Exploring Islam in comparison with other faiths and worldviews",
+  };
+  return descriptions[category] || `Authentic Islamic content on ${category}`;
+}

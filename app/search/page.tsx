@@ -53,6 +53,38 @@ channelData.forEach((ch: ChannelItem) => {
 });
 const channelOptions = channelData.map(c => c.name);
 
+// Safe localStorage helpers
+function getRecentSearches(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem("recentSearches");
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item): item is string => typeof item === "string");
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecentSearches(searches: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    const safe = searches.filter((s): s is string => typeof s === "string");
+    localStorage.setItem("recentSearches", JSON.stringify(safe));
+  } catch {
+    // Silently fail for prototype
+  }
+}
+
+// Safe trim helper
+function safeTrim(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  return "";
+}
+
 // ── MULTI‑SELECT COMPONENT ──
 function MultiSelect({
   label,
@@ -232,6 +264,106 @@ function VideoSkeleton() {
   );
 }
 
+// ── FILTERS CONTENT ──
+function FiltersContent({
+  languages,
+  activeLangs,
+  toggleLang,
+  categoryOptions,
+  selectedCategories,
+  setSelectedCategories,
+  scholarOptions,
+  selectedScholars,
+  setSelectedScholars,
+  channelOptions,
+  selectedChannels,
+  setSelectedChannels,
+  hasFilters,
+  resetAllFilters,
+  performSearch,
+  query,
+}: {
+  languages: { code: string; name: string }[];
+  activeLangs: string[];
+  toggleLang: (code: string) => void;
+  categoryOptions: string[];
+  selectedCategories: string[];
+  setSelectedCategories: (values: string[]) => void;
+  scholarOptions: string[];
+  selectedScholars: string[];
+  setSelectedScholars: (values: string[]) => void;
+  channelOptions: string[];
+  selectedChannels: string[];
+  setSelectedChannels: (values: string[]) => void;
+  hasFilters: boolean;
+  resetAllFilters: () => void;
+  performSearch: () => void;
+  query: string;
+}) {
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold text-base">Filters</h2>
+        {hasFilters && (
+          <button
+            onClick={resetAllFilters}
+            className="text-sm text-primary hover:underline"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium mb-2">Languages</p>
+        <div className="flex flex-wrap gap-2">
+          {languages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => toggleLang(lang.code)}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium transition-colors",
+                activeLangs.includes(lang.code)
+                  ? "bg-foreground text-background"
+                  : "bg-muted hover:bg-muted/80 text-foreground"
+              )}
+            >
+              {lang.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <MultiSelect
+        label="Categories"
+        options={categoryOptions}
+        selected={selectedCategories}
+        onChange={setSelectedCategories}
+        searchable
+      />
+      <MultiSelect
+        label="Scholars"
+        options={scholarOptions}
+        selected={selectedScholars}
+        onChange={setSelectedScholars}
+        searchable
+      />
+      <MultiSelect
+        label="Channels"
+        options={channelOptions}
+        selected={selectedChannels}
+        onChange={setSelectedChannels}
+        searchable
+      />
+      <Button
+        onClick={performSearch}
+        className="w-full rounded-full"
+        disabled={!query.trim() && !hasFilters}
+      >
+        <Search className="h-4 w-4 mr-2" /> Search
+      </Button>
+    </div>
+  );
+}
+
 // ── MAIN PAGE ──
 export default function SearchPage() {
   const router = useRouter();
@@ -243,7 +375,7 @@ export default function SearchPage() {
 
   const initialQuery = searchParams?.get("q") || "";
 
-  const [query, setQuery] = useState(initialQuery);
+  const [query, setQuery] = useState<string>(initialQuery);
   const [activeLangs, setActiveLangs] = useState<string[]>(["bn"]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedScholars, setSelectedScholars] = useState<string[]>([]);
@@ -252,31 +384,21 @@ export default function SearchPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<VideoItem[]>([]);
-  const [recentSearchesList, setRecentSearchesList] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("recentSearches");
-      return stored ? JSON.parse(stored) : [];
-    }
-    return [];
-  });
+  const [recentSearchesList, setRecentSearchesList] = useState<string[]>(getRecentSearches);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
 
-  // Recent search dropdown states
   const [showMobileRecent, setShowMobileRecent] = useState(false);
   const [showDesktopRecent, setShowDesktopRecent] = useState(false);
 
-  // Auto-focus search input
   useEffect(() => {
     if (searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, []);
 
-  // ✅ Auto-search when query param is present on mount
   useEffect(() => {
     if (initialQuery) {
-      // Set query first, then search
       setQuery(initialQuery);
       const timer = setTimeout(() => {
         performSearch(initialQuery);
@@ -286,7 +408,6 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target as Node)) {
@@ -304,10 +425,9 @@ export default function SearchPage() {
     return (
       selectedCategories.length > 0 ||
       selectedScholars.length > 0 ||
-      selectedChannels.length > 0 ||
-      activeLangs.length > 0
+      selectedChannels.length > 0
     );
-  }, [selectedCategories, selectedScholars, selectedChannels, activeLangs]);
+  }, [selectedCategories, selectedScholars, selectedChannels]);
 
   const toggleLang = (code: string) => {
     setActiveLangs((prev) =>
@@ -329,17 +449,27 @@ export default function SearchPage() {
     setQuery("");
   };
 
+  const addToRecent = (searchTerm: string) => {
+    if (!searchTerm || typeof searchTerm !== "string") return;
+    setRecentSearchesList((prev) => {
+      const updated = [
+        searchTerm,
+        ...prev.filter((s) => s !== searchTerm),
+      ].slice(0, 8);
+      saveRecentSearches(updated);
+      return updated;
+    });
+  };
+
   const performSearch = useCallback((searchQuery?: string) => {
-    const searchTerm = searchQuery || query.trim();
+    // Safely get the search term
+    const term = typeof searchQuery === "string" ? searchQuery : query;
+    const searchTerm = typeof term === "string" ? term.trim() : "";
+    
     if (!searchTerm && !hasFilters()) return;
 
     if (searchTerm) {
-      const updated = [
-        searchTerm,
-        ...recentSearchesList.filter((s) => s !== searchTerm),
-      ].slice(0, 8);
-      setRecentSearchesList(updated);
-      localStorage.setItem("recentSearches", JSON.stringify(updated));
+      addToRecent(searchTerm);
     }
 
     setIsLoading(true);
@@ -393,7 +523,6 @@ export default function SearchPage() {
   }, [
     query,
     hasFilters,
-    recentSearchesList,
     activeLangs,
     selectedCategories,
     selectedScholars,
@@ -402,28 +531,26 @@ export default function SearchPage() {
 
   const clearRecentSearches = () => {
     setRecentSearchesList([]);
-    localStorage.removeItem("recentSearches");
+    saveRecentSearches([]);
     setShowMobileRecent(false);
     setShowDesktopRecent(false);
   };
 
   const removeRecentSearch = (search: string) => {
-    const updated = recentSearchesList.filter((s) => s !== search);
-    setRecentSearchesList(updated);
-    localStorage.setItem("recentSearches", JSON.stringify(updated));
+    setRecentSearchesList((prev) => {
+      const updated = prev.filter((s) => s !== search);
+      saveRecentSearches(updated);
+      return updated;
+    });
   };
 
   const handleRecentSearchClick = (search: string) => {
     setQuery(search);
     setShowMobileRecent(false);
     setShowDesktopRecent(false);
-    const updated = [
-      search,
-      ...recentSearchesList.filter((s) => s !== search),
-    ].slice(0, 8);
-    setRecentSearchesList(updated);
-    localStorage.setItem("recentSearches", JSON.stringify(updated));
-    performSearch(search);
+    addToRecent(search);
+    // Use setTimeout to ensure query state is updated before search
+    setTimeout(() => performSearch(search), 50);
   };
 
   const handleClearSearch = () => {
@@ -440,71 +567,11 @@ export default function SearchPage() {
     setShareModalOpen(true);
   };
 
-  const FiltersContent = () => (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-base">Filters</h2>
-        {hasFilters() && (
-          <button
-            onClick={resetAllFilters}
-            className="text-sm text-primary hover:underline"
-          >
-            Clear all
-          </button>
-        )}
-      </div>
-      <div>
-        <p className="text-sm font-medium mb-2">Languages</p>
-        <div className="flex flex-wrap gap-2">
-          {languages.map((lang) => (
-            <button
-              key={lang.code}
-              onClick={() => toggleLang(lang.code)}
-              className={cn(
-                "px-4 py-2 rounded-full text-sm font-medium transition-colors",
-                activeLangs.includes(lang.code)
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted hover:bg-muted/80 text-foreground"
-              )}
-            >
-              {lang.name}
-            </button>
-          ))}
-        </div>
-      </div>
-      <MultiSelect
-        label="Categories"
-        options={categoryOptions}
-        selected={selectedCategories}
-        onChange={setSelectedCategories}
-        searchable
-      />
-      <MultiSelect
-        label="Scholars"
-        options={scholarOptions}
-        selected={selectedScholars}
-        onChange={setSelectedScholars}
-        searchable
-      />
-      <MultiSelect
-        label="Channels"
-        options={channelOptions}
-        selected={selectedChannels}
-        onChange={setSelectedChannels}
-        searchable
-      />
-      <Button
-        onClick={() => performSearch()}
-        className="w-full rounded-full"
-        disabled={!query.trim() && !hasFilters()}
-      >
-        <Search className="h-4 w-4 mr-2" /> Search
-      </Button>
-    </div>
-  );
+  // Safe query for display
+  const displayQuery = typeof query === "string" ? query : "";
 
   return (
-    <div className="min-h-screen bg-background md:mt-16">
+    <div className="min-h-screen bg-background">
       {/* Mobile header – integrated search bar */}
       <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
         <button
@@ -524,7 +591,7 @@ export default function SearchPage() {
           <input
             ref={searchInputRef}
             type="text"
-            value={query}
+            value={displayQuery}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setShowMobileRecent(true)}
             onClick={() => setShowMobileRecent(true)}
@@ -537,7 +604,7 @@ export default function SearchPage() {
             }}
           />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          {query && (
+          {displayQuery && (
             <button
               onClick={() => setQuery("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
@@ -546,7 +613,7 @@ export default function SearchPage() {
             </button>
           )}
 
-          {/* ✅ Recent searches dropdown – appears BELOW search input */}
+          {/* Recent searches dropdown */}
           {showMobileRecent && !hasSearched && recentSearchesList.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-xl shadow-lg z-50 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2 border-b">
@@ -581,32 +648,41 @@ export default function SearchPage() {
         </Button>
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-12">
-        {/* Desktop search bar */}
-        <div className="hidden md:flex items-center gap-3 mb-6">
-          <div className="relative w-full max-w-xl" ref={desktopSearchRef}>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-12 max-w-4xl mx-auto">
+        {/* Desktop search bar + filters layout */}
+        <div className="hidden md:block mb-6">
+          <h1 className="text-2xl font-bold mb-4">Search</h1>
+
+          {/* Search input */}
+          <div className="relative w-full mb-6" ref={desktopSearchRef}>
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
               ref={searchInputRef}
               type="text"
-              value={query}
+              value={displayQuery}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setShowDesktopRecent(true)}
               onClick={() => setShowDesktopRecent(true)}
               placeholder="Search videos, scholars, channels..."
-              className="w-full h-10 pl-10 pr-10 rounded-full bg-muted/50 text-sm focus:bg-muted transition-colors"
+              className="w-full h-12 pl-12 pr-24 rounded-full bg-muted/50 text-sm focus:bg-muted transition-colors border focus:border-primary focus:ring-2 focus:ring-primary/20"
               onKeyDown={(e) => e.key === "Enter" && performSearch()}
             />
-            {query && (
+            {displayQuery && (
               <button
                 onClick={() => setQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-24 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             )}
+            <Button
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-9 px-6"
+              onClick={() => performSearch()}
+            >
+              <Search className="h-4 w-4 mr-1.5" /> Search
+            </Button>
 
-            {/* ✅ Recent searches dropdown – appears BELOW search input */}
+            {/* Recent searches dropdown */}
             {showDesktopRecent && !hasSearched && recentSearchesList.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-xl shadow-lg z-50 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 border-b">
@@ -636,148 +712,271 @@ export default function SearchPage() {
               </div>
             )}
           </div>
-          <Button variant="default" className="rounded-full h-10" onClick={() => performSearch()}>
-            Search
-          </Button>
-        </div>
 
-        {/* Main content */}
-        {!hasSearched ? (
-          <div>
-            {/* Filters */}
-            <div className="hidden md:block mb-6">
-              <div className="p-4 border rounded-xl bg-muted/10 max-w-xl">
-                <FiltersContent />
+          {/* Desktop: filters + results */}
+          {!hasSearched ? (
+            <div>
+              {/* Filters card */}
+              <div className="p-5 border rounded-xl bg-muted/10">
+                <FiltersContent
+                  languages={languages}
+                  activeLangs={activeLangs}
+                  toggleLang={toggleLang}
+                  categoryOptions={categoryOptions}
+                  selectedCategories={selectedCategories}
+                  setSelectedCategories={setSelectedCategories}
+                  scholarOptions={scholarOptions}
+                  selectedScholars={selectedScholars}
+                  setSelectedScholars={setSelectedScholars}
+                  channelOptions={channelOptions}
+                  selectedChannels={selectedChannels}
+                  setSelectedChannels={setSelectedChannels}
+                  hasFilters={hasFilters()}
+                  resetAllFilters={resetAllFilters}
+                  performSearch={performSearch}
+                  query={displayQuery}
+                />
               </div>
-            </div>
-            <div className="md:hidden mb-6">
-              <div className="p-4 border rounded-xl bg-muted/10">
-                <FiltersContent />
-              </div>
-            </div>
 
-            {/* Empty state (no recent searches and no query) */}
-            {recentSearchesList.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p>Use the filters and search box to find Islamic content</p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div>
-            {/* Results header */}
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-muted-foreground">
-                {`${results.length} result${results.length !== 1 ? "s" : ""}${query ? ` for "${query}"` : ""}`}
-              </p>
-              <button onClick={handleClearSearch} className="text-sm text-primary hover:underline">
-                Clear results
-              </button>
+              {/* Empty state */}
+              {recentSearchesList.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>Use the filters and search box to find Islamic content</p>
+                </div>
+              )}
             </div>
-
-            {isLoading ? (
-              <div className="space-y-4">
-                <VideoSkeleton />
-                <VideoSkeleton />
-                <VideoSkeleton />
-                <VideoSkeleton />
+          ) : (
+            <div>
+              {/* Results header */}
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  {`${results.length} result${results.length !== 1 ? "s" : ""}${displayQuery ? ` for "${displayQuery}"` : ""}`}
+                </p>
+                <button onClick={handleClearSearch} className="text-sm text-primary hover:underline">
+                  Clear results
+                </button>
               </div>
-            ) : results.length > 0 ? (
-              <div className="space-y-4">
-                {results.map((video) => (
-                  <div key={video.id} className="flex gap-3 group">
-                    <Link
-                      href={`/videos/${video.channel}/${video.videoId}`}
-                      className="relative w-40 md:w-56 aspect-video flex-shrink-0"
-                    >
-                      <Image
-                        src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
-                        alt={video.title}
-                        fill
-                        className="object-cover rounded-xl"
-                      />
-                      <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                        {video.duration}
-                      </div>
-                      <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="bg-black/60 rounded-full p-2">
-                          <Play className="h-5 w-5 text-white fill-white" />
+
+              {isLoading ? (
+                <div className="space-y-4">
+                  <VideoSkeleton />
+                  <VideoSkeleton />
+                  <VideoSkeleton />
+                  <VideoSkeleton />
+                </div>
+              ) : results.length > 0 ? (
+                <div className="space-y-4">
+                  {results.map((video) => (
+                    <div key={video.id} className="flex gap-3 group">
+                      <Link
+                        href={`/videos/${video.channel}/${video.videoId}`}
+                        className="relative w-40 md:w-56 aspect-video flex-shrink-0"
+                      >
+                        <Image
+                          src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                          alt={video.title}
+                          fill
+                          className="object-cover rounded-xl"
+                        />
+                        <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                          {video.duration}
                         </div>
-                      </div>
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <Link href={`/videos/${video.channel}/${video.videoId}`}>
-                            <h3 className="font-medium text-sm md:text-base line-clamp-2 hover:text-primary transition-colors">
-                              {video.title}
-                            </h3>
-                          </Link>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Link
-                              href={`/channels/${video.channelId}`}
-                              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                            >
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage src={video.channelAvatar} />
-                                <AvatarFallback className="text-[10px]">
-                                  {video.channel.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span>{video.channel}</span>
-                            </Link>
+                        <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-black/60 rounded-full p-2">
+                            <Play className="h-5 w-5 text-white fill-white" />
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {video.views} • {video.timeAgo}
-                          </p>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-1.5 rounded-full hover:bg-muted transition-colors flex-shrink-0">
-                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56 rounded-xl">
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() => toast.success("Added to Watch Later (demo)")}
-                            >
-                              <Clock className="h-4 w-4 mr-2" /> Save to Watch later
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() => toast.success("Added to playlist (demo)")}
-                            >
-                              <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() => handleShare(video)}
-                            >
-                              <Share className="h-4 w-4 mr-2" /> Share
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/videos/${video.channel}/${video.videoId}`}>
+                              <h3 className="font-medium text-sm md:text-base line-clamp-2 hover:text-primary transition-colors">
+                                {video.title}
+                              </h3>
+                            </Link>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Link
+                                href={`/channel-new/${video.channelId}`}
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                              >
+                                <Avatar className="h-5 w-5">
+                                  <AvatarImage src={video.channelAvatar} />
+                                  <AvatarFallback className="text-[10px]">
+                                    {video.channel.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>{video.channel}</span>
+                              </Link>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {video.views} • {video.timeAgo}
+                            </p>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1.5 rounded-full hover:bg-muted transition-colors flex-shrink-0">
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => toast.success("Added to Watch Later (demo)")}
+                              >
+                                <Clock className="h-4 w-4 mr-2" /> Save to Watch later
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => toast.success("Added to playlist (demo)")}
+                              >
+                                <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => handleShare(video)}
+                              >
+                                <Share className="h-4 w-4 mr-2" /> Share
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search className="h-8 w-8 text-muted-foreground" />
+                  ))}
                 </div>
-                <h3 className="text-lg font-medium mb-1">No results found</h3>
-                <p className="text-muted-foreground">Try different keywords or adjust your filters</p>
-                <Button variant="outline" className="mt-4 rounded-full" onClick={handleClearSearch}>
-                  Clear search
-                </Button>
+              ) : (
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1">No results found</h3>
+                  <p className="text-muted-foreground">Try different keywords or adjust your filters</p>
+                  <Button variant="outline" className="mt-4 rounded-full" onClick={handleClearSearch}>
+                    Clear search
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Mobile: filters + results */}
+        <div className="md:hidden">
+          {!hasSearched ? (
+            <div>
+              {/* Mobile filters */}
+              <div className="mb-6">
+                <div className="p-4 border rounded-xl bg-muted/10">
+                  <FiltersContent
+                    languages={languages}
+                    activeLangs={activeLangs}
+                    toggleLang={toggleLang}
+                    categoryOptions={categoryOptions}
+                    selectedCategories={selectedCategories}
+                    setSelectedCategories={setSelectedCategories}
+                    scholarOptions={scholarOptions}
+                    selectedScholars={selectedScholars}
+                    setSelectedScholars={setSelectedScholars}
+                    channelOptions={channelOptions}
+                    selectedChannels={selectedChannels}
+                    setSelectedChannels={setSelectedChannels}
+                    hasFilters={hasFilters()}
+                    resetAllFilters={resetAllFilters}
+                    performSearch={performSearch}
+                    query={displayQuery}
+                  />
+                </div>
               </div>
-            )}
-          </div>
-        )}
+
+              {/* Empty state */}
+              {recentSearchesList.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>Use the filters and search box to find Islamic content</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div>
+              {/* Results header */}
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  {`${results.length} result${results.length !== 1 ? "s" : ""}${displayQuery ? ` for "${displayQuery}"` : ""}`}
+                </p>
+                <button onClick={handleClearSearch} className="text-sm text-primary hover:underline">
+                  Clear results
+                </button>
+              </div>
+
+              {isLoading ? (
+                <div className="space-y-4">
+                  <VideoSkeleton />
+                  <VideoSkeleton />
+                  <VideoSkeleton />
+                  <VideoSkeleton />
+                </div>
+              ) : results.length > 0 ? (
+                <div className="space-y-4">
+                  {results.map((video) => (
+                    <div key={video.id} className="flex gap-3 group">
+                      <Link
+                        href={`/videos/${video.channel}/${video.videoId}`}
+                        className="relative w-40 aspect-video flex-shrink-0"
+                      >
+                        <Image
+                          src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                          alt={video.title}
+                          fill
+                          className="object-cover rounded-xl"
+                        />
+                        <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                          {video.duration}
+                        </div>
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/videos/${video.channel}/${video.videoId}`}>
+                          <h3 className="font-medium text-sm line-clamp-2 hover:text-primary transition-colors">
+                            {video.title}
+                          </h3>
+                        </Link>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Link
+                            href={`/channel-new/${video.channelId}`}
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            <Avatar className="h-4 w-4">
+                              <AvatarImage src={video.channelAvatar} />
+                              <AvatarFallback className="text-[8px]">
+                                {video.channel.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{video.channel}</span>
+                          </Link>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {video.views} • {video.timeAgo}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1">No results found</h3>
+                  <p className="text-muted-foreground">Try different keywords or adjust your filters</p>
+                  <Button variant="outline" className="mt-4 rounded-full" onClick={handleClearSearch}>
+                    Clear search
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <ShareModal isOpen={shareModalOpen} onClose={() => setShareModalOpen(false)} videoUrl={shareUrl} />

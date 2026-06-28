@@ -243,10 +243,10 @@ export default function ScholarDetailPage() {
           <button
             onClick={() => setBioModalOpen(false)}
             className="rounded-full p-1 hover:bg-muted transition-colors z-10"
-            style={{ position: "absolute", top: "12px", right: "12px" }}
+            style={{ position: "absolute", top: "8px", right: "8px" }}
             aria-label="Close"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
           <DialogHeader>
             <DialogTitle>About {scholar.name}</DialogTitle>

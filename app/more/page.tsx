@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Star,
   MessageSquare,
   Info,
@@ -61,13 +60,13 @@ export default function MorePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
-          <div className="mb-4">
-            <h1 className="text-2xl font-bold">More</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Additional features and information
-            </p>
-          </div>
+      <div className="px-4 md:px-6 py-2 md:py-6 mt-16 max-w-3xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">More</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Additional features and information
+          </p>
+        </div>
 
         {isLoading ? (
           <div className="divide-y">
@@ -100,6 +99,7 @@ export default function MorePage() {
           </div>
         )}
 
+        {/* Footer */}
         <div className="py-8 text-center">
           <p className="text-xs text-muted-foreground">
             Powered By · Deeni Info Tech

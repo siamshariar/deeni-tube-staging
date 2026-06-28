@@ -10,6 +10,9 @@ import {
   History,
   Play,
   Trash2,
+  Clock,
+  Bookmark,
+  Share,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,70 +28,66 @@ import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { videoData, VideoItem } from "@/lib/video-data";
+import { ShareModal } from "@/components/share-modal";
 
-// Sample history data
-const islamicHistory = [
+// Real shorts data (same as shorts page)
+const shortsHistoryData = [
   {
-    id: "h1",
-    title: "সূরা আর-রহমানের অপূর্ব তিলাওয়াত – মন ছুঁয়ে যাবে",
-    channel: "কুরআনিক সাউন্ড",
-    duration: "10:22",
-    views: "4.3M views",
+    id: "sh1",
+    videoId: "MBxDbbkk0gQ",
+    title: "একমাত্র আল্লাহর রাজত্বই চিরস্থায়ী",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelId: "monzur",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_lLp3SxQeehJxSmd_QCmSxpFBj4k-7X-brif7v9Jz0rBg=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/MBxDbbkk0gQ/hqdefault.jpg",
+    duration: "0:58",
+    views: "15K views",
     timeAgo: "2 weeks ago",
-    thumbnail: "https://placehold.co/600x400/111/888?text=Video",
-    channelAvatar: "https://placehold.co/100x100/333/fff?text=Q",
-    type: "video",
+    type: "short",
   },
   {
-    id: "h2",
-    title: "বদ নজর থেকে বাঁচার দোয়া – শক্তিশালী আমল",
-    channel: "ইসলামিক লেকচার",
-    duration: "12:35",
-    views: "2.1M views",
-    timeAgo: "1 month ago",
-    thumbnail: "https://placehold.co/600x400/111/888?text=Video",
-    channelAvatar: "https://placehold.co/100x100/333/fff?text=I",
-    type: "video",
+    id: "sh2",
+    videoId: "goHfO28fE-A",
+    title: "যারা বলে আমাদের রব আল্লাহ",
+    channel: "Dr. Mohammad Monzur-E-Elahi",
+    channelId: "monzur",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_lLp3SxQeehJxSmd_QCmSxpFBj4k-7X-brif7v9Jz0rBg=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/goHfO28fE-A/hqdefault.jpg",
+    duration: "0:45",
+    views: "25K views",
+    timeAgo: "3 days ago",
+    type: "short",
   },
   {
-    id: "h3",
-    title: "পাঁচ ওয়াক্ত নামাজের গুরুত্ব – জানতে হবে",
-    channel: "দ্বীনের পথ",
-    duration: "25:48",
-    views: "1.5M views",
-    timeAgo: "3 months ago",
-    thumbnail: "https://placehold.co/600x400/111/888?text=Video",
-    channelAvatar: "https://placehold.co/100x100/333/fff?text=D",
-    type: "video",
-  },
-  {
-    id: "h4",
-    title: "কোরআনের গল্প – হজরত ইউসুফ (আ.) পর্ব ১",
-    channel: "শান্তির বার্তা",
-    duration: "45:12",
-    views: "3.8M views",
-    timeAgo: "5 months ago",
-    thumbnail: "https://placehold.co/600x400/111/888?text=Video",
-    channelAvatar: "https://placehold.co/100x100/333/fff?text=S",
-    type: "video",
-  },
-  {
-    id: "h5",
-    title: "শবে বরাতের ফজিলত ও আমল",
-    channel: "জান্নাতের পথিক",
-    duration: "18:30",
-    views: "5.2M views",
-    timeAgo: "1 year ago",
-    thumbnail: "https://placehold.co/600x400/111/888?text=Video",
-    channelAvatar: "https://placehold.co/100x100/333/fff?text=J",
-    type: "video",
+    id: "sh3",
+    videoId: "PUwTf64igQk",
+    title: "এভাবে ঈমান নষ্ট করছেন নাতো?",
+    channel: "Dr. Khandaker Abdullah Jahangir Rh.",
+    channelId: "abdullah",
+    channelAvatar: "https://yt3.googleusercontent.com/stJnVilfKhMtBiIq_hXTu-9DnanUT0GNtmsRePmQvLAi6c7bhXoIIHGlYL0HqUrdEjrL0KFs7Q=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/PUwTf64igQk/hqdefault.jpg",
+    duration: "0:52",
+    views: "35K views",
+    timeAgo: "4 days ago",
+    type: "short",
   },
 ];
 
+// Convert video data to history format
+const videoHistoryData = videoData.slice(0, 8).map((v: VideoItem) => ({
+  ...v,
+  type: "video" as const,
+  thumbnail: `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`,
+}));
+
+// Combined history data
+const allHistoryData = [...videoHistoryData, ...shortsHistoryData];
+
 const categories = [
-  { id: "all", label: "All", count: islamicHistory.length },
-  { id: "videos", label: "Videos", count: islamicHistory.filter((v) => v.type !== "short").length },
-  { id: "shorts", label: "Shorts", count: islamicHistory.filter((v) => v.type === "short").length },
+  { id: "all", label: "All", count: allHistoryData.length },
+  { id: "videos", label: "Videos", count: allHistoryData.filter((v) => v.type === "video").length },
+  { id: "shorts", label: "Shorts", count: allHistoryData.filter((v) => v.type === "short").length },
 ];
 
 function VideoSkeleton() {
@@ -108,10 +107,12 @@ function VideoSkeleton() {
 export default function HistoryPage() {
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const [videos, setVideos] = useState(islamicHistory);
+  const [videos, setVideos] = useState(allHistoryData);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -131,7 +132,7 @@ export default function HistoryPage() {
     );
 
     if (activeCategory === "videos") {
-      list = list.filter((v) => v.type !== "short");
+      list = list.filter((v) => v.type === "video");
     } else if (activeCategory === "shorts") {
       list = list.filter((v) => v.type === "short");
     }
@@ -139,9 +140,18 @@ export default function HistoryPage() {
   }, [videos, searchQuery, activeCategory]);
 
   const handlePlayAll = () => {
-    if (videos.length) {
-      router.push(`/videos/${videos[0].channel}/${videos[0].id}`);
+    const firstVideo = videos.find((v) => v.type === "video");
+    if (firstVideo) {
+      router.push(`/videos/${firstVideo.channel}/${firstVideo.videoId || firstVideo.id}`);
     }
+  };
+
+  const handleShare = (video: any) => {
+    const url = video.type === "short"
+      ? `${window.location.origin}/shorts`
+      : `${window.location.origin}/videos/${video.channel}/${video.videoId || video.id}`;
+    setShareUrl(url);
+    setShareModalOpen(true);
   };
 
   // Update category counts dynamically
@@ -151,13 +161,16 @@ export default function HistoryPage() {
       cat.id === "all"
         ? videos.length
         : cat.id === "videos"
-        ? videos.filter((v) => v.type !== "short").length
+        ? videos.filter((v) => v.type === "video").length
         : videos.filter((v) => v.type === "short").length,
   }));
 
+  // Get first video for hero card (prefer video type)
+  const heroVideo = videos.find((v) => v.type === "video") || videos[0];
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-4 py-4 md:py-6 max-w-full">
+      <div className="px-4 md:px-4 py-2 md:py-6 max-w-full">
         {isLoading ? (
           <div className="flex flex-col md:flex-row gap-6 mt-16">
             <Skeleton className="w-full md:w-[340px] h-[60vh] rounded-xl" />
@@ -195,10 +208,10 @@ export default function HistoryPage() {
             {/* LEFT COLUMN – Fixed card with last watched video */}
             <div className="md:w-[340px] flex-shrink-0 md:sticky md:top-[80px] md:self-start md:h-[calc(100vh-80px)] md:overflow-hidden">
               <div className="relative h-full rounded-xl overflow-hidden bg-card border shadow-sm">
-                {videos[0] && (
+                {heroVideo && (
                   <>
                     <Image
-                      src={videos[0].thumbnail}
+                      src={heroVideo.thumbnail}
                       alt=""
                       fill
                       className="object-cover scale-110 blur-md opacity-40"
@@ -212,20 +225,20 @@ export default function HistoryPage() {
                           {videos.length} videos
                         </p>
                       </div>
-                      {!isMobile && videos[0] && (
+                      {!isMobile && heroVideo && (
                         <Link
-                          href={`/videos/${videos[0].channel}/${videos[0].id}`}
+                          href={`/videos/${heroVideo.channel}/${heroVideo.videoId || heroVideo.id}`}
                           className="block w-full mb-6 group"
                         >
                           <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10">
                             <Image
-                              src={videos[0].thumbnail}
-                              alt={videos[0].title}
+                              src={heroVideo.thumbnail}
+                              alt={heroVideo.title}
                               fill
                               className="object-cover transition-transform group-hover:scale-105"
                             />
                             <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                              {videos[0].duration}
+                              {heroVideo.duration}
                             </div>
                             <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                               <div className="bg-black/60 rounded-full p-3">
@@ -235,13 +248,13 @@ export default function HistoryPage() {
                           </div>
                           <div className="mt-3 text-left">
                             <p className="text-sm font-medium line-clamp-2 group-hover:underline">
-                              {videos[0].title}
+                              {heroVideo.title}
                             </p>
                             <p className="text-xs text-white/70 mt-0.5">
-                              {videos[0].channel}
+                              {heroVideo.channel}
                             </p>
                             <p className="text-xs text-white/50 mt-0.5">
-                              {videos[0].views} • {videos[0].timeAgo}
+                              {heroVideo.views} • {heroVideo.timeAgo}
                             </p>
                           </div>
                         </Link>
@@ -257,7 +270,7 @@ export default function HistoryPage() {
                     </div>
                   </>
                 )}
-                {!videos[0] && (
+                {!heroVideo && (
                   <div className="h-full bg-muted flex items-center justify-center">
                     <History className="h-12 w-12 text-muted-foreground/30" />
                   </div>
@@ -319,7 +332,11 @@ export default function HistoryPage() {
                       className="flex gap-3 group py-2 hover:bg-muted/30 rounded-lg px-2 -mx-2 transition-colors w-full"
                     >
                       <Link
-                        href={`/videos/${video.channel}/${video.id}`}
+                        href={
+                          video.type === "short"
+                            ? "/shorts"
+                            : `/videos/${video.channel}/${video.videoId || video.id}`
+                        }
                         className={cn(
                           "relative flex-shrink-0 rounded-lg overflow-hidden",
                           video.type === "short"
@@ -341,18 +358,30 @@ export default function HistoryPage() {
                             <Play className="h-5 w-5 text-white fill-white" />
                           </div>
                         </div>
+                        {/* Short badge */}
+                        {/* {video.type === "short" && (
+                          <div className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                            SHORT
+                          </div>
+                        )} */}
                       </Link>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <Link href={`/videos/${video.channel}/${video.id}`}>
+                            <Link
+                              href={
+                                video.type === "short"
+                                  ? "/shorts"
+                                  : `/videos/${video.channel}/${video.videoId || video.id}`
+                              }
+                            >
                               <h3 className="font-medium text-sm line-clamp-2 hover:text-primary transition-colors">
                                 {video.title}
                               </h3>
                             </Link>
                             <div className="flex items-center gap-2 mt-1">
                               <Link
-                                href={`/channel/${video.channel}`}
+                                href={`/channel-new/${video.channelId}`}
                                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
                               >
                                 <Avatar className="h-5 w-5">
@@ -389,11 +418,31 @@ export default function HistoryPage() {
                                 <DropdownMenuItem
                                   onClick={() =>
                                     router.push(
-                                      `/videos/${video.channel}/${video.id}`
+                                      video.type === "short"
+                                        ? "/shorts"
+                                        : `/videos/${video.channel}/${video.videoId || video.id}`
                                     )
                                   }
                                 >
                                   <Play className="h-4 w-4 mr-3" /> Play now
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() => toast.success("Added to Watch Later (demo)")}
+                                >
+                                  <Clock className="h-4 w-4 mr-3" /> Save to Watch later
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() => toast.success("Added to playlist (demo)")}
+                                >
+                                  <Bookmark className="h-4 w-4 mr-3" /> Save to playlist
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() => handleShare(video)}
+                                >
+                                  <Share className="h-4 w-4 mr-3" /> Share
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleRemove(video.id)}
@@ -414,6 +463,12 @@ export default function HistoryPage() {
           </div>
         )}
       </div>
+
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        videoUrl={shareUrl}
+      />
     </div>
   );
 }

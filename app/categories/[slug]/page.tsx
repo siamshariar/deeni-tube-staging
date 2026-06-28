@@ -14,6 +14,7 @@ import {
   Clock,
   Bookmark,
   Share,
+  FolderOpen,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,54 +26,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { mockCategories, mockVideos } from "@/lib/mock-data";
+import { videoData, VideoItem, categoryData } from "@/lib/video-data";
 import { ShareModal } from "@/components/share-modal";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-const generateCategoryVideos = (categoryName: string) => {
-  let videos = mockVideos.filter((v) => v.category === categoryName);
-  if (videos.length === 0) {
-    for (let i = 1; i <= 8; i++) {
-      videos.push({
-        id: `mock-${categoryName}-${i}`,
-        title: `${categoryName} Video ${i}`,
-        channel: `${categoryName} Channel`,
-        channelId: `channel-${i}`,
-        channelAvatar: "/placeholder.svg?height=100&width=100",
-        views: `${Math.floor(Math.random() * 500 + 100)}K views`,
-        timeAgo: `${Math.floor(Math.random() * 30 + 1)} days ago`,
-        duration: `${Math.floor(Math.random() * 20 + 5)}:${String(
-          Math.floor(Math.random() * 60)
-        ).padStart(2, "0")}`,
-        thumbnail: `https://placehold.co/600x400/111/888?text=Video+${i}`,
-        language: "en",
-        category: categoryName,
-        description: `Mock video for ${categoryName}`,
-      });
-    }
-    return videos;
-  }
-  if (videos.length < 8) {
-    const baseVideos = [...videos];
-    while (videos.length < 8) {
-      const index = (videos.length - baseVideos.length + baseVideos.length) % baseVideos.length;
-      const base = baseVideos[index];
-      if (!base) continue;
-      videos.push({
-        ...base,
-        id: `${base.id}-dup-${videos.length}`,
-        title: `${base.title} (Part ${videos.length + 1})`,
-        views: `${Math.floor(Math.random() * 500 + 100)}K views`,
-        timeAgo: `${Math.floor(Math.random() * 30 + 1)} days ago`,
-        duration: `${Math.floor(Math.random() * 20 + 5)}:${String(
-          Math.floor(Math.random() * 60)
-        ).padStart(2, "0")}`,
-      });
-    }
-  }
-  return videos;
-};
 
 function VideoSkeleton() {
   return (
@@ -109,8 +66,6 @@ export default function CategoryVideosPage() {
   const params = useParams();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const slug = params.slug as string;
-  const category = mockCategories.find((c) => c.slug === slug) || mockCategories[0];
-  const categoryVideos = generateCategoryVideos(category.name);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -124,6 +79,22 @@ export default function CategoryVideosPage() {
     return () => clearTimeout(timer);
   }, [slug]);
 
+  // Get category info
+  const category = categoryData.find((c) => c.slug === slug);
+
+  // Get real videos for this category
+  const categoryVideos: VideoItem[] = videoData.filter(
+    (v) => v.category.toLowerCase().replace(/\s+/g, "-") === slug
+  );
+
+  // Derive category name
+  const categoryName = category?.name || slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+  const categoryDescription = category?.description || `Videos about ${categoryName}`;
+
   const filteredVideos = categoryVideos
     .filter(
       (v) =>
@@ -134,12 +105,14 @@ export default function CategoryVideosPage() {
     .sort((a, b) => {
       if (sortMode === "latest") {
         const getDate = (time: string) => {
-          if (time.includes("day")) return parseInt(time);
-          if (time.includes("week")) return parseInt(time) * 7;
-          if (time.includes("month")) return parseInt(time) * 30;
+          const num = parseInt(time);
+          if (time.includes("day")) return num;
+          if (time.includes("week")) return num * 7;
+          if (time.includes("month")) return num * 30;
+          if (time.includes("year")) return num * 365;
           return 0;
         };
-        return getDate(b.timeAgo) - getDate(a.timeAgo);
+        return getDate(a.timeAgo) - getDate(b.timeAgo);
       }
       if (sortMode === "popular") {
         const parseView = (v: string) => {
@@ -151,22 +124,22 @@ export default function CategoryVideosPage() {
       return 0;
     });
 
-  const handleShare = (video: any) => {
-    setShareUrl(`${window.location.origin}/videos/${video.channel}/${video.id}`);
+  const handleShare = (video: VideoItem) => {
+    setShareUrl(`${window.location.origin}/videos/${video.channel}/${video.videoId}`);
     setShareModalOpen(true);
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile header – sticky back button */}
-      <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
+      <div className="md:hidden flex items-center gap-2 px-4 py-2 border-b sticky top-[56px] bg-background z-10">
         <button
           onClick={() => router.back()}
           className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="font-semibold text-lg truncate">{category.name}</h1>
+        <h1 className="font-semibold text-lg truncate">{categoryName}</h1>
       </div>
 
       <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
@@ -199,9 +172,12 @@ export default function CategoryVideosPage() {
           <>
             {!isMobile && (
               <div className="mb-6">
-                <h1 className="text-2xl font-bold">{category.name}</h1>
+                <h1 className="text-2xl font-bold">{categoryName}</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {category.description}
+                  {categoryDescription}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {filteredVideos.length} video{filteredVideos.length !== 1 ? "s" : ""}
                 </p>
               </div>
             )}
@@ -213,7 +189,7 @@ export default function CategoryVideosPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder={`Search ${category.name} videos...`}
+                    placeholder={`Search ${categoryName} videos...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-10 h-10 text-sm rounded-full bg-muted/50 focus:bg-muted transition-colors"
@@ -247,154 +223,168 @@ export default function CategoryVideosPage() {
               </div>
             </div>
 
-            {/* Desktop grid */}
-            <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredVideos.map((video) => (
-                <div key={video.id} className="flex flex-col group">
-                  <Link
-                    href={`/videos/${video.channel}/${video.id}`}
-                    className="relative aspect-video w-full"
-                  >
-                    <Image
-                      src={video.thumbnail}
-                      alt={video.title}
-                      fill
-                      className="object-cover rounded-xl"
-                    />
-                    <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                      {video.duration}
-                    </div>
-                    <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="bg-black/60 rounded-full p-2">
-                        <Play className="h-5 w-5 text-white fill-white" />
-                      </div>
-                    </div>
-                  </Link>
-                  <div className="flex mt-3 gap-2">
-                    <Link href={`/channel/${video.channel}`}>
-                      <Avatar className="h-9 w-9 flex-shrink-0">
-                        <AvatarImage src={video.channelAvatar} />
-                        <AvatarFallback>{video.channel.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-1">
-                        <Link href={`/videos/${video.channel}/${video.id}`}>
-                          <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                            {video.title}
-                          </h3>
-                        </Link>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0">
-                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() => toast.success("Added to Watch Later (demo)")}
-                            >
-                              <Clock className="h-4 w-4 mr-2" /> Save to Watch later
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() => toast.success("Added to playlist (demo)")}
-                            >
-                              <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() => handleShare(video)}
-                            >
-                              <Share className="h-4 w-4 mr-2" /> Share
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {video.channel}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {video.views} • {video.timeAgo}
-                      </p>
-                    </div>
-                  </div>
+            {filteredVideos.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FolderOpen className="h-8 w-8 text-muted-foreground" />
                 </div>
-              ))}
-            </div>
-
-            {/* Mobile list */}
-            <div className="flex flex-col md:hidden">
-              {filteredVideos.map((video) => (
-                <div key={video.id} className="flex gap-3 py-3 border-b last:border-0 group">
-                  <Link
-                    href={`/videos/${video.channel}/${video.id}`}
-                    className="relative w-40 aspect-video flex-shrink-0"
-                  >
-                    <Image
-                      src={video.thumbnail}
-                      alt={video.title}
-                      fill
-                      className="object-cover rounded-lg"
-                    />
-                    <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 py-0.5 rounded font-medium">
-                      {video.duration}
-                    </div>
-                  </Link>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-1">
-                      <Link href={`/videos/${video.channel}/${video.id}`}>
-                        <h3 className="font-medium text-sm line-clamp-2">
-                          {video.title}
-                        </h3>
+                <h3 className="text-lg font-medium mb-1">No videos found</h3>
+                <p className="text-muted-foreground">
+                  Try different search terms or sort options
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop grid */}
+                <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredVideos.map((video) => (
+                    <div key={video.id} className="flex flex-col group">
+                      <Link
+                        href={`/videos/${video.channel}/${video.videoId}`}
+                        className="relative aspect-video w-full"
+                      >
+                        <Image
+                          src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                          alt={video.title}
+                          fill
+                          className="object-cover rounded-xl"
+                        />
+                        <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                          {video.duration}
+                        </div>
+                        <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-black/60 rounded-full p-2">
+                            <Play className="h-5 w-5 text-white fill-white" />
+                          </div>
+                        </div>
                       </Link>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0">
-                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => toast.success("Added to Watch Later (demo)")}
-                          >
-                            <Clock className="h-4 w-4 mr-2" /> Save to Watch later
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => toast.success("Added to playlist (demo)")}
-                          >
-                            <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => handleShare(video)}
-                          >
-                            <Share className="h-4 w-4 mr-2" /> Share
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex mt-3 gap-2">
+                        <Link href={`/channel-new/${video.channelId}`}>
+                          <Avatar className="h-9 w-9 flex-shrink-0">
+                            <AvatarImage src={video.channelAvatar} />
+                            <AvatarFallback>{video.channel.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-1">
+                            <Link href={`/videos/${video.channel}/${video.videoId}`}>
+                              <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                                {video.title}
+                              </h3>
+                            </Link>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0">
+                                  <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() => toast.success("Added to Watch Later (demo)")}
+                                >
+                                  <Clock className="h-4 w-4 mr-2" /> Save to Watch later
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() => toast.success("Added to playlist (demo)")}
+                                >
+                                  <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() => handleShare(video)}
+                                >
+                                  <Share className="h-4 w-4 mr-2" /> Share
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {video.channel}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {video.views} • {video.timeAgo}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <Avatar className="h-4 w-4">
-                        <AvatarImage src={video.channelAvatar} />
-                        <AvatarFallback className="text-[8px]">
-                          {video.channel.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-[11px] text-muted-foreground">
-                        {video.channel}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {video.views} • {video.timeAgo}
-                    </p>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+
+                {/* Mobile list */}
+                <div className="flex flex-col md:hidden">
+                  {filteredVideos.map((video) => (
+                    <div key={video.id} className="flex gap-3 py-3 border-b last:border-0 group">
+                      <Link
+                        href={`/videos/${video.channel}/${video.videoId}`}
+                        className="relative w-40 aspect-video flex-shrink-0"
+                      >
+                        <Image
+                          src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                          alt={video.title}
+                          fill
+                          className="object-cover rounded-lg"
+                        />
+                        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 py-0.5 rounded font-medium">
+                          {video.duration}
+                        </div>
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-1">
+                          <Link href={`/videos/${video.channel}/${video.videoId}`}>
+                            <h3 className="font-medium text-sm line-clamp-2">
+                              {video.title}
+                            </h3>
+                          </Link>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0">
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => toast.success("Added to Watch Later (demo)")}
+                              >
+                                <Clock className="h-4 w-4 mr-2" /> Save to Watch later
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => toast.success("Added to playlist (demo)")}
+                              >
+                                <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => handleShare(video)}
+                              >
+                                <Share className="h-4 w-4 mr-2" /> Share
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Avatar className="h-4 w-4">
+                            <AvatarImage src={video.channelAvatar} />
+                            <AvatarFallback className="text-[8px]">
+                              {video.channel.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-[11px] text-muted-foreground">
+                            {video.channel}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {video.views} • {video.timeAgo}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

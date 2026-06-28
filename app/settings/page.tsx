@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
-  ArrowLeft,
   Settings,
   Globe,
   Bell,
@@ -93,21 +92,22 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">Settings</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your app preferences</p>
-          </div>
+      <div className="px-4 md:px-6 py-2 md:py-6 mt-16 max-w-3xl mx-auto">
+        {/* Desktop title */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Settings</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage your app preferences</p>
+        </div>
 
         <div className="divide-y">
           {/* General */}
           <div className="py-4">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               General
             </h3>
 
             {/* Appearance */}
-            <div className="flex items-center justify-between py-3">
+            <div className="flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-muted/20 transition-colors">
               <div className="flex items-center gap-3">
                 {getThemeIcon()}
                 <div>
@@ -143,7 +143,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Language */}
-            <div className="flex items-center justify-between py-3 border-t">
+            <div className="flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-muted/20 transition-colors border-t">
               <div className="flex items-center gap-3">
                 <Globe className="h-5 w-5 text-muted-foreground" />
                 <div>
@@ -168,11 +168,11 @@ export default function SettingsPage() {
 
           {/* Notifications */}
           <div className="py-4">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Notifications
             </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-muted/20 transition-colors">
                 <div className="flex items-center gap-3">
                   <Bell className="h-5 w-5 text-muted-foreground" />
                   <div>
@@ -182,7 +182,7 @@ export default function SettingsPage() {
                 </div>
                 <Switch checked={notifications.all} onCheckedChange={() => toggleNotification("all")} />
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-muted/20 transition-colors">
                 <div className="flex items-center gap-3">
                   <Bell className="h-5 w-5 text-muted-foreground" />
                   <div>
@@ -192,7 +192,7 @@ export default function SettingsPage() {
                 </div>
                 <Switch checked={notifications.email} onCheckedChange={() => toggleNotification("email")} />
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-muted/20 transition-colors">
                 <div className="flex items-center gap-3">
                   <Bell className="h-5 w-5 text-muted-foreground" />
                   <div>
@@ -207,12 +207,12 @@ export default function SettingsPage() {
 
           {/* Account & Privacy */}
           <div className="py-4">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Account & Privacy
             </h3>
             <button
-              onClick={() => router.push("/you-new")}
-              className="w-full flex items-center justify-between py-3 hover:bg-muted/30 rounded-lg px-2 -mx-2 transition-colors"
+              onClick={() => router.push("/you")}
+              className="w-full flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-muted/20 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-muted-foreground" />
@@ -224,8 +224,8 @@ export default function SettingsPage() {
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </button>
             <button
-              onClick={() => router.push("/you-new")}
-              className="w-full flex items-center justify-between py-3 hover:bg-muted/30 rounded-lg px-2 -mx-2 transition-colors"
+              onClick={() => router.push("/help/privacy")}
+              className="w-full flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-muted/20 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-muted-foreground" />
@@ -240,12 +240,12 @@ export default function SettingsPage() {
 
           {/* Help & About */}
           <div className="py-4">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Help & About
             </h3>
             <button
               onClick={() => router.push("/help")}
-              className="w-full flex items-center justify-between py-3 hover:bg-muted/30 rounded-lg px-2 -mx-2 transition-colors"
+              className="w-full flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-muted/20 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <HelpCircle className="h-5 w-5 text-muted-foreground" />
@@ -257,8 +257,8 @@ export default function SettingsPage() {
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </button>
             <button
-              onClick={() => router.push("/help")}
-              className="w-full flex items-center justify-between py-3 hover:bg-muted/30 rounded-lg px-2 -mx-2 transition-colors"
+              onClick={() => router.push("/more/about")}
+              className="w-full flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-muted/20 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <Info className="h-5 w-5 text-muted-foreground" />
@@ -273,6 +273,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Language Dialog */}
       <Dialog open={showLanguagePrompt} onOpenChange={setShowLanguagePrompt}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

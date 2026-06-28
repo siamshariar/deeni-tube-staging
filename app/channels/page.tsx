@@ -22,7 +22,7 @@ function ChannelSkeleton() {
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-3 w-20" />
       </div>
-      <Skeleton className="h-8 w-16 md:w-24 rounded-full" />
+      <Skeleton className="h-9 w-20 md:w-24 rounded-full" />
     </div>
   );
 }
@@ -199,13 +199,13 @@ export default function ChannelsPage() {
               return (
                 <div
                   key={channel.id}
-                  className="flex items-center gap-3 px-2 py-3 hover:bg-muted/30 transition-colors group"
+                  className="flex items-center gap-2 md:gap-3 px-2 py-3 hover:bg-muted/30 transition-colors group"
                 >
                   <Link
                     href={`/channels/${channel.slug}`}
                     className="flex-shrink-0"
                   >
-                    <Avatar className="h-12 w-12 md:h-14 md:w-14 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
+                    <Avatar className="h-10 w-10 md:h-14 md:w-14 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
                       <AvatarImage src={channel.avatar} />
                       <AvatarFallback>
                         {channel.name.charAt(0)}
@@ -219,12 +219,12 @@ export default function ChannelsPage() {
                       className="hover:underline"
                     >
                       <div className="flex items-center gap-1">
-                        <h3 className="font-medium text-sm md:text-base truncate group-hover:text-primary transition-colors">
+                        <h3 className="font-medium text-xs md:text-base truncate group-hover:text-primary transition-colors">
                           {channel.name}
                         </h3>
                         {channel.verified && (
                           <svg
-                            className="w-4 h-4 text-blue-500 flex-shrink-0"
+                            className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-500 flex-shrink-0"
                             fill="currentColor"
                             viewBox="0 0 24 24"
                           >
@@ -233,7 +233,7 @@ export default function ChannelsPage() {
                         )}
                       </div>
                     </Link>
-                    <p className="text-xs md:text-sm text-muted-foreground truncate">
+                    <p className="text-[10px] md:text-sm text-muted-foreground truncate">
                       {formatSubscribers(channel.subscribers)}
                     </p>
                   </div>
@@ -245,10 +245,10 @@ export default function ChannelsPage() {
                     }}
                     className={cn(
                       "flex items-center gap-1 rounded-full transition-colors",
-                      isMobile ? "h-8 w-8 justify-center" : "h-9 px-3",
+                      "h-8 md:h-9 px-2.5 md:px-3",
                       isVisible
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
+                        ? "bg-primary/10 text-primary hover:bg-primary/20"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
                     )}
                     title={
                       isVisible
@@ -257,15 +257,13 @@ export default function ChannelsPage() {
                     }
                   >
                     {isVisible ? (
-                      <Eye className="h-4 w-4 flex-shrink-0" />
+                      <Eye className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
                     ) : (
-                      <EyeOff className="h-4 w-4 flex-shrink-0" />
+                      <EyeOff className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
                     )}
-                    {!isMobile && (
-                      <span className="text-xs font-medium">
-                        {isVisible ? "Visible" : "Hidden"}
-                      </span>
-                    )}
+                    <span className="text-xs font-medium whitespace-nowrap">
+                      {isVisible ? "Visible" : "Hidden"}
+                    </span>
                   </button>
                 </div>
               );
