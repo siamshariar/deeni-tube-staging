@@ -7,17 +7,16 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
-  Bell,
-  Menu,
   Mic,
   ArrowLeft,
   X,
   UserCircle,
   History,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AccountDropdown from "@/components/account-dropdown";
-import NotificationDropdown from "./notification-dropdown";
+import NotificationDropdown from "@/components/notification-dropdown";
 import MobileSidebar from "@/components/mobile-sidebar";
 import { cn } from "@/lib/utils";
 import { useHeader } from "@/app/contexts/header-context";
@@ -65,16 +64,13 @@ export default function AppHeader() {
     };
   }, []);
 
+  // Load recent searches when search input is focused
   const loadRecentSearches = () => {
     try {
       const stored = localStorage.getItem("recentSearches");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setRecentSearches(parsed.filter((s): s is string => typeof s === "string"));
-        } else {
-          setRecentSearches([]);
-        }
+        setRecentSearches(Array.isArray(parsed) ? parsed : []);
       } else {
         setRecentSearches([]);
       }
@@ -83,6 +79,7 @@ export default function AppHeader() {
     }
   };
 
+  // Close desktop recent searches dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (desktopSearchRef.current && !desktopSearchRef.current.contains(e.target as Node)) {
@@ -95,26 +92,21 @@ export default function AppHeader() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDesktopRecent]);
 
-  const handleMobileSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mobileSearchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(mobileSearchQuery.trim())}`);
-      setShowMobileSearch(false);
-      setMobileSearchQuery("");
-    }
+  const handleMobileSearchClick = () => {
+    router.push("/search");
   };
 
   const handleDesktopSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (desktopSearchQuery.trim()) {
-      const stored = localStorage.getItem("recentSearches");
-      let searches: string[] = stored ? JSON.parse(stored) : [];
-      if (Array.isArray(searches)) {
+      // Save to recent searches
+      try {
+        const stored = localStorage.getItem("recentSearches");
+        let searches: string[] = stored ? JSON.parse(stored) : [];
+        if (!Array.isArray(searches)) searches = [];
         searches = [desktopSearchQuery.trim(), ...searches.filter(s => s !== desktopSearchQuery.trim())].slice(0, 8);
-      } else {
-        searches = [desktopSearchQuery.trim()];
-      }
-      localStorage.setItem("recentSearches", JSON.stringify(searches));
+        localStorage.setItem("recentSearches", JSON.stringify(searches));
+      } catch {}
 
       router.push(`/search?q=${encodeURIComponent(desktopSearchQuery.trim())}`);
       setShowDesktopRecent(false);
@@ -124,26 +116,31 @@ export default function AppHeader() {
   const handleRecentClick = (search: string) => {
     setDesktopSearchQuery(search);
     setShowDesktopRecent(false);
-    const stored = localStorage.getItem("recentSearches");
-    let searches: string[] = stored ? JSON.parse(stored) : [];
-    if (Array.isArray(searches)) {
+    // Move clicked search to top
+    try {
+      const stored = localStorage.getItem("recentSearches");
+      let searches: string[] = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(searches)) searches = [];
       searches = [search, ...searches.filter(s => s !== search)].slice(0, 8);
-    } else {
-      searches = [search];
-    }
-    localStorage.setItem("recentSearches", JSON.stringify(searches));
+      localStorage.setItem("recentSearches", JSON.stringify(searches));
+    } catch {}
+
     router.push(`/search?q=${encodeURIComponent(search)}`);
   };
 
   const removeRecent = (search: string) => {
     const updated = recentSearches.filter(s => s !== search);
     setRecentSearches(updated);
-    localStorage.setItem("recentSearches", JSON.stringify(updated));
+    try {
+      localStorage.setItem("recentSearches", JSON.stringify(updated));
+    } catch {}
   };
 
   const clearRecent = () => {
     setRecentSearches([]);
-    localStorage.removeItem("recentSearches");
+    try {
+      localStorage.removeItem("recentSearches");
+    } catch {}
   };
 
   const showDesktopHamburger =
@@ -176,56 +173,24 @@ export default function AppHeader() {
           !headerVisible && "-translate-y-full"
         )}
       >
-        {showMobileSearch ? (
-          <div className="flex items-center gap-2 px-3 py-2 w-full">
-            <button
-              onClick={() => { setShowMobileSearch(false); setMobileSearchQuery("") }}
-              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors flex-shrink-0"
-              type="button"
-            >
-              <ArrowLeft className="h-5 w-5" />
+        <div className="flex items-center justify-between px-2 py-2 w-full">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => setMobileSidebarOpen(true)} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors flex-shrink-0" type="button">
+              <Menu className="h-5 w-5" />
             </button>
-            <form onSubmit={handleMobileSearchSubmit} className="flex-1 flex items-center gap-2 min-w-0">
-              <div className="relative flex-1 min-w-0">
-                <input
-                  type="text"
-                  value={mobileSearchQuery}
-                  onChange={(e) => setMobileSearchQuery(e.target.value)}
-                  placeholder="Search"
-                  autoFocus
-                  className="w-full h-9 pl-3 pr-8 text-sm rounded-full border bg-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-                />
-                {mobileSearchQuery && (
-                  <button onClick={() => setMobileSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" type="button">
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              <Button variant="ghost" size="icon" className="rounded-full flex-shrink-0 bg-muted hover:bg-muted/80" type="button">
-                <Mic className="h-5 w-5" />
-              </Button>
-            </form>
+            <Link href="/" className="flex-shrink-0">
+              <Image src="/DeeniTubeLogo.png" alt="Deeni.tube" width={90} height={24} className="h-6 w-auto" priority />
+            </Link>
           </div>
-        ) : (
-          <div className="flex items-center justify-between px-2 py-2 w-full">
-            <div className="flex items-center gap-3 min-w-0">
-              <button onClick={() => setMobileSidebarOpen(true)} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors flex-shrink-0" type="button">
-                <Menu className="h-5 w-5" />
-              </button>
-              <Link href="/" className="flex-shrink-0">
-                <Image src="/DeeniTubeLogo.png" alt="Deeni.tube" width={90} height={24} className="h-6 w-auto" priority />
-              </Link>
-            </div>
 
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowMobileSearch(true)}>
-                <Search className="h-5 w-5" />
-              </Button>
-              <NotificationDropdown />
-              <UserArea />
-            </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={handleMobileSearchClick}>
+              <Search className="h-5 w-5" />
+            </Button>
+            <NotificationDropdown />
+            <UserArea />
           </div>
-        )}
+        </div>
       </header>
 
       {/* Desktop Header */}
