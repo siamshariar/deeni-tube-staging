@@ -810,6 +810,13 @@ export default function ShortsPage() {
     }, 1500)
   }
 
+  // Toggle sidebar collapse/expand
+  const toggleSidebar = () => {
+    if (typeof window !== 'undefined' && (window as any).__sidebarToggle) {
+      (window as any).__sidebarToggle();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <style>{`

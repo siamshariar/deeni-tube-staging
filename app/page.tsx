@@ -23,6 +23,7 @@ export default function Home() {
   const [isGuest, setIsGuest] = useState(true);
   const [showLanguagePrompt, setShowLanguagePrompt] = useState(false);
   const [visibleChannelIds, setVisibleChannelIds] = useState<string[]>([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const allCategories: string[] = videoData
     .map((v: VideoItem) => v.category)
@@ -46,6 +47,33 @@ export default function Home() {
     "Health",
   ];
   const chipItems: string[] = ["All", ...uniqueCategories, ...extraCategories];
+
+  // Listen for sidebar class changes using MutationObserver
+  useEffect(() => {
+    const checkSidebarState = () => {
+      const sidebar = document.querySelector('aside');
+      if (sidebar) {
+        setSidebarCollapsed(sidebar.classList.contains('w-[72px]'));
+      }
+    };
+
+    // Initial check
+    checkSidebarState();
+
+    // Observe sidebar class changes
+    const sidebar = document.querySelector('aside');
+    if (sidebar) {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            checkSidebarState();
+          }
+        });
+      });
+      observer.observe(sidebar, { attributes: true });
+      return () => observer.disconnect();
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setInitialLoading(false), 800);
@@ -121,6 +149,15 @@ export default function Home() {
   // Chip bar position: follows header visibility
   const chipBarTop = headerVisible ? "top-[56px]" : "top-0";
   const contentMarginTop = headerVisible ? "104px" : "48px";
+  
+  // Dynamic chip bar width based on sidebar state
+  const chipBarLeft = sidebarCollapsed ? "md:left-[72px]" : "md:left-[240px]";
+  const chipBarWidth = sidebarCollapsed ? "md:w-[calc(100%-72px)]" : "md:w-[calc(100%-240px)]";
+
+  // Dynamic grid columns based on sidebar state
+  const gridColumns = sidebarCollapsed 
+    ? "md:grid-cols-1 lg:grid-cols-3 xl:grid-cols-4" 
+    : "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -135,7 +172,8 @@ export default function Home() {
       <div
         className={cn(
           "fixed z-20 h-12 border-b bg-background w-full transition-all duration-300",
-          "md:left-[240px] md:w-[calc(100%-240px)]",
+          chipBarLeft,
+          chipBarWidth,
           chipBarTop,
           !headerVisible && "-translate-y-full opacity-0 pointer-events-none"
         )}
@@ -182,7 +220,10 @@ export default function Home() {
 
         {initialLoading ? (
           <>
-            <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+            <div className={cn(
+              "hidden md:grid gap-4 p-4 transition-all duration-300",
+              gridColumns
+            )}>
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={`dsk-${i}`} className="flex flex-col">
                   <Skeleton className="aspect-video w-full rounded-lg" />
@@ -212,7 +253,10 @@ export default function Home() {
           </>
         ) : (
           <>
-            <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+            <div className={cn(
+              "hidden md:grid gap-4 p-4 transition-all duration-300",
+              gridColumns
+            )}>
               {displayedVideos.map((video: VideoItem) => (
                 <VideoCard
                   key={video.id}

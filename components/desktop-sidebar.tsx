@@ -15,14 +15,33 @@ import {
   FolderOpen,
   Globe,
   BookMarked,
+  LayoutGrid,
+  ListVideo,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHeader } from "@/app/contexts/header-context";
+import { useState, useEffect } from "react";
 
 export default function DesktopSidebar() {
   const { headerVisible } = useHeader();
   const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
+  // Expose toggle function globally for header to call
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__sidebarToggle = () => {
+        setIsCollapsed(prev => !prev);
+      };
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).__sidebarToggle;
+      }
+    };
+  }, []);
+
+  // Hide sidebar on pages where it shouldn't appear
   if (
     pathname?.startsWith("/videos/") ||
     pathname?.startsWith("/playlists/") ||
@@ -53,40 +72,175 @@ export default function DesktopSidebar() {
   return (
     <aside
       className={cn(
-        "hidden md:flex fixed left-0 w-[240px] border-r bg-background overflow-y-auto flex-shrink-0 z-10 transition-all duration-300",
+        "hidden md:flex fixed left-0 border-r bg-background overflow-y-auto overflow-x-hidden flex-shrink-0 z-10 transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-[72px]" : "w-[240px]",
         top,
         height
       )}
     >
       <div className="w-full py-2">
-        <SidebarItem href="/" icon={<Home className="h-5 w-5" />} label="Home" active={pathname === "/"} />
-        <SidebarItem href="/shorts" icon={<PlaySquare className="h-5 w-5" />} label="Shorts" active={pathname === "/shorts"} />
+        {/* Mini Sidebar Items - Only Home, Shorts, You and MobileNav items */}
+        {isCollapsed ? (
+          <>
+            <SidebarItem 
+              href="/" 
+              icon={<Home className="h-5 w-5 flex-shrink-0" />} 
+              label="Home" 
+              active={pathname === "/"} 
+              collapsed={true}
+            />
+            <SidebarItem 
+              href="/shorts" 
+              icon={<PlaySquare className="h-5 w-5 flex-shrink-0" />} 
+              label="Shorts" 
+              active={pathname === "/shorts"} 
+              collapsed={true}
+            />
+            <SidebarItem 
+              href="/you" 
+              icon={<UserIcon className="h-5 w-5 flex-shrink-0" />} 
+              label="You" 
+              active={pathname === "/you"} 
+              collapsed={true}
+            />
+            <SidebarItem 
+              href="/channels" 
+              icon={<Users className="h-5 w-5 flex-shrink-0" />} 
+              label="Channels" 
+              active={pathname === "/channels"} 
+              collapsed={true}
+            />
+            <SidebarItem 
+              href="/categories" 
+              icon={<LayoutGrid className="h-5 w-5 flex-shrink-0" />} 
+              label="Categories" 
+              active={pathname === "/categories"} 
+              collapsed={true}
+            />
+            <SidebarItem 
+              href="/scholars" 
+              icon={<GraduationCap className="h-5 w-5 flex-shrink-0" />} 
+              label="Scholars" 
+              active={pathname === "/scholars"} 
+              collapsed={true}
+            />
+            <SidebarItem 
+              href="/playlists" 
+              icon={<ListVideo className="h-5 w-5 flex-shrink-0" />} 
+              label="Playlists" 
+              active={pathname === "/playlists"} 
+              collapsed={true}
+            />
+          </>
+        ) : (
+          <>
+            {/* Full Sidebar - All Items */}
+            <SidebarItem 
+              href="/" 
+              icon={<Home className="h-5 w-5 flex-shrink-0" />} 
+              label="Home" 
+              active={pathname === "/"} 
+              collapsed={false}
+            />
+            <SidebarItem 
+              href="/shorts" 
+              icon={<PlaySquare className="h-5 w-5 flex-shrink-0" />} 
+              label="Shorts" 
+              active={pathname === "/shorts"} 
+              collapsed={false}
+            />
 
-        <div className="border-t py-2 mt-2">
-          <SidebarItem href="/you" icon={<UserIcon className="h-5 w-5" />} label="You" active={pathname === "/you"} />
-          <SidebarItem href="/history" icon={<History className="h-5 w-5" />} label="History" />
-        </div>
+            <div className="border-t py-2 mt-2">
+              <div className="px-4 mb-2">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                  You
+                </h3>
+              </div>
+              <SidebarItem 
+                href="/you" 
+                icon={<UserIcon className="h-5 w-5 flex-shrink-0" />} 
+                label="You" 
+                active={pathname === "/you"} 
+                collapsed={false}
+              />
+              <SidebarItem 
+                href="/history" 
+                icon={<History className="h-5 w-5 flex-shrink-0" />} 
+                label="History" 
+                collapsed={false}
+              />
+            </div>
 
-        <div className="border-t py-2 mt-2">
-          <SidebarItem href="/playlists" icon={<BookMarked className="h-5 w-5" />} label="Playlists" active={pathname === "/playlists"} />
-        </div>
+            <div className="border-t py-2 mt-2">
+              <SidebarItem 
+                href="/playlists" 
+                icon={<BookMarked className="h-5 w-5 flex-shrink-0" />} 
+                label="Playlists" 
+                active={pathname === "/playlists"} 
+                collapsed={false}
+              />
+            </div>
 
-        <div className="border-t py-2 mt-2">
-          <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Deeni.tube</h3>
-          <SidebarItem href="/channels" icon={<Users className="h-5 w-5" />} label="Channels" active={pathname === "/channels"} />
-          <SidebarItem href="/scholars" icon={<GraduationCap className="h-5 w-5" />} label="Scholars" active={pathname === "/scholars"} />
-          <SidebarItem href="/categories" icon={<FolderOpen className="h-5 w-5" />} label="Categories" active={pathname === "/categories"} />
-        </div>
+            <div className="border-t py-2 mt-2">
+              <div className="px-4 mb-2">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                  Deeni.tube
+                </h3>
+              </div>
+              <SidebarItem 
+                href="/channels" 
+                icon={<Users className="h-5 w-5 flex-shrink-0" />} 
+                label="Channels" 
+                active={pathname === "/channels"} 
+                collapsed={false}
+              />
+              <SidebarItem 
+                href="/scholars" 
+                icon={<GraduationCap className="h-5 w-5 flex-shrink-0" />} 
+                label="Scholars" 
+                active={pathname === "/scholars"} 
+                collapsed={false}
+              />
+              <SidebarItem 
+                href="/categories" 
+                icon={<FolderOpen className="h-5 w-5 flex-shrink-0" />} 
+                label="Categories" 
+                active={pathname === "/categories"} 
+                collapsed={false}
+              />
+            </div>
 
-        <div className="border-t py-2 mt-2">
-          <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">More</h3>
-          <SidebarItem href="/more" icon={<Globe className="h-5 w-5" />} label="More" active={pathname === "/more"} />
-        </div>
+            <div className="border-t py-2 mt-2">
+              <div className="px-4 mb-2">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                  More
+                </h3>
+              </div>
+              <SidebarItem 
+                href="/more" 
+                icon={<Globe className="h-5 w-5 flex-shrink-0" />} 
+                label="More" 
+                active={pathname === "/more"} 
+                collapsed={false}
+              />
+            </div>
 
-        <div className="border-t py-2 mt-2">
-          <SidebarItem href="/settings" icon={<Settings className="h-5 w-5" />} label="Settings" />
-          <SidebarItem href="/help" icon={<HelpCircle className="h-5 w-5" />} label="Help" />
-        </div>
+            <div className="border-t py-2 mt-2">
+              <SidebarItem 
+                href="/settings" 
+                icon={<Settings className="h-5 w-5 flex-shrink-0" />} 
+                label="Settings" 
+                collapsed={false}
+              />
+              <SidebarItem 
+                href="/help" 
+                icon={<HelpCircle className="h-5 w-5 flex-shrink-0" />} 
+                label="Help" 
+                collapsed={false}
+              />
+            </div>
+          </>
+        )}
       </div>
     </aside>
   );
@@ -97,19 +251,27 @@ interface SidebarItemProps {
   icon: React.ReactNode;
   label: string;
   active?: boolean;
+  collapsed?: boolean;
 }
 
-function SidebarItem({ href, icon, label, active }: SidebarItemProps) {
+function SidebarItem({ href, icon, label, active, collapsed }: SidebarItemProps) {
   return (
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-4 px-4 py-2 text-sm hover:bg-muted transition-colors",
-        active && "font-medium"
+        "flex items-center gap-4 px-4 py-2 text-sm hover:bg-muted transition-all duration-300",
+        active && "font-medium bg-muted/50",
+        collapsed && "flex-col gap-1 px-2 py-3 justify-center"
       )}
+      title={label}
     >
-      {icon}
-      <span>{label}</span>
+      <span className="flex-shrink-0">{icon}</span>
+      <span className={cn(
+        "transition-all duration-300 whitespace-nowrap",
+        collapsed ? "text-[10px] leading-tight w-full text-center" : "text-sm"
+      )}>
+        {label}
+      </span>
     </Link>
   );
 }

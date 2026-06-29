@@ -143,10 +143,41 @@ export default function AppHeader() {
     } catch {}
   };
 
-  const showDesktopHamburger =
+  // Toggle sidebar collapse/expand - ONLY called by hamburger click
+  const toggleSidebar = () => {
+    // Call the sidebar's internal toggle function
+    if (typeof window !== 'undefined' && (window as any).__sidebarToggle) {
+      (window as any).__sidebarToggle();
+      
+      // Update main content margin after a small delay to let sidebar update
+      setTimeout(() => {
+        const sidebar = document.querySelector('aside');
+        const main = document.querySelector('main');
+        if (sidebar && main) {
+          if (sidebar.classList.contains('w-[72px]')) {
+            main.classList.remove('md:pl-[240px]');
+            main.classList.add('md:pl-[72px]');
+          } else {
+            main.classList.remove('md:pl-[72px]');
+            main.classList.add('md:pl-[240px]');
+          }
+        }
+      }, 50);
+    }
+  };
+
+  // Open mobile sidebar (used for pages where desktop sidebar is hidden)
+  const openMobileSidebar = () => {
+    setMobileSidebarOpen(true);
+  };
+
+  // Check if current page has desktop sidebar
+  const hasDesktopSidebar = !(
+    pathname?.startsWith("/videos/") ||
+    pathname?.startsWith("/playlists/") ||
     pathname === "/shorts" ||
-    pathname.startsWith("/videos/") ||
-    (pathname.startsWith("/playlists/") && pathname.split("/").length > 3);
+    pathname === "/signin"
+  );
 
   const UserArea = () => (
     <div className="flex items-center gap-1 flex-shrink-0 min-w-[36px] justify-center">
@@ -202,11 +233,16 @@ export default function AppHeader() {
       >
         <div className="flex items-center justify-between px-4 py-2 border-b">
           <div className="flex items-center gap-4 flex-shrink-0">
-            {showDesktopHamburger && (
-              <button onClick={() => setMobileSidebarOpen(true)} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors" type="button" aria-label="Menu">
-                <Menu className="h-5 w-5" />
-              </button>
-            )}
+            {/* Hamburger button - behavior changes based on page */}
+            <button 
+              onClick={hasDesktopSidebar ? toggleSidebar : openMobileSidebar} 
+              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors" 
+              type="button" 
+              aria-label={hasDesktopSidebar ? "Toggle sidebar" : "Open menu"}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            
             <Link href="/">
               <Image src="/DeeniTubeLogo.png" alt="Deeni.tube" width={120} height={30} className="h-7 w-auto" priority />
             </Link>

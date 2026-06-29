@@ -21,6 +21,7 @@ import {
   Send,
   Reply,
   X,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -290,6 +291,7 @@ export default function VideoPlayPage() {
   const [comments, setComments] = useState(mockCommentsWithReplies);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
+  const [isLoved, setIsLoved] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -326,6 +328,10 @@ export default function VideoPlayPage() {
   const handleDislike = () => {
     setIsDisliked(!isDisliked);
     if (isLiked) setIsLiked(false);
+  };
+
+  const handleLove = () => {
+    setIsLoved(!isLoved);
   };
 
   const handleAddComment = () => {
@@ -497,7 +503,7 @@ export default function VideoPlayPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center bg-muted rounded-full overflow-hidden">
-                      <button
+                      {/* <button
                         onClick={handleLike}
                         className={`flex items-center gap-2 px-4 py-2 hover:bg-muted/80 transition-colors border-r border-border ${
                           isLiked ? "text-foreground" : ""
@@ -505,16 +511,28 @@ export default function VideoPlayPage() {
                       >
                         <ThumbsUp className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
                         <span className="text-sm font-medium">15K</span>
-                      </button>
-                      <button
+                      </button> */}
+                      {/* <button
                         onClick={handleDislike}
                         className={`px-4 py-2 hover:bg-muted/80 transition-colors ${
                           isDisliked ? "text-foreground" : ""
                         }`}
                       >
                         <ThumbsDown className={`h-5 w-5 ${isDisliked ? "fill-current" : ""}`} />
-                      </button>
+                      </button> */}
                     </div>
+                    <button
+                      onClick={handleLove}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
+                        isLoved
+                          ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                          : "bg-muted hover:bg-muted/80"
+                      }`}
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${isLoved ? "fill-current" : ""}`}
+                      />
+                    </button>
                     <Button
                       variant="ghost"
                       size="icon"

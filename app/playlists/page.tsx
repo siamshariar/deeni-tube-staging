@@ -75,7 +75,7 @@ export default function PlaylistsPage() {
       pl.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // “Watch Later” always comes first, then sort the rest
+    // "Watch Later" always comes first, then sort the rest
     const watchLater = list.find(p => p.id === "pl-watch-later");
     const others = list.filter(p => p.id !== "pl-watch-later");
 
@@ -191,7 +191,7 @@ export default function PlaylistsPage() {
               }}
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">New playlist</span>
+              <span>New playlist</span>
             </Button>
           </div>
         </div>

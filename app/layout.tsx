@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import AppHeader from "@/components/app-header";
 import DesktopSidebar from "@/components/desktop-sidebar";
 import MobileNav from "@/components/mobile-nav";
-import { HeaderProvider } from "@/app/contexts/header-context";   // ✅ fixed path
+import { HeaderProvider } from "@/app/contexts/header-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -45,7 +45,7 @@ export default function RootLayout({
           <HeaderProvider>
             <AppHeader />
             <DesktopSidebar />
-            <main className="flex-1 md:pl-[240px] pb-[calc(56px+env(safe-area-inset-bottom,0px))] min-h-screen">
+            <main className="flex-1 md:pl-[240px] pb-[calc(56px+env(safe-area-inset-bottom,0px))] min-h-screen transition-all duration-300 ease-in-out">
               {children}
             </main>
             <MobileNav />

@@ -174,7 +174,7 @@ export default function AccountDropdown() {
           </div>
 
           <DropdownMenuGroup>
-            <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/you-new")}>
+            <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/you")}>
               <User className="mr-3 h-5 w-5" />
               <span>Preferences</span>
             </DropdownMenuItem>
