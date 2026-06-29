@@ -14,10 +14,10 @@ import {
   X,
   UserCircle,
   History,
-  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AccountDropdown from "@/components/account-dropdown";
+import NotificationDropdown from "./notification-dropdown";
 import MobileSidebar from "@/components/mobile-sidebar";
 import { cn } from "@/lib/utils";
 import { useHeader } from "@/app/contexts/header-context";
@@ -65,12 +65,16 @@ export default function AppHeader() {
     };
   }, []);
 
-  // Load recent searches when search input is focused
   const loadRecentSearches = () => {
     try {
       const stored = localStorage.getItem("recentSearches");
       if (stored) {
-        setRecentSearches(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setRecentSearches(parsed.filter((s): s is string => typeof s === "string"));
+        } else {
+          setRecentSearches([]);
+        }
       } else {
         setRecentSearches([]);
       }
@@ -79,7 +83,6 @@ export default function AppHeader() {
     }
   };
 
-  // Close desktop recent searches dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (desktopSearchRef.current && !desktopSearchRef.current.contains(e.target as Node)) {
@@ -104,10 +107,13 @@ export default function AppHeader() {
   const handleDesktopSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (desktopSearchQuery.trim()) {
-      // Save to recent searches
       const stored = localStorage.getItem("recentSearches");
       let searches: string[] = stored ? JSON.parse(stored) : [];
-      searches = [desktopSearchQuery.trim(), ...searches.filter(s => s !== desktopSearchQuery.trim())].slice(0, 8);
+      if (Array.isArray(searches)) {
+        searches = [desktopSearchQuery.trim(), ...searches.filter(s => s !== desktopSearchQuery.trim())].slice(0, 8);
+      } else {
+        searches = [desktopSearchQuery.trim()];
+      }
       localStorage.setItem("recentSearches", JSON.stringify(searches));
 
       router.push(`/search?q=${encodeURIComponent(desktopSearchQuery.trim())}`);
@@ -118,12 +124,14 @@ export default function AppHeader() {
   const handleRecentClick = (search: string) => {
     setDesktopSearchQuery(search);
     setShowDesktopRecent(false);
-    // Move clicked search to top
     const stored = localStorage.getItem("recentSearches");
     let searches: string[] = stored ? JSON.parse(stored) : [];
-    searches = [search, ...searches.filter(s => s !== search)].slice(0, 8);
+    if (Array.isArray(searches)) {
+      searches = [search, ...searches.filter(s => s !== search)].slice(0, 8);
+    } else {
+      searches = [search];
+    }
     localStorage.setItem("recentSearches", JSON.stringify(searches));
-
     router.push(`/search?q=${encodeURIComponent(search)}`);
   };
 
@@ -213,12 +221,7 @@ export default function AppHeader() {
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowMobileSearch(true)}>
                 <Search className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Mic className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Bell className="h-5 w-5" />
-              </Button>
+              <NotificationDropdown />
               <UserArea />
             </div>
           </div>
@@ -318,10 +321,8 @@ export default function AppHeader() {
             </form>
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell className="w-5 h-5" />
-            </Button>
+          <div className="flex items-center gap-8 flex-shrink-0">
+            <NotificationDropdown />
             <div className="flex items-center justify-end">
               {!authLoaded ? (
                 <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
