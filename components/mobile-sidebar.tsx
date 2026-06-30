@@ -95,7 +95,7 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         </div>
 
         {/* Channels Section */}
-        <div className="border-t py-2">
+        {/* <div className="border-t py-2">
           <Link 
             href="/channels"
             onClick={onClose}
@@ -153,10 +153,10 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               </button>
             </>
           )}
-        </div>
+        </div> */}
 
         {/* Scholars Section */}
-        <div className="border-t py-2">
+        {/* <div className="border-t py-2">
           <Link 
             href="/scholars"
             onClick={onClose}
@@ -214,7 +214,7 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               </button>
             </>
           )}
-        </div>
+        </div> */}
 
         {/* You Section */}
         <div className="border-t py-2">
@@ -222,15 +222,15 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
           <MobileSidebarItem href="/you" icon={<UserIcon className="h-5 w-5" />} label="Your account" active={pathname === "/you"} onClick={onClose} />
           <MobileSidebarItem href="/history" icon={<History className="h-5 w-5" />} label="History" active={pathname === "/history"} onClick={onClose} />
           <MobileSidebarItem href="/playlists" icon={<BookMarked className="h-5 w-5" />} label="Playlists" active={pathname === "/playlists"} onClick={onClose} />
-          <MobileSidebarItem href="/playlist?list=WL" icon={<Clock className="h-5 w-5" />} label="Watch later" onClick={onClose} />
-          <MobileSidebarItem href="/playlist?list=LL" icon={<ThumbsUp className="h-5 w-5" />} label="Liked videos" onClick={onClose} />
+          {/* <MobileSidebarItem href="/playlist?list=WL" icon={<Clock className="h-5 w-5" />} label="Watch later" onClick={onClose} />
+          <MobileSidebarItem href="/playlist?list=LL" icon={<ThumbsUp className="h-5 w-5" />} label="Liked videos" onClick={onClose} /> */}
         </div>
 
         {/* Explore Section */}
-        <div className="border-t py-2">
+        {/* <div className="border-t py-2">
           <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Explore</h3>
           <MobileSidebarItem href="/categories" icon={<FolderOpen className="h-5 w-5" />} label="Categories" active={pathname === "/categories"} onClick={onClose} />
-        </div>
+        </div> */}
 
         {/* More from Deeni.tube */}
         <div className="border-t py-2">
