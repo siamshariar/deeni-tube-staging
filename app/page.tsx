@@ -146,7 +146,7 @@ export default function Home() {
       ? filteredVideos
       : filteredVideos.filter((v: VideoItem) => v.category === activeChip);
 
-  // Chip bar position: follows header visibility
+  // Chip bar position: follows header visibility, starts right below header
   const chipBarTop = headerVisible ? "top-[56px]" : "top-0";
   const contentMarginTop = headerVisible ? "104px" : "48px";
   
@@ -168,7 +168,7 @@ export default function Home() {
         initialSelected={["en"]}
       />
 
-      {/* Category chip bar — hides/shows with header */}
+      {/* Category chip bar — hides/shows with header, starts right below header */}
       <div
         className={cn(
           "fixed z-20 h-12 border-b bg-background w-full transition-all duration-300",

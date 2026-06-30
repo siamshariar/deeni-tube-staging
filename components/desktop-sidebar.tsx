@@ -33,15 +33,16 @@ export default function DesktopSidebar() {
       (window as any).__sidebarToggle = () => {
         setIsCollapsed(prev => !prev);
       };
+      (window as any).__sidebarGetState = () => isCollapsed;
     }
     return () => {
       if (typeof window !== 'undefined') {
         delete (window as any).__sidebarToggle;
+        delete (window as any).__sidebarGetState;
       }
     };
-  }, []);
+  }, [isCollapsed]);
 
-  // Hide sidebar on pages where it shouldn't appear
   if (
     pathname?.startsWith("/videos/") ||
     pathname?.startsWith("/playlists/") ||
@@ -53,21 +54,13 @@ export default function DesktopSidebar() {
 
   const isHome = pathname === "/";
 
-  const top = isHome
-    ? headerVisible
-      ? "top-[104px]"
-      : "top-0"
-    : headerVisible
-      ? "top-[56px]"
-      : "top-0";
-
-  const height = isHome
-    ? headerVisible
-      ? "h-[calc(100vh-104px)]"
-      : "h-screen"
-    : headerVisible
-      ? "h-[calc(100vh-56px)]"
-      : "h-screen";
+  // Sidebar starts right below the header (56px from top)
+  const top = headerVisible ? "top-[56px]" : "top-0";
+  
+  // Height adjusts to fill remaining space below header
+  const height = headerVisible 
+    ? "h-[calc(100vh-56px)]" 
+    : "h-screen";
 
   return (
     <aside
@@ -78,7 +71,7 @@ export default function DesktopSidebar() {
         height
       )}
     >
-      <div className="w-full py-2">
+      <div className="w-full py-1.5">
         {/* Mini Sidebar Items - Only Home, Shorts, You and MobileNav items */}
         {isCollapsed ? (
           <>
