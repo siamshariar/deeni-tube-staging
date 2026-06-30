@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import {
   ChevronUp, ChevronDown, Heart, MessageCircle, Share2, Bookmark, Flag,
@@ -136,7 +136,7 @@ const shortsData = [
     videoId: "PUwTf64igQk",
     title: "এভাবে ঈমান নষ্ট করছেন নাতো?",
     channel: "Dr. Khandaker Abdullah Jahangir Rh.",
-    channelId: "abdullah",
+    channelId: "abdullah-jahangir",
     channelAvatar: "https://yt3.googleusercontent.com/stJnVilfKhMtBiIq_hXTu-9DnanUT0GNtmsRePmQvLAi6c7bhXoIIHGlYL0HqUrdEjrL0KFs7Q=s160-c-k-c0x00ffffff-no-rj",
     thumbnail: "https://img.youtube.com/vi/PUwTf64igQk/hqdefault.jpg",
     likes: "35K",
@@ -155,7 +155,7 @@ Dr. Khandaker Abdullah Jahangir Rh Official`,
     videoId: "hHpoYE-v6og",
     title: "রোগ-ব্যাধিতে ধৈর্য ধারণ করা",
     channel: "Dr. Khandaker Abdullah Jahangir Rh.",
-    channelId: "abdullah",
+    channelId: "abdullah-jahangir",
     channelAvatar: "https://yt3.googleusercontent.com/stJnVilfKhMtBiIq_hXTu-9DnanUT0GNtmsRePmQvLAi6c7bhXoIIHGlYL0HqUrdEjrL0KFs7Q=s160-c-k-c0x00ffffff-no-rj",
     thumbnail: "https://img.youtube.com/vi/hHpoYE-v6og/hqdefault.jpg",
     likes: "28K",
@@ -176,7 +176,7 @@ Dr. Khandaker Abdullah Jahangir Rh Official
     videoId: "Kk1_-T-8MFU",
     title: "মহান আল্লাহ'র কাছে চাওয়ার নিয়ম",
     channel: "Dr. Khandaker Abdullah Jahangir Rh.",
-    channelId: "abdullah",
+    channelId: "abdullah-jahangir",
     channelAvatar: "https://yt3.googleusercontent.com/stJnVilfKhMtBiIq_hXTu-9DnanUT0GNtmsRePmQvLAi6c7bhXoIIHGlYL0HqUrdEjrL0KFs7Q=s160-c-k-c0x00ffffff-no-rj",
     thumbnail: "https://img.youtube.com/vi/Kk1_-T-8MFU/hqdefault.jpg",
     likes: "42K",
@@ -186,7 +186,103 @@ Dr. Khandaker Abdullah Jahangir Rh Official
     views: "42,345",
     timeAgo: "2 weeks ago",
     hashtags: ["#abdullahjahangir", "#dua", "#islamicdua"]
-  }
+  },
+  {
+    id: "s9",
+    videoId: "rTrh9VHgdwo",
+    title: "ওজুতে ঘাড় মাসাহ করা সুন্নাহ নাকি বিদ'আত - Dr. Abu Bakar Muhammad Zakaria",
+    channel: "Professor Dr. Abubakar Muhammad Zakaria",
+    channelId: "abu-bakar-zakariya",
+    channelAvatar: "https://yt3.googleusercontent.com/B5dEWmLpOG-j07FqzYJJW2snv2yep93R_AcnBx05lzn56r0CJdX8LtrEASS-FxW3r663GNzLHQ=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/rTrh9VHgdwo/hqdefault.jpg",
+    likes: "12K",
+    comments: "850",
+    isSubscribed: false,
+    description: "ওজুতে ঘাড় মাসাহ করা সুন্নাহ নাকি বিদ'আত - Dr. Abu Bakar Muhammad Zakaria - Mizanur Rahman Azhari",
+    views: "12,345",
+    timeAgo: "1 week ago",
+    hashtags: ["#abubakarzakaria", "#wudu", "#islamicqa"]
+  },
+  {
+    id: "s10",
+    videoId: "ihdO_G6Yk0E",
+    title: "দুনিয়াতেই জান্নাত আছে আপনি কি জানেন? ✨ Abu Bakar Zakaria",
+    channel: "Professor Dr. Abubakar Muhammad Zakaria",
+    channelId: "abu-bakar-zakariya",
+    channelAvatar: "https://yt3.googleusercontent.com/B5dEWmLpOG-j07FqzYJJW2snv2yep93R_AcnBx05lzn56r0CJdX8LtrEASS-FxW3r663GNzLHQ=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/ihdO_G6Yk0E/hqdefault.jpg",
+    likes: "28K",
+    comments: "1.5K",
+    isSubscribed: false,
+    description: "দুনিয়াতে জান্নাতের স্বাদ পাওয়ার গোপন রহস্য! ✨🌿 | Abu Bakar Zakaria\n\nআমরা সবাই পরকালের জান্নাতের কথা জানি, কিন্তু আপনি কি জানেন এই দুনিয়াতেই জান্নাত বিদ্যমান?",
+    views: "28,456",
+    timeAgo: "3 days ago",
+    hashtags: ["#abubakarzakaria", "#jannah", "#islamicshorts"]
+  },
+  {
+    id: "s11",
+    videoId: "_zCnmnCd7CU",
+    title: "আদমসুমারির খাতায় মুসলমান, বাস্তবে ইমানের খাতায় নাম নাই || Dr. Mohammad Imam Hossain",
+    channel: "Dr. Mohammad Imam Hossain",
+    channelId: "imam-hossain",
+    channelAvatar: "/placeholder.svg?height=48&width=48",
+    thumbnail: "https://img.youtube.com/vi/_zCnmnCd7CU/hqdefault.jpg",
+    likes: "18K",
+    comments: "950",
+    isSubscribed: false,
+    description: "ড. মোহাম্মাদ ইমাম হোসাইন (হাফিযাহুল্লাহ্‌)\n-(পিএইচডি, ইসলামী বিশ্ববিদ্যালয়, কুষ্টিয়া)",
+    views: "18,234",
+    timeAgo: "5 days ago",
+    hashtags: ["#imamhossain", "#iman", "#islamicreminder"]
+  },
+  {
+    id: "s13",
+    videoId: "0m1Mc6dX8XY",
+    title: "Seek The Forgiveness of Allah #muftimenk",
+    channel: "Mufti Menk",
+    channelId: "mufti-menk",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_nFND09H6Vvk_P8L4djMdBusHPU8nIT6XuiRjL8M59hJsw=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/0m1Mc6dX8XY/hqdefault.jpg",
+    likes: "95K",
+    comments: "3.2K",
+    isSubscribed: false,
+    description: "Seek The Forgiveness of Allah #muftimenk #motivation #dua #clean #faith",
+    views: "95,678",
+    timeAgo: "2 days ago",
+    hashtags: ["#muftimenk", "#forgiveness", "#dua"]
+  },
+  {
+    id: "s15",
+    videoId: "Tnb74r4VZaY",
+    title: "Is it not permissible 2 get married in Muharram? assim al hakeem",
+    channel: "Assim Al Hakeem",
+    channelId: "assim-al-hakeem",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_nc1yIpeXxXdQ02ZRrAQr6HZU_gMrzljS5HFCRO4a95KH8=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/Tnb74r4VZaY/hqdefault.jpg",
+    likes: "32K",
+    comments: "1.8K",
+    isSubscribed: false,
+    description: "Is it not permissible 2 get married in Muharram? #muharram #innovation #quran #halal assim al hakeem",
+    views: "32,456",
+    timeAgo: "3 days ago",
+    hashtags: ["#assimalhakeem", "#muharram", "#islamicqa"]
+  },
+  {
+    id: "s16",
+    videoId: "yLMQmr7qjcM",
+    title: "Read all duas of morning & evening adhkar or can we pick & choose? || assim al hakeem",
+    channel: "Assim Al Hakeem",
+    channelId: "assim-al-hakeem",
+    channelAvatar: "https://yt3.googleusercontent.com/ytc/AIdro_nc1yIpeXxXdQ02ZRrAQr6HZU_gMrzljS5HFCRO4a95KH8=s160-c-k-c0x00ffffff-no-rj",
+    thumbnail: "https://img.youtube.com/vi/yLMQmr7qjcM/hqdefault.jpg",
+    likes: "25K",
+    comments: "1.2K",
+    isSubscribed: false,
+    description: "Read all duas of morning & evening adhkar or can we pick & choose? || assim al hakeem",
+    views: "25,890",
+    timeAgo: "1 week ago",
+    hashtags: ["#assimalhakeem", "#adhkar", "#dua"]
+  },
 ]
 
 // ============ COMMENTS DATA ============
@@ -553,6 +649,7 @@ function ShareModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 
 export default function ShortsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const containerRef = useRef<HTMLDivElement>(null)
   const commentInputRef = useRef<HTMLInputElement>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -583,6 +680,7 @@ export default function ShortsPage() {
   const descTimerRef = useRef<NodeJS.Timeout | null>(null)
   const switchTimerRef = useRef<NodeJS.Timeout | null>(null)
   const videoRefs = useRef<Map<string, HTMLIFrameElement>>(new Map())
+  const hasScrolledToTarget = useRef(false)
 
   // Feedback dialog state
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
@@ -596,6 +694,25 @@ export default function ShortsPage() {
   useEffect(() => { saveIds(STORAGE_DISLIKED, dislikedIds) }, [dislikedIds])
 
   useEffect(() => { return () => { if (commentsTimerRef.current) clearTimeout(commentsTimerRef.current); if (descTimerRef.current) clearTimeout(descTimerRef.current); if (switchTimerRef.current) clearTimeout(switchTimerRef.current) } }, [])
+
+  // Handle URL parameter - scroll to specific short by videoId
+  useEffect(() => {
+    const targetVideoId = searchParams.get('v')
+    if (targetVideoId && !hasScrolledToTarget.current) {
+      const targetIndex = shortsData.findIndex(short => short.videoId === targetVideoId)
+      if (targetIndex !== -1) {
+        hasScrolledToTarget.current = true
+        // Small delay to ensure container is rendered
+        setTimeout(() => {
+          setCurrentIndex(targetIndex)
+          const c = containerRef.current
+          if (c) {
+            c.scrollTo({ top: targetIndex * c.clientHeight, behavior: "instant" as ScrollBehavior })
+          }
+        }, 100)
+      }
+    }
+  }, [searchParams])
 
   const loadCommentsForCurrentShort = () => {
     setCommentsLoading(true)
@@ -809,13 +926,6 @@ export default function ShortsPage() {
       toast.success("Feedback sent! Thank you.")
     }, 1500)
   }
-
-  // Toggle sidebar collapse/expand
-  const toggleSidebar = () => {
-    if (typeof window !== 'undefined' && (window as any).__sidebarToggle) {
-      (window as any).__sidebarToggle();
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">

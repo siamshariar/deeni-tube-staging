@@ -10,7 +10,6 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { scholarData, ScholarItem } from "@/lib/scholar-data";
-import { videoData, VideoItem } from "@/lib/video-data";
 import { SortDropdown, SortOption } from "@/components/sort-dropdown";
 
 function ScholarSkeleton() {
@@ -35,7 +34,6 @@ const languageOptions = [
   { code: "bn", name: "Bangla" },
   { code: "en", name: "English" },
   { code: "ar", name: "Arabic" },
-  { code: "ur", name: "Urdu" },
 ];
 
 export default function ScholarsPage() {
@@ -44,7 +42,7 @@ export default function ScholarsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [sortValue, setSortValue] = useState("default");
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["bn"]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["bn", "en", "ar"]);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -74,13 +72,7 @@ export default function ScholarsPage() {
 
   const filteredScholars: ScholarItem[] = sortScholars(
     scholarData
-      .filter((scholar: ScholarItem) => {
-        return videoData.some(
-          (v: VideoItem) =>
-            v.channelId === scholar.channelId &&
-            selectedLanguages.includes(v.language)
-        );
-      })
+      .filter((scholar: ScholarItem) => selectedLanguages.includes(scholar.language))
       .filter(
         (scholar: ScholarItem) =>
           !searchQuery ||
@@ -95,7 +87,7 @@ export default function ScholarsPage() {
       <div className="px-4 md:px-6 py-2 md:py-6 mt-16">
         {/* Title + search — desktop only */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className=" md:block">
+          <div className="md:block">
             <h1 className="text-2xl font-bold">Scholars</h1>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -146,7 +138,7 @@ export default function ScholarsPage() {
 
         {isLoading ? (
           <div className="divide-y">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 5 }).map((_, i) => (
               <ScholarSkeleton key={i} />
             ))}
           </div>

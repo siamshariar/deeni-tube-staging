@@ -38,7 +38,7 @@ export default function ChannelsPage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["bn"]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["bn", "en", "ar"]);
   const [sortValue, setSortValue] = useState("default");
   const [followedChannels, setFollowedChannels] = useState<string[]>([]);
 
@@ -115,7 +115,7 @@ export default function ChannelsPage() {
     return `${count} subscribers`;
   };
 
-  const mockLanguages = [
+  const languageOptions = [
     { code: "bn", name: "Bangla" },
     { code: "en", name: "English" },
     { code: "ar", name: "Arabic" },
@@ -159,7 +159,7 @@ export default function ChannelsPage() {
 
         {/* Language chips */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
-          {mockLanguages.map((lang) => (
+          {languageOptions.map((lang) => (
             <button
               key={lang.code}
               onClick={() => toggleLanguage(lang.code)}

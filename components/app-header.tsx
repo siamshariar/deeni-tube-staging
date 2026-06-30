@@ -197,10 +197,10 @@ export default function AppHeader() {
 
   return (
     <>
-      {/* Mobile Header */}
+      {/* Mobile Header - z-40 to stay above mobile sidebar (z-30) */}
       <header
         className={cn(
-          "md:hidden fixed top-0 left-0 right-0 bg-background z-30 w-full max-w-[100vw] transition-transform duration-300 ease-in-out",
+          "md:hidden fixed top-0 left-0 right-0 bg-background z-40 w-full max-w-[100vw] transition-transform duration-300 ease-in-out",
           !headerVisible && "-translate-y-full"
         )}
       >
@@ -227,7 +227,7 @@ export default function AppHeader() {
       {/* Desktop Header */}
       <header
         className={cn(
-          "hidden md:flex fixed top-0 left-0 right-0 bg-background z-30 w-full max-w-[100vw] flex-col transition-transform duration-300 ease-in-out",
+          "hidden md:flex fixed top-0 left-0 right-0 bg-background z-40 w-full max-w-[100vw] flex-col transition-transform duration-300 ease-in-out",
           !headerVisible && "-translate-y-full"
         )}
       >

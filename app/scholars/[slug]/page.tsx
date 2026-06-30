@@ -81,10 +81,17 @@ export default function ScholarDetailPage() {
   const scholar: ScholarItem | undefined = scholarData.find(
     (s: ScholarItem) => s.slug === slug
   );
+
   if (!scholar) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        Scholar not found
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Scholar not found</h2>
+          <p className="text-muted-foreground mb-4">The scholar you're looking for doesn't exist.</p>
+          <Button onClick={() => router.push("/scholars")} className="rounded-full">
+            Back to Scholars
+          </Button>
+        </div>
       </div>
     );
   }
@@ -101,11 +108,10 @@ export default function ScholarDetailPage() {
     availableLanguages.includes(lang.code)
   );
 
-  const defaultSelected = scholar.languages.filter((lang) =>
-    availableLanguages.includes(lang)
-  );
-  const initialSelected =
-    defaultSelected.length > 0 ? defaultSelected : availableLanguages.slice(0, 1);
+  // Use scholar's language as default, or first available language
+  const initialSelected = availableLanguages.includes(scholar.language)
+    ? [scholar.language]
+    : availableLanguages.slice(0, 1);
 
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(initialSelected);
   const [isLoading, setIsLoading] = useState(true);
@@ -264,22 +270,24 @@ export default function ScholarDetailPage() {
         </h2>
 
         {/* Language chips */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
-          {languageOptions.map((lang) => (
-            <button
-              key={lang.code}
-              onClick={() => toggleLanguage(lang.code)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                selectedLanguages.includes(lang.code)
-                  ? "bg-foreground text-background"
-                  : "bg-muted hover:bg-muted/80 text-foreground"
-              )}
-            >
-              {lang.name}
-            </button>
-          ))}
-        </div>
+        {languageOptions.length > 0 && (
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+            {languageOptions.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => toggleLanguage(lang.code)}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                  selectedLanguages.includes(lang.code)
+                    ? "bg-foreground text-background"
+                    : "bg-muted hover:bg-muted/80 text-foreground"
+                )}
+              >
+                {lang.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Desktop grid */}
         {scholarVideos.length > 0 ? (
@@ -289,7 +297,6 @@ export default function ScholarDetailPage() {
                 key={video.id}
                 className="flex flex-col border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-card"
               >
-                {/* ✅ Fixed URL – uses video.channel (full name) */}
                 <Link
                   href={`/videos/${video.channel}/${video.videoId}`}
                   className="relative aspect-video w-full"
@@ -303,7 +310,7 @@ export default function ScholarDetailPage() {
                   <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
                     {video.duration}
                   </div>
-                  <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="bg-black/60 rounded-full p-2">
                       <Play className="h-5 w-5 text-white fill-white" />
                     </div>
@@ -363,7 +370,7 @@ export default function ScholarDetailPage() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <p className="text-muted-foreground">No videos in selected languages.</p>
+            <p className="text-muted-foreground">No videos available in selected languages.</p>
           </div>
         )}
 
