@@ -168,7 +168,7 @@ export default function DesktopSidebar() {
                 )}
               >
                 <Users className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm flex-1">Channels</span>
+                <span className="text-sm flex">Channels</span>
                 <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
               </Link>
               
@@ -231,7 +231,7 @@ export default function DesktopSidebar() {
                 )}
               >
                 <GraduationCap className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm flex-1">Scholars</span>
+                <span className="text-sm flex">Scholars</span>
                 <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
               </Link>
               

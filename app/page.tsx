@@ -185,6 +185,8 @@ export default function Home() {
             WebkitOverflowScrolling: "touch",
             overscrollBehaviorX: "contain",
             touchAction: "pan-x",
+            scrollbarWidth: 'none', // Firefox
+            msOverflowStyle: 'none', // IE/Edge
           }}
         >
           <div className="flex gap-2 py-2 w-max items-center h-full">
