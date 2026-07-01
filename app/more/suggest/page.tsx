@@ -27,7 +27,7 @@ function SuggestSkeleton() {
         <Skeleton className="h-6 w-36" />
       </div>
 
-      <div className="px-4 md:px-6 py-6 md:py-8 mt-16 max-w-3xl mx-auto">
+      <div className="px-4 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Header skeleton */}
         <div className="flex items-center gap-3 mb-8">
           <Skeleton className="h-12 w-12 rounded-full" />
@@ -126,14 +126,14 @@ export default function SuggestPage() {
       <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
         <button
           onClick={() => router.back()}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
+          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1 min-h-[44px] min-w-[44px]"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="font-semibold text-lg">Suggest a Feature</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-6 md:py-8 mt-16 max-w-3xl mx-auto">
+      <div className="px-4 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">

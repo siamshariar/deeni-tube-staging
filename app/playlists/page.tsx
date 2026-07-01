@@ -158,7 +158,7 @@ export default function PlaylistsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-6 py-2 md:py-6 mt-16">
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-14 md:mt-16">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold">Playlists</h1>
@@ -229,9 +229,23 @@ export default function PlaylistsPage() {
         {/* Playlist grid */}
         {filteredPlaylists.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-muted-foreground">
-              {searchQuery ? "No playlists found" : "No playlists in this category"}
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <ListVideo className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-1">
+              {searchQuery ? "No playlists found" : "No playlists yet"}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {searchQuery ? "Try different search terms" : "Create your first playlist to organise your lectures"}
             </p>
+            {!searchQuery && (
+              <button
+                onClick={() => { setNewPlaylistName(""); setNewPlaylistPublic(true); setShowCreateDialog(true); }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                <Plus className="h-4 w-4" /> New playlist
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import Image from "next/image"
 import {
   ChevronUp, ChevronDown, Heart, MessageCircle, Share2, Bookmark, Flag,
@@ -648,7 +648,6 @@ function ShareModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 // ============ MAIN COMPONENT ============
 
 export default function ShortsPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const containerRef = useRef<HTMLDivElement>(null)
   const commentInputRef = useRef<HTMLInputElement>(null)
@@ -662,7 +661,6 @@ export default function ShortsPage() {
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [hoveredVideoId, setHoveredVideoId] = useState<string | null>(null)
   const [isScrolling, setIsScrolling] = useState(false)
-  const [showCenterPlayPause, setShowCenterPlayPause] = useState(false)
   const [captionsEnabled, setCaptionsEnabled] = useState(false)
   const [activePanel, setActivePanel] = useState<PanelType>(null)
   const [commentText, setCommentText] = useState("")
@@ -674,7 +672,6 @@ export default function ShortsPage() {
   const [likedIds, setLikedIds] = useState<string[]>(() => loadIds(STORAGE_LIKED))
   const [dislikedIds, setDislikedIds] = useState<string[]>(() => loadIds(STORAGE_DISLIKED))
   const [desktopSidebarWidth, setDesktopSidebarWidth] = useState(240)
-  const centerPlayTimeout = useRef<NodeJS.Timeout | null>(null)
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null)
   const commentsTimerRef = useRef<NodeJS.Timeout | null>(null)
   const descTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -683,6 +680,13 @@ export default function ShortsPage() {
   const [videoCurrentTime, setVideoCurrentTime] = useState(0)
   const [videoDuration, setVideoDuration] = useState(0)
   const videoDurationRef = useRef(0)
+  const [isProgressTouch, setIsProgressTouch] = useState(false)
+  const [isProgressHovered, setIsProgressHovered] = useState(false)
+  const [showPlayFeedback, setShowPlayFeedback] = useState(false)
+  const playFeedbackTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const isSeekingRef = useRef(false)
+  const isMutedRef = useRef(isMuted)
+  const volumeRef = useRef(volume)
 
   // Feedback dialog state
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
@@ -840,6 +844,10 @@ export default function ShortsPage() {
             videoDurationRef.current = d.info.duration
             setVideoDuration(d.info.duration)
           }
+          if (typeof d.info.playerState === 'number') {
+            if (d.info.playerState === 1) setIsPlaying(true)
+            else if (d.info.playerState === 2 || d.info.playerState === 0) setIsPlaying(false)
+          }
         }
       } catch {}
     }
@@ -858,10 +866,37 @@ export default function ShortsPage() {
       const iframe = activeShort ? videoRefs.current.get(activeShort.id) : null
       if (iframe?.contentWindow) {
         iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: activeShort.id }), 'https://www.youtube.com')
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: isMutedRef.current ? 'mute' : 'unMute', args: [] }), 'https://www.youtube.com')
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [volumeRef.current] }), 'https://www.youtube.com')
       }
     }, 1000)
     return () => clearTimeout(id)
   }, [currentIndex])
+
+  // Keep muted ref in sync and send postMessage when mute changes
+  useEffect(() => { isMutedRef.current = isMuted }, [isMuted])
+  useEffect(() => {
+    const activeShort = shortsData[currentIndex]
+    const iframe = activeShort ? videoRefs.current.get(activeShort.id) : null
+    if (!iframe?.contentWindow) return
+    iframe.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func: isMuted ? 'mute' : 'unMute', args: [] }),
+      'https://www.youtube.com'
+    )
+  }, [isMuted])
+
+  // Keep volume ref in sync and send postMessage when volume changes
+  useEffect(() => { volumeRef.current = volume }, [volume])
+  useEffect(() => {
+    if (isMuted) return
+    const activeShort = shortsData[currentIndex]
+    const iframe = activeShort ? videoRefs.current.get(activeShort.id) : null
+    if (!iframe?.contentWindow) return
+    iframe.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func: 'setVolume', args: [volume] }),
+      'https://www.youtube.com'
+    )
+  }, [volume])
 
   const scrollToVideo = (i: number) => {
     const c = containerRef.current; if (!c) return
@@ -887,6 +922,9 @@ export default function ShortsPage() {
     e.stopPropagation()
     const newPlaying = !isPlaying
     setIsPlaying(newPlaying)
+    if (playFeedbackTimerRef.current) clearTimeout(playFeedbackTimerRef.current)
+    setShowPlayFeedback(true)
+    playFeedbackTimerRef.current = setTimeout(() => setShowPlayFeedback(false), 600)
     const activeShort = shortsData[currentIndex]
     const iframe = activeShort ? videoRefs.current.get(activeShort.id) : null
     iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: newPlaying ? 'playVideo' : 'pauseVideo', args: [] }), 'https://www.youtube.com')
@@ -1014,8 +1052,10 @@ export default function ShortsPage() {
       <style>{`
         @keyframes fadeInLeft { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes playFeedback { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6); } }
         .animate-fade-in-left { animation: fadeInLeft 0.3s ease-out forwards; }
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+        .animate-play-feedback { animation: playFeedback 0.55s ease-out forwards; }
         .scrollbar-thin::-webkit-scrollbar { width: 6px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 3px; }
@@ -1265,20 +1305,20 @@ export default function ShortsPage() {
           const isActive = index === currentIndex
           const isHovered = hoveredVideoId === short.id
           return (
-            <section key={short.id} className="relative h-[calc(100vh-56px)] md:h-[calc(100vh-80px)] w-full snap-start snap-always flex items-center md:items-start justify-center bg-background">
+            <section key={short.id} className="relative h-[calc(100vh-56px)] md:h-[calc(100vh-84px)] w-full snap-start snap-always flex items-center md:items-start justify-center bg-background">
               <div
-                className="relative w-full h-full md:h-[calc(100%-4px)] md:mt-0.5 md:w-auto md:aspect-[9/16] md:rounded-2xl overflow-hidden mx-auto bg-black"
+                className="relative w-full h-full md:h-[calc(100%-10px)] md:mt-1 md:w-auto md:aspect-[9/16] md:rounded-2xl mx-auto bg-black"
                 onMouseEnter={() => setHoveredVideoId(short.id)}
                 onMouseLeave={() => { setHoveredVideoId(null); setShowVolumeSlider(false); setShowMoreMenu(false) }}
               >
-                {/* Video Player - Only the active video plays, full screen on mobile */}
-                <div className="w-full h-full bg-black" onClick={handleTogglePlay}>
+                {/* Video Player — overflow-hidden only here so the progress bar scrubber isn't clipped */}
+                <div className="absolute inset-0 overflow-hidden md:rounded-2xl bg-black" onClick={handleTogglePlay}>
                   {isActive ? (
                     <iframe
                       ref={(el) => {
                         if (el) videoRefs.current.set(short.id, el)
                       }}
-                      src={`https://www.youtube.com/embed/${short.videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${short.videoId}&modestbranding=1&rel=0&fs=1&playsinline=1&enablejsapi=1`}
+                      src={`https://www.youtube.com/embed/${short.videoId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${short.videoId}&modestbranding=1&rel=0&fs=1&playsinline=1&enablejsapi=1`}
                       title={short.title}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -1310,6 +1350,25 @@ export default function ShortsPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Transparent click overlay — above iframe (z-0) but below controls (z-20+) */}
+                {isActive && (
+                  <div
+                    className="absolute inset-0 z-10 cursor-pointer"
+                    onClick={(e) => handleTogglePlay(e as unknown as React.MouseEvent)}
+                  />
+                )}
+
+                {/* Play/pause tap feedback animation */}
+                {isActive && showPlayFeedback && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                    <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center animate-play-feedback">
+                      {isPlaying
+                        ? <Pause className="h-7 w-7 text-white" />
+                        : <Play className="h-7 w-7 text-white fill-white" />}
+                    </div>
+                  </div>
+                )}
 
                 {/* Gradient overlays */}
                 <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
@@ -1378,9 +1437,9 @@ export default function ShortsPage() {
                 </div>
 
                 {/* Bottom info & actions */}
-                <div className={`absolute bottom-6 left-4 right-20 z-20 transition-all duration-500 ${isActive && !isScrolling ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <Avatar className="h-10 w-10 border-2 border-white/20 flex-shrink-0">
+                <div className={`absolute bottom-16 md:bottom-6 left-4 right-20 z-20 transition-all duration-500 ${isActive && !isScrolling ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <Avatar className="h-8 w-8 border-2 border-white/20 flex-shrink-0">
                       <AvatarImage src={short.channelAvatar} />
                       <AvatarFallback className="bg-muted text-black dark:text-white text-xs">{short.channel.charAt(0)}</AvatarFallback>
                     </Avatar>
@@ -1391,7 +1450,7 @@ export default function ShortsPage() {
                   </button>
                 </div>
 
-                <div className={`absolute right-3 bottom-28 flex flex-col gap-6 items-center z-20 transition-all duration-500 ${isActive && !isScrolling ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"}`}>
+                <div className={`absolute right-3 bottom-36 md:bottom-28 flex flex-col gap-6 items-center z-20 transition-all duration-500 ${isActive && !isScrolling ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"}`}>
                   <button onClick={() => toggleLike(short.id)} className="flex flex-col items-center gap-1 group">
                     <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all", isLiked[short.id] ? "scale-110" : "", "group-hover:bg-white/10 group-active:scale-95")} style={{ backgroundColor: isLiked[short.id] ? "rgba(255, 0, 0, 0.2)" : "rgba(0,0,0,0.4)" }}>
                       <Heart className={cn("h-6 w-6", isLiked[short.id] ? "text-red-500 fill-red-500" : "text-white")} />
@@ -1426,55 +1485,80 @@ export default function ShortsPage() {
                   </ReportDialog>
                 </div>
 
-                {/* YouTube-style progress bar */}
-                {isActive && (
-                  <div
-                    className="absolute bottom-0 left-0 right-0 h-[3px] z-40 cursor-pointer"
-                    style={{ background: 'rgba(255,255,255,0.25)' }}
-                    onMouseDown={(e) => {
-                      e.stopPropagation()
-                      const bar = e.currentTarget
-                      const doSeek = (clientX: number) => {
-                        const rect = bar.getBoundingClientRect()
-                        const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+                {/* YouTube-style progress bar with scrubber */}
+                {isActive && (() => {
+                  const fillPct = videoDuration > 0 ? Math.min(100, (videoCurrentTime / videoDuration) * 100) : 0
+                  const showScrubber = isProgressHovered || isProgressTouch
+                  return (
+                    <div
+                      className={`absolute bottom-0 left-0 right-0 z-40 cursor-pointer transition-[height] duration-150 ${showScrubber ? 'h-[5px]' : 'h-[3px]'}`}
+                      style={{ background: 'rgba(255,255,255,0.25)' }}
+                      onMouseEnter={() => setIsProgressHovered(true)}
+                      onMouseLeave={() => { setIsProgressHovered(false); if (!isSeekingRef.current) return }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation()
+                        isSeekingRef.current = true
+                        const bar = e.currentTarget
+                        const doSeek = (clientX: number) => {
+                          const rect = bar.getBoundingClientRect()
+                          const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+                          const t = pct * videoDurationRef.current
+                          setVideoCurrentTime(t)
+                          const iframe = videoRefs.current.get(short.id)
+                          iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [t, true] }), 'https://www.youtube.com')
+                        }
+                        doSeek(e.clientX)
+                        const onMove = (ev: MouseEvent) => doSeek(ev.clientX)
+                        const onUp = () => {
+                          isSeekingRef.current = false
+                          window.removeEventListener('mousemove', onMove)
+                          window.removeEventListener('mouseup', onUp)
+                        }
+                        window.addEventListener('mousemove', onMove)
+                        window.addEventListener('mouseup', onUp)
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation()
+                        isSeekingRef.current = true
+                        setIsProgressTouch(true)
+                        const touch = e.touches[0]; if (!touch) return
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const pct = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width))
                         const t = pct * videoDurationRef.current
                         setVideoCurrentTime(t)
                         const iframe = videoRefs.current.get(short.id)
                         iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [t, true] }), 'https://www.youtube.com')
-                      }
-                      doSeek(e.clientX)
-                      const onMove = (ev: MouseEvent) => doSeek(ev.clientX)
-                      const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-                      window.addEventListener('mousemove', onMove)
-                      window.addEventListener('mouseup', onUp)
-                    }}
-                    onTouchStart={(e) => {
-                      e.stopPropagation()
-                      const touch = e.touches[0]; if (!touch) return
-                      const rect = e.currentTarget.getBoundingClientRect()
-                      const pct = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width))
-                      const t = pct * videoDurationRef.current
-                      setVideoCurrentTime(t)
-                      const iframe = videoRefs.current.get(short.id)
-                      iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [t, true] }), 'https://www.youtube.com')
-                    }}
-                    onTouchMove={(e) => {
-                      e.stopPropagation()
-                      const touch = e.touches[0]; if (!touch) return
-                      const rect = e.currentTarget.getBoundingClientRect()
-                      const pct = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width))
-                      const t = pct * videoDurationRef.current
-                      setVideoCurrentTime(t)
-                      const iframe = videoRefs.current.get(short.id)
-                      iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [t, true] }), 'https://www.youtube.com')
-                    }}
-                  >
-                    <div
-                      className="h-full bg-red-500 pointer-events-none"
-                      style={{ width: `${videoDuration > 0 ? Math.min(100, (videoCurrentTime / videoDuration) * 100) : 0}%`, transition: 'width 0.25s linear' }}
-                    />
-                  </div>
-                )}
+                      }}
+                      onTouchMove={(e) => {
+                        e.stopPropagation()
+                        const touch = e.touches[0]; if (!touch) return
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const pct = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width))
+                        const t = pct * videoDurationRef.current
+                        setVideoCurrentTime(t)
+                        const iframe = videoRefs.current.get(short.id)
+                        iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [t, true] }), 'https://www.youtube.com')
+                      }}
+                      onTouchEnd={() => { isSeekingRef.current = false; setIsProgressTouch(false) }}
+                    >
+                      {/* Red fill — no transition during seeking so it tracks the cursor immediately */}
+                      <div
+                        className="h-full bg-red-500 pointer-events-none"
+                        style={{
+                          width: `${fillPct}%`,
+                          transition: isSeekingRef.current ? 'none' : 'width 0.25s linear',
+                        }}
+                      />
+                      {/* Single scrubber circle — only when hovering the progress bar or touching it */}
+                      {showScrubber && (
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-red-500 shadow-md pointer-events-none"
+                          style={{ left: `${fillPct}%` }}
+                        />
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             </section>
           )

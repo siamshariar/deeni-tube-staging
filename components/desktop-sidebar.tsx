@@ -173,25 +173,25 @@ export default function DesktopSidebar() {
 
             {/* Channels Section - YouTube Style Header */}
             <div className="border-t pt-2 mt-2">
-              <Link 
+              <Link
                 href="/channels"
                 className={cn(
-                  "flex items-center gap-4 px-4 py-2 text-sm hover:bg-muted transition-all duration-300",
-                  isChannelsActive && "font-medium bg-muted/50"
+                  "flex items-center gap-4 px-3 mx-1 py-2 rounded-lg text-sm hover:bg-muted transition-all duration-200",
+                  isChannelsActive && "font-semibold bg-muted"
                 )}
               >
                 <Users className="h-5 w-5 flex-shrink-0" />
                 <span className="text-sm flex">Channels</span>
                 <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
               </Link>
-              
+
               {/* Channel List - from lib/channel-data.ts */}
               <div className="mt-1">
                 {visibleChannels.map((channel) => (
                   <Link
                     key={channel.id}
                     href={`/channels/${channel.slug}`}
-                    className="flex items-center gap-4 px-4 py-1.5 text-sm hover:bg-muted transition-all duration-300"
+                    className="flex items-center gap-4 px-3 mx-1 py-1.5 rounded-lg text-sm hover:bg-muted transition-all duration-200"
                   >
                     <Avatar className="h-6 w-6 flex-shrink-0">
                       <AvatarImage src={channel.avatar} alt={channel.name} />
@@ -208,7 +208,7 @@ export default function DesktopSidebar() {
                       <Link
                         key={channel.id}
                         href={`/channels/${channel.slug}`}
-                        className="flex items-center gap-4 px-4 py-1.5 text-sm hover:bg-muted transition-all duration-300"
+                        className="flex items-center gap-4 px-3 mx-1 py-1.5 rounded-lg text-sm hover:bg-muted transition-all duration-200"
                       >
                         <Avatar className="h-6 w-6 flex-shrink-0">
                           <AvatarImage src={channel.avatar} alt={channel.name} />
@@ -217,10 +217,10 @@ export default function DesktopSidebar() {
                         <span className="text-sm truncate flex-1">{channel.name}</span>
                       </Link>
                     ))}
-                    
+
                     <button
                       onClick={() => setShowMoreChannels(!showMoreChannels)}
-                      className="flex items-center gap-4 px-4 py-2 text-sm hover:bg-muted transition-colors w-full"
+                      className="flex items-center gap-4 px-3 mx-1 py-2 rounded-lg text-sm hover:bg-muted transition-colors w-[calc(100%-8px)]"
                     >
                       {showMoreChannels ? (
                         <ChevronUp className="h-5 w-5 flex-shrink-0" />
@@ -236,25 +236,25 @@ export default function DesktopSidebar() {
 
             {/* Scholars Section - YouTube Style Header */}
             <div className="border-t pt-2 mt-2">
-              <Link 
+              <Link
                 href="/scholars"
                 className={cn(
-                  "flex items-center gap-4 px-4 py-2 text-sm hover:bg-muted transition-all duration-300",
-                  isScholarsActive && "font-medium bg-muted/50"
+                  "flex items-center gap-4 px-3 mx-1 py-2 rounded-lg text-sm hover:bg-muted transition-all duration-200",
+                  isScholarsActive && "font-semibold bg-muted"
                 )}
               >
                 <GraduationCap className="h-5 w-5 flex-shrink-0" />
                 <span className="text-sm flex">Scholars</span>
                 <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
               </Link>
-              
+
               {/* Scholar List - from lib/scholar-data.ts */}
               <div className="mt-1">
                 {visibleScholars.map((scholar) => (
                   <Link
                     key={scholar.id}
                     href={`/scholars/${scholar.slug}`}
-                    className="flex items-center gap-4 px-4 py-1.5 text-sm hover:bg-muted transition-all duration-300"
+                    className="flex items-center gap-4 px-3 mx-1 py-1.5 rounded-lg text-sm hover:bg-muted transition-all duration-200"
                   >
                     <Avatar className="h-6 w-6 flex-shrink-0">
                       <AvatarImage src={scholar.avatar} alt={scholar.name} />
@@ -271,7 +271,7 @@ export default function DesktopSidebar() {
                       <Link
                         key={scholar.id}
                         href={`/scholars/${scholar.slug}`}
-                        className="flex items-center gap-4 px-4 py-1.5 text-sm hover:bg-muted transition-all duration-300"
+                        className="flex items-center gap-4 px-3 mx-1 py-1.5 rounded-lg text-sm hover:bg-muted transition-all duration-200"
                       >
                         <Avatar className="h-6 w-6 flex-shrink-0">
                           <AvatarImage src={scholar.avatar} alt={scholar.name} />
@@ -280,10 +280,10 @@ export default function DesktopSidebar() {
                         <span className="text-sm truncate flex-1">{scholar.name}</span>
                       </Link>
                     ))}
-                    
+
                     <button
                       onClick={() => setShowMoreScholars(!showMoreScholars)}
-                      className="flex items-center gap-4 px-4 py-2 text-sm hover:bg-muted transition-colors w-full"
+                      className="flex items-center gap-4 px-3 mx-1 py-2 rounded-lg text-sm hover:bg-muted transition-colors w-[calc(100%-8px)]"
                     >
                       {showMoreScholars ? (
                         <ChevronUp className="h-5 w-5 flex-shrink-0" />
@@ -401,15 +401,15 @@ function SidebarItem({ href, icon, label, active, collapsed }: SidebarItemProps)
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-4 px-4 py-2 text-sm hover:bg-muted transition-all duration-300",
-        active && "font-medium bg-muted/50",
-        collapsed && "flex-col gap-1 px-2 py-3 justify-center"
+        "flex items-center gap-4 px-3 mx-1 py-2 rounded-lg text-sm hover:bg-muted transition-all duration-200",
+        active && "font-semibold bg-muted",
+        collapsed && "flex-col gap-1 px-2 py-3 justify-center mx-1"
       )}
       title={label}
     >
       <span className="flex-shrink-0">{icon}</span>
       <span className={cn(
-        "transition-all duration-300 whitespace-nowrap truncate",
+        "transition-all duration-200 whitespace-nowrap truncate",
         collapsed ? "text-[10px] leading-tight w-full text-center" : "text-sm"
       )}>
         {label}

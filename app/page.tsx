@@ -227,15 +227,12 @@ export default function Home() {
               gridColumns
             )}>
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={`dsk-${i}`} className="flex flex-col">
-                  <Skeleton className="aspect-video w-full rounded-lg" />
-                  <div className="flex mt-2 gap-2">
-                    <Skeleton className="h-9 w-9 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-3 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
+                <div key={`dsk-${i}`} className="flex flex-col border rounded-xl overflow-hidden bg-card shadow-sm">
+                  <Skeleton className="aspect-video w-full" />
+                  <div className="p-3 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
                   </div>
                 </div>
               ))}

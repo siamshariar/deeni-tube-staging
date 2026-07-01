@@ -208,26 +208,31 @@ export default function VideoCard({
     );
   }
 
-  // Desktop grid card – new style matching playlist cards
+  // Desktop grid card
   return (
-    <div className="flex flex-col border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-card">
-      <Link href={videoLink} className="block">
+    <div className="group/card flex flex-col border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 bg-card">
+      <Link href={videoLink} className="block relative overflow-hidden">
         <div className="relative aspect-video w-full">
-          <Image src={thumbnail} alt={title} fill className="object-cover" />
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 py-0.5 rounded">{duration}</div>
+          <Image src={thumbnail} alt={title} fill className="object-cover transition-transform duration-300 group-hover/card:scale-105" />
+          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium">{duration}</div>
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="bg-black/60 rounded-full p-2.5">
+              <svg viewBox="0 0 24 24" className="h-5 w-5 text-white fill-white"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
         </div>
       </Link>
-      <div className="p-3 space-y-1">
+      <div className="p-3 flex-1 flex flex-col gap-1">
         {/* Title + three‑dot menu */}
         <div className="flex items-start justify-between gap-1">
-          <Link href={videoLink} className="line-clamp-2 font-medium text-sm hover:text-primary transition-colors flex-1">
+          <Link href={videoLink} className="line-clamp-2 font-medium text-sm hover:text-primary transition-colors flex-1 leading-snug">
             {title}
           </Link>
           {isDesktop ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 -mr-1" onClick={e => e.stopPropagation()}>
-                  <MoreVertical className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 -mr-1 opacity-0 group-hover/card:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[240px] p-0 rounded-xl">{menuItems}</DropdownMenuContent>
@@ -236,7 +241,7 @@ export default function VideoCard({
             <Drawer open={open} onOpenChange={setOpen}>
               <DrawerTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 -mr-1" onClick={e => { e.stopPropagation(); setOpen(true); }}>
-                  <MoreVertical className="h-5 w-5" />
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
               </DrawerTrigger>
               <DrawerContent className="px-0 max-h-[70vh]">
@@ -246,9 +251,13 @@ export default function VideoCard({
           )}
         </div>
 
-        {/* Channel name */}
-        <Link href={channelLink} className="text-muted-foreground text-xs block hover:text-foreground transition-colors">
-          {channel}
+        {/* Channel row with avatar */}
+        <Link href={channelLink} className="flex items-center gap-1.5 mt-0.5 group/ch">
+          <Avatar className="h-5 w-5 flex-shrink-0">
+            <AvatarImage src={channelAvatar} />
+            <AvatarFallback className="text-[9px]">{channel.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <span className="text-xs text-muted-foreground group-hover/ch:text-foreground transition-colors truncate">{channel}</span>
         </Link>
 
         {/* Views and time */}

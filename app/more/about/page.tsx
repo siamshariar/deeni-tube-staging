@@ -25,7 +25,7 @@ function AboutSkeleton() {
         <Skeleton className="h-6 w-20" />
       </div>
 
-      <div className="px-4 md:px-6 py-6 md:py-8 mt-16 max-w-3xl mx-auto">
+      <div className="px-4 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Header skeleton */}
         <div className="flex items-center gap-3 mb-8">
           <Skeleton className="h-12 w-12 rounded-full" />
@@ -84,32 +84,32 @@ export default function AboutPage() {
       <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b sticky top-[56px] bg-background z-10">
         <button
           onClick={() => router.back()}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1"
+          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted flex-shrink-0 -ml-1 min-h-[44px] min-w-[44px]"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="font-semibold text-lg">About</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-6 md:py-8 mt-16 max-w-3xl mx-auto">
+      <div className="px-4 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+        <div className="hidden md:flex items-center gap-3 mb-8">
+          <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
             <Info className="h-6 w-6 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">About Deeni.tube</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-2xl md:text-3xl font-bold">About Deeni.tube</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
               Your trusted platform for authentic Islamic content
             </p>
           </div>
         </div>
 
         {/* Content sections */}
-        <div className="space-y-8">
-          <section>
-            <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" /> Our Mission
+        <div className="space-y-6">
+          <section className="p-4 border rounded-xl bg-card">
+            <h2 className="text-base font-semibold mb-2 flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary flex-shrink-0" /> Our Mission
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Deeni.tube is dedicated to making authentic Islamic knowledge
@@ -121,9 +121,9 @@ export default function AboutPage() {
             </p>
           </section>
 
-          <section>
-            <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" /> Who We Serve
+          <section className="p-4 border rounded-xl bg-card">
+            <h2 className="text-base font-semibold mb-2 flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary flex-shrink-0" /> Who We Serve
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Whether you're a student of knowledge, a busy professional
@@ -135,9 +135,9 @@ export default function AboutPage() {
             </p>
           </section>
 
-          <section>
-            <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" /> Our Commitment
+          <section className="p-4 border rounded-xl bg-card">
+            <h2 className="text-base font-semibold mb-2 flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary flex-shrink-0" /> Our Commitment
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               We are committed to providing a clean, distraction‑free
@@ -149,9 +149,9 @@ export default function AboutPage() {
             </p>
           </section>
 
-          <section>
-            <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Heart className="h-5 w-5 text-primary" /> Built With Care
+          <section className="p-4 border rounded-xl bg-card">
+            <h2 className="text-base font-semibold mb-2 flex items-center gap-2">
+              <Heart className="h-5 w-5 text-primary flex-shrink-0" /> Built With Care
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Deeni.tube is developed and maintained by Deeni Info Tech, a
@@ -165,16 +165,16 @@ export default function AboutPage() {
         </div>
 
         {/* Version info */}
-        <div className="mt-8 p-4 border rounded-xl bg-muted/10">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mt-6 p-4 border rounded-xl bg-muted/10">
+          <div className="flex items-center justify-between py-1.5">
             <span className="text-sm font-medium">Version</span>
             <span className="text-sm text-muted-foreground">1.0.0</span>
           </div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between py-1.5 border-t">
             <span className="text-sm font-medium">Released</span>
             <span className="text-sm text-muted-foreground">June 2025</span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between py-1.5 border-t">
             <span className="text-sm font-medium">Developer</span>
             <a
               href="https://www.deeniinfotech.com/"
@@ -187,7 +187,6 @@ export default function AboutPage() {
             </a>
           </div>
         </div>
-
 
         {/* Back button — hidden on mobile */}
         <div className="hidden md:block mt-8">

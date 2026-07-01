@@ -306,7 +306,7 @@ export default function AppHeader() {
             </form>
           </div>
 
-          <div className="flex items-center gap-8 flex-shrink-0">
+          <div className="flex items-center gap-6 flex-shrink-0">
             <NotificationDropdown />
             <div className="flex items-center justify-end">
               {!authLoaded ? (

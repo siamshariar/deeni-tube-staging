@@ -112,7 +112,7 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-6 py-2 md:py-6 mt-16 max-w-3xl mx-auto">
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Desktop title */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Help & Support</h1>

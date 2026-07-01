@@ -431,15 +431,15 @@ export default function VideoPlayPage() {
   const videoSrc = `https://www.youtube.com/embed/${mainVideo.videoId}?autoplay=1`;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Mobile back button – sticky below global header */}
+    <div className="min-h-screen bg-background pt-14">
+      {/* Mobile back button – sits naturally below the fixed header */}
       {isMobile && (
-        <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">
+        <div className="sticky top-14 z-10 bg-background/95 backdrop-blur-sm border-b">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1.5 px-4 py-2 w-full"
+            className="flex items-center gap-1.5 px-4 py-2 w-full min-h-[44px]"
           >
-            <ArrowLeft className="h-6 w-6 shrink-0" />
+            <ArrowLeft className="h-5 w-5 shrink-0" />
             <span className="text-sm font-medium line-clamp-1 text-left">
               {mainVideo.title}
             </span>
@@ -447,11 +447,11 @@ export default function VideoPlayPage() {
         </div>
       )}
 
-      {/* Main content – md:pt-4 provides top gap on desktop/tablet; mobile has small pt-2 */}
+      {/* Main content */}
       <div className="md:pt-4 pb-6">
-        {/* Mobile: full-width video with a small top padding */}
+        {/* Mobile: full-width video */}
         {isMobile && (
-          <div className="w-full bg-black pt-12">
+          <div className="w-full bg-black">
             <div className="relative w-full aspect-video">
               <iframe
                 src={videoSrc}
@@ -464,8 +464,8 @@ export default function VideoPlayPage() {
           </div>
         )}
 
-        {/* Content with standard small left padding */}
-        <div className="px-4 lg:pt-12 md:pt-12 sm:pt-2 md:px-4">
+        {/* Content */}
+        <div className="px-4 md:px-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 min-w-0">
               {/* Desktop video player */}

@@ -80,7 +80,7 @@ export default function ListPage({ title, items, languageFilter = true, showSort
       <AppHeader />
 
       <div className="flex">
-        <DesktopSidebar className="hidden md:block" />
+        <DesktopSidebar />
 
         <div className="flex-1 md:pl-[240px] pt-[56px] md:pt-[80px]">
           {/* Mobile Back + Title */}

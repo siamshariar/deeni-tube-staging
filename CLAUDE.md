@@ -11,7 +11,16 @@ npm run lint     # ESLint
 npm run start    # serve production build
 ```
 
-There is no test suite. TypeScript build errors are suppressed (`typescript.ignoreBuildErrors: true` in `next.config.mjs`) — the project relies on ESLint rather than tsc for code quality.
+**E2E tests** use Playwright:
+```bash
+npx playwright install chromium   # first time only
+npx playwright test               # run all tests (starts dev server automatically)
+npx playwright test e2e/navigation.spec.ts --project=chromium  # single file
+```
+
+Tests live in `e2e/` covering navigation, Shorts player, video detail, and responsive layouts. The `playwright.config.ts` at project root auto-starts the dev server via `webServer` config with `reuseExistingServer: true`.
+
+TypeScript build errors are suppressed (`typescript.ignoreBuildErrors: true` in `next.config.mjs`). `components/ui/calendar.tsx` has known TS errors due to a `react-day-picker` version mismatch; the component is unused and can be ignored. ESLint is not installed locally (`npm run lint` will fail without `eslint` in node_modules).
 
 ## Stack
 
@@ -96,6 +105,28 @@ The most complex file (~1400 lines), entirely `"use client"`. Key layout mechani
 
 CSS custom properties defined in `app/globals.css` for all colour tokens (`--background`, `--foreground`, `--primary`, etc.). Tailwind uses these via `hsl(var(--...))` mappings in `tailwind.config.ts`. Dark mode is toggled via the `class` strategy (`next-themes`).
 
+### Header clearance rules
+
+The `AppHeader` is `fixed top-0 h-14 z-40` (56px). Every page must push its content below the header. There are two patterns:
+
+**Standard pages** — add `mt-14 md:mt-16` to the outermost content wrapper. This applies to all pages except video/playlist detail.
+
+**Video & playlist detail pages** (`/videos/*`, `/playlists/*`) — these have a `sticky` back button bar that must stack on top of the content below the header:
+- Add `pt-14` to the outermost `<div>` wrapper (not `mt-14`)
+- The sticky back button uses `sticky top-14 z-10` (same 56px)
+- The mobile video element directly below the back button must have **no** extra top padding — `pt-14` on the wrapper already handles clearance
+- Desktop inner content divs must have no `pt-*` top padding (it stacks naturally)
+
+The math: header occupies 0–56px. With `pt-14`, content starts at 56px. The `sticky top-14` back button sticks at exactly 56px, immediately below the header. The video below the back button starts at 56px + back-button height (~40px) = 96px, with no gap.
+
+### VideoCard
+
+`components/video-card.tsx` has two render paths gated on the `isHorizontal` prop:
+- `isHorizontal={false}` (default) — grid card with `group/card` hover effects (thumbnail scale, play overlay, three-dot appears on hover)
+- `isHorizontal={true}` — flat mobile list card with always-visible three-dot
+
+The grid card uses Tailwind named groups: `group/card` for the outer container and `group/ch` for the channel link row, allowing `group-hover/card:scale-105` etc. without conflicts.
+
 ### Route patterns
 
 - `/` — home feed
@@ -104,3 +135,6 @@ CSS custom properties defined in `app/globals.css` for all colour tokens (`--bac
 - `/shorts` — vertical shorts feed (fullscreen, header auto-hides)
 - `/channels/[slug]`, `/scholars/[slug]`, `/categories/[slug]` — entity detail pages
 - `/signin` — auth page (no desktop sidebar)
+- `/you`, `/history`, `/liked-videos`, `/watch-later` — account/activity pages
+- `/more`, `/settings`, `/help` — utility pages (each has sub-pages under the same prefix)
+- `/donate`, `/search`, `/playlists` — standalone pages

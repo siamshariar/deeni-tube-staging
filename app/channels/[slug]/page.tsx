@@ -126,10 +126,13 @@ export default function ChannelDetailPage() {
 
   if (!channel) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-background flex items-center justify-center mt-14 md:mt-16">
+        <div className="text-center px-4">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <Play className="h-8 w-8 text-muted-foreground" />
+          </div>
           <h2 className="text-xl font-semibold mb-2">Channel not found</h2>
-          <p className="text-muted-foreground mb-4">The channel you're looking for doesn't exist.</p>
+          <p className="text-sm text-muted-foreground mb-4">The channel you're looking for doesn't exist.</p>
           <Button onClick={() => router.push("/channels")} className="rounded-full">
             Back to Channels
           </Button>
@@ -377,8 +380,12 @@ export default function ChannelDetailPage() {
               </div>
             </>
           ) : (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground">No videos available yet.</p>
+            <div className="text-center py-16 px-4">
+              <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                <Play className="h-7 w-7 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold mb-1">No videos yet</h3>
+              <p className="text-sm text-muted-foreground">This channel hasn't uploaded any videos.</p>
             </div>
           )}
         </>
@@ -388,19 +395,19 @@ export default function ChannelDetailPage() {
       {activeTab === "shorts" && (
         <>
           {channelShorts.length > 0 ? (
-            <div className="grid gap-4 p-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid gap-3 p-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {channelShorts.map((short) => (
                 <button
                   key={short.id}
                   onClick={() => handleShortClick(short.videoId)}
                   className="flex flex-col group cursor-pointer text-left"
                 >
-                  <div className="relative aspect-[9/16] w-full rounded-xl overflow-hidden bg-muted">
+                  <div className="relative aspect-[9/16] w-full rounded-xl overflow-hidden bg-muted shadow-sm hover:shadow-md transition-shadow">
                     <Image
                       src={`https://img.youtube.com/vi/${short.videoId}/hqdefault.jpg`}
                       alt={short.title}
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform"
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
                       {short.duration}
@@ -411,18 +418,22 @@ export default function ChannelDetailPage() {
                       </div>
                     </div>
                   </div>
-                  <h3 className="font-medium text-sm line-clamp-2 mt-2 group-hover:text-primary transition-colors">
+                  <h3 className="font-medium text-xs sm:text-sm line-clamp-2 mt-2 group-hover:text-primary transition-colors">
                     {short.title}
                   </h3>
-                  <p className="text-muted-foreground text-xs mt-0.5">
+                  <p className="text-muted-foreground text-[10px] sm:text-xs mt-0.5">
                     {short.views} views • {short.timeAgo}
                   </p>
                 </button>
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground">No shorts available yet.</p>
+            <div className="text-center py-16 px-4">
+              <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                <Play className="h-7 w-7 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold mb-1">No shorts yet</h3>
+              <p className="text-sm text-muted-foreground">This channel hasn't uploaded any shorts.</p>
             </div>
           )}
         </>
@@ -549,10 +560,12 @@ export default function ChannelDetailPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground">
-                No playlists available for this channel.
-              </p>
+            <div className="text-center py-16 px-4">
+              <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                <ListVideo className="h-7 w-7 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold mb-1">No playlists yet</h3>
+              <p className="text-sm text-muted-foreground">This channel has no playlists available.</p>
             </div>
           )}
         </div>
@@ -560,18 +573,32 @@ export default function ChannelDetailPage() {
 
       {/* Tab content - About */}
       {activeTab === "about" && (
-        <div className="px-4 py-6 max-w-2xl">
-          <h2 className="text-xl font-bold mb-2">Description</h2>
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-            {channel.description || "No description provided."}
-          </p>
-          <div className="mt-6 space-y-3">
-            <h3 className="font-semibold text-sm">Details</h3>
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p><span className="font-medium">Channel name:</span> {channel.name}</p>
-              <p><span className="font-medium">Subscribers:</span> {formatNumber(channel.subscribers)}</p>
-              <p><span className="font-medium">Videos:</span> {channelVideos.length}</p>
-              <p><span className="font-medium">Language:</span> {channel.language.toUpperCase()}</p>
+        <div className="px-4 py-6 max-w-2xl space-y-4">
+          <div className="p-4 border rounded-xl bg-card">
+            <h2 className="text-base font-semibold mb-2">Description</h2>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+              {channel.description || "No description provided."}
+            </p>
+          </div>
+          <div className="p-4 border rounded-xl bg-card">
+            <h3 className="text-base font-semibold mb-3">Details</h3>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Channel name</span>
+                <span className="font-medium">{channel.name}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm border-t pt-2">
+                <span className="text-muted-foreground">Subscribers</span>
+                <span className="font-medium">{formatNumber(channel.subscribers)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm border-t pt-2">
+                <span className="text-muted-foreground">Videos</span>
+                <span className="font-medium">{channelVideos.length}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm border-t pt-2">
+                <span className="text-muted-foreground">Language</span>
+                <span className="font-medium">{channel.language.toUpperCase()}</span>
+              </div>
             </div>
           </div>
         </div>

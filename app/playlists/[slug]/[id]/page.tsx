@@ -478,15 +478,15 @@ export default function PlaylistDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-14">
       {/* Mobile back button + title */}
       {isMobile && (
-        <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">
+        <div className="sticky top-14 z-10 bg-background/95 backdrop-blur-sm border-b">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1.5 px-4 py-2 w-full"
+            className="flex items-center gap-1.5 px-4 py-2 w-full min-h-[44px]"
           >
-            <ArrowLeft className="h-6 w-6 shrink-0" />
+            <ArrowLeft className="h-5 w-5 shrink-0" />
             <span className="text-sm font-medium line-clamp-1 text-left">
               {currentVideo?.title || playlist.name}
             </span>
@@ -496,7 +496,7 @@ export default function PlaylistDetailPage() {
 
       {/* Mobile: full-width video (edge-to-edge) */}
       {isMobile && (
-        <div className="w-full bg-black pt-12">
+        <div className="w-full bg-black">
           <div className="relative w-full aspect-video">
             <iframe
               src={`https://www.youtube.com/embed/${currentVideo?.videoId || "5qap5aO4i9A"}?autoplay=1`}
@@ -509,8 +509,8 @@ export default function PlaylistDetailPage() {
         </div>
       )}
 
-      <div className="md:pt-4 pb-6">
-        <div className="px-4 lg:pt-12 md:pt-12 sm:pt-2 md:px-4">
+      <div className="pb-6">
+        <div className="px-4 pt-4 md:pt-4 md:px-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 min-w-0">
               {/* Desktop video player */}

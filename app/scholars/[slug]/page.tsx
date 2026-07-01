@@ -48,7 +48,7 @@ const allLanguageOptions = [
 function ScholarSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 py-6 mt-16 border-b flex items-start gap-4">
+      <div className="px-4 py-6 mt-14 md:mt-16 border-b flex items-start gap-4">
         <Skeleton className="h-20 w-20 md:h-24 md:w-24 rounded-full" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-7 w-48" />
@@ -166,7 +166,7 @@ export default function ScholarDetailPage() {
       )}
 
       {/* Scholar Profile Section */}
-      <div className="px-4 py-6 mt-16 border-b">
+      <div className="px-4 py-6 mt-14 md:mt-16 border-b">
         <div className="flex items-start gap-4">
           <Avatar
             className={cn(
@@ -291,7 +291,7 @@ export default function ScholarDetailPage() {
 
         {/* Desktop grid */}
         {scholarVideos.length > 0 ? (
-          <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
             {scholarVideos.map((video) => (
               <div
                 key={video.id}
@@ -369,8 +369,12 @@ export default function ScholarDetailPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground">No videos available in selected languages.</p>
+          <div className="text-center py-16 px-4">
+            <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+              <Play className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold mb-1">No videos available</h3>
+            <p className="text-sm text-muted-foreground">No videos found in the selected language.</p>
           </div>
         )}
 
@@ -378,16 +382,16 @@ export default function ScholarDetailPage() {
         {scholarVideos.length > 0 && (
           <div className="flex flex-col md:hidden">
             {scholarVideos.map((video) => (
-              <div key={video.id} className="flex gap-3 py-3 border-b last:border-0 group">
+              <div key={video.id} className="flex gap-3 py-2.5 hover:bg-muted/30 rounded-lg px-1 -mx-1 transition-colors group">
                 <Link
                   href={`/videos/${video.channel}/${video.videoId}`}
-                  className="relative w-40 aspect-video flex-shrink-0"
+                  className="relative w-36 aspect-video flex-shrink-0 rounded-lg overflow-hidden"
                 >
                   <Image
                     src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
                     alt={video.title}
                     fill
-                    className="object-cover rounded-lg"
+                    className="object-cover"
                   />
                   <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 py-0.5 rounded font-medium">
                     {video.duration}
@@ -395,7 +399,7 @@ export default function ScholarDetailPage() {
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link href={`/videos/${video.channel}/${video.videoId}`}>
-                    <h3 className="font-medium text-sm line-clamp-2">
+                    <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
                       {video.title}
                     </h3>
                   </Link>
@@ -406,11 +410,11 @@ export default function ScholarDetailPage() {
                         {video.channel.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground truncate">
                       {video.channel}
                     </span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {video.views} • {video.timeAgo}
                   </p>
                 </div>

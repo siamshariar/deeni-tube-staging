@@ -84,7 +84,7 @@ export default function ScholarsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Content area */}
-      <div className="px-4 md:px-6 py-2 md:py-6 mt-16">
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-14 md:mt-16">
         {/* Title + search — desktop only */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="md:block">

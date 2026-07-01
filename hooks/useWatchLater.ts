@@ -21,7 +21,7 @@ export const useWatchLater = () => {
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      setVideos(JSON.parse(stored));
+      try { setVideos(JSON.parse(stored)); } catch {}
     }
   }, []);
 

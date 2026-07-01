@@ -255,9 +255,9 @@ export default function WatchLaterPage() {
         <h1 className="font-semibold text-lg">Watch Later</h1>
       </div>
 
-      <div className="px-4 md:px-4 py-4 md:py-6 max-w-full">
+      <div className="px-4 md:px-6 py-4 md:py-6 max-w-full">
         {isLoading ? (
-          <div className="flex flex-col md:flex-row gap-6 mt-16">
+          <div className="flex flex-col md:flex-row gap-6 mt-14 md:mt-16">
             <Skeleton className="w-full md:w-[340px] h-[60vh] rounded-xl" />
             <div className="flex-1 space-y-4">
               <Skeleton className="h-8 w-48" />
@@ -275,7 +275,7 @@ export default function WatchLaterPage() {
             </div>
           </div>
         ) : videos.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-16 mt-14 md:mt-16">
             <Clock className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Watch Later is empty</h2>
             <p className="text-muted-foreground">
@@ -289,7 +289,7 @@ export default function WatchLaterPage() {
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col md:flex-row gap-0 md:gap-6 mt-16">
+          <div className="flex flex-col md:flex-row gap-0 md:gap-6 mt-14 md:mt-16">
             {/* LEFT COLUMN */}
             <div className="md:w-[340px] flex-shrink-0 md:sticky md:top-[80px] md:self-start md:h-[calc(100vh-80px)] md:overflow-hidden">
               <div className="relative h-full rounded-xl overflow-hidden bg-card border shadow-sm">

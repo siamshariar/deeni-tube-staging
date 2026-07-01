@@ -142,7 +142,7 @@ export default function CategoryVideosPage() {
         <h1 className="font-semibold text-lg truncate">{categoryName}</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-16">
+      <div className="px-4 md:px-6 py-4 md:py-6 mt-14 md:mt-16">
         {isLoading ? (
           <>
             <div className="hidden md:block mb-4">
@@ -315,16 +315,16 @@ export default function CategoryVideosPage() {
                 {/* Mobile list */}
                 <div className="flex flex-col md:hidden">
                   {filteredVideos.map((video) => (
-                    <div key={video.id} className="flex gap-3 py-3 border-b last:border-0 group">
+                    <div key={video.id} className="flex gap-3 py-2.5 hover:bg-muted/30 rounded-lg px-1 -mx-1 transition-colors group">
                       <Link
                         href={`/videos/${video.channel}/${video.videoId}`}
-                        className="relative w-40 aspect-video flex-shrink-0"
+                        className="relative w-36 aspect-video flex-shrink-0 rounded-lg overflow-hidden"
                       >
                         <Image
                           src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
                           alt={video.title}
                           fill
-                          className="object-cover rounded-lg"
+                          className="object-cover"
                         />
                         <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 py-0.5 rounded font-medium">
                           {video.duration}
@@ -333,7 +333,7 @@ export default function CategoryVideosPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-1">
                           <Link href={`/videos/${video.channel}/${video.videoId}`}>
-                            <h3 className="font-medium text-sm line-clamp-2">
+                            <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
                               {video.title}
                             </h3>
                           </Link>
@@ -372,11 +372,11 @@ export default function CategoryVideosPage() {
                               {video.channel.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-xs text-muted-foreground">
                             {video.channel}
                           </span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {video.views} • {video.timeAgo}
                         </p>
                       </div>
