@@ -431,7 +431,7 @@ export default function VideoPlayPage() {
   const videoSrc = `https://www.youtube.com/embed/${mainVideo.videoId}?autoplay=1`;
 
   return (
-    <div className="min-h-screen bg-background md:-ml-[240px]">
+    <div className="min-h-screen bg-background">
       {/* Mobile back button – sticky below global header */}
       {isMobile && (
         <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">

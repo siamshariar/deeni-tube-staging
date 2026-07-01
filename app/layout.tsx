@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import AppHeader from "@/components/app-header";
 import DesktopSidebar from "@/components/desktop-sidebar";
 import MobileNav from "@/components/mobile-nav";
+import AppShell from "@/components/app-shell";
 import { HeaderProvider } from "@/app/contexts/header-context";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -42,12 +43,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <style>{`\n            @keyframes sidebarOpen {\n              from { transform: translateX(-100%); }\n              to { transform: translateX(0); }\n            }\n            @keyframes fadeIn {\n              from { opacity: 0; }\n              to { opacity: 1; }\n            }\n            .animate-sidebar-open { animation: sidebarOpen 0.3s ease-out; }\n            .animate-fade-in { animation: fadeIn 0.3s ease-out; }\n          `}</style>
           <HeaderProvider>
             <AppHeader />
             <DesktopSidebar />
-            <main className="flex-1 md:pl-[240px] pb-[calc(56px+env(safe-area-inset-bottom,0px))] min-h-screen transition-all duration-300 ease-in-out">
+            <AppShell>
               {children}
-            </main>
+            </AppShell>
             <MobileNav />
           </HeaderProvider>
         </ThemeProvider>

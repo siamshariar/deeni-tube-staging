@@ -85,55 +85,55 @@ body {
 /* Add these styles at the end of the file */
 
 /* YouTube-style thin scrollbar - ONLY for sidebars (desktop sidebar and mobile sidebar) */
-aside.sidebar-scrollbar::-webkit-scrollbar {
+.sidebar-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
 
-aside.sidebar-scrollbar::-webkit-scrollbar-track {
+.sidebar-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-aside.sidebar-scrollbar::-webkit-scrollbar-thumb {
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
   background: transparent;
   border-radius: 4px;
 }
 
-aside.sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
+.sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
   background: #909090;
 }
 
-aside.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #606060;
 }
 
-aside.sidebar-scrollbar::-webkit-scrollbar-thumb:active {
+.sidebar-scrollbar::-webkit-scrollbar-thumb:active {
   background: #404040;
 }
 
 /* Dark mode */
-.dark aside.sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
+.dark .sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
   background: #717171;
 }
 
-.dark aside.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+.dark .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #909090;
 }
 
-.dark aside.sidebar-scrollbar::-webkit-scrollbar-thumb:active {
+.dark .sidebar-scrollbar::-webkit-scrollbar-thumb:active {
   background: #aaaaaa;
 }
 
 /* Firefox */
-aside.sidebar-scrollbar {
+.sidebar-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
 
-aside.sidebar-scrollbar:hover {
+.sidebar-scrollbar:hover {
   scrollbar-color: #909090 transparent;
 }
 
-.dark aside.sidebar-scrollbar:hover {
+.dark .sidebar-scrollbar:hover {
   scrollbar-color: #717171 transparent;
 }
 

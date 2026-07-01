@@ -34,13 +34,26 @@ export default function DesktopSidebar() {
   const [showMoreChannels, setShowMoreChannels] = useState(false);
   const [showMoreScholars, setShowMoreScholars] = useState(false);
 
+  // Restore persisted sidebar state on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('sidebar-collapsed');
+    if (stored !== null) {
+      setIsCollapsed(stored === 'true');
+    }
+  }, []);
+
   // Expose toggle function globally for header to call
   useEffect(() => {
     if (typeof window !== 'undefined') {
       (window as any).__sidebarToggle = () => {
-        setIsCollapsed(prev => !prev);
+        setIsCollapsed(prev => {
+          const next = !prev;
+          localStorage.setItem('sidebar-collapsed', String(next));
+          return next;
+        });
       };
       (window as any).__sidebarGetState = () => isCollapsed;
+      window.dispatchEvent(new Event('sidebar-state-change'));
     }
     return () => {
       if (typeof window !== 'undefined') {
@@ -53,7 +66,6 @@ export default function DesktopSidebar() {
   if (
     pathname?.startsWith("/videos/") ||
     pathname?.startsWith("/playlists/") ||
-    pathname === "/shorts" ||
     pathname === "/signin"
   ) {
     return null;
@@ -78,14 +90,15 @@ export default function DesktopSidebar() {
   const isScholarsActive = pathname === "/scholars";
 
   return (
-    <aside
-      className={cn(
-        "hidden md:flex fixed left-0 border-r bg-background overflow-y-auto overflow-x-hidden flex-shrink-0 z-10 transition-all duration-300 ease-in-out sidebar-scrollbar",
-        isCollapsed ? "w-[72px]" : "w-[240px]",
-        top,
-        height
-      )}
-    >
+    <>
+      <aside
+        className={cn(
+          "hidden md:flex fixed left-0 border-r bg-background overflow-y-auto overflow-x-hidden flex-shrink-0 z-30 transition-all duration-300 ease-in-out sidebar-scrollbar",
+          isCollapsed ? "w-[72px]" : "w-[240px]",
+          top,
+          height
+        )}
+      >
       <div className="w-full py-1.5">
         {/* Mini Sidebar Items */}
         {isCollapsed ? (
@@ -369,7 +382,9 @@ export default function DesktopSidebar() {
           </>
         )}
       </div>
-    </aside>
+      </aside>
+
+    </>
   );
 }
 

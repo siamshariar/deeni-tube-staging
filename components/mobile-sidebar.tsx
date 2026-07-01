@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Home,
+  Menu,
   PlaySquare,
   BookMarked,
   History,
@@ -26,7 +27,7 @@ import {
   ListVideo,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ShortsModal from "./shorts-modal";
 
@@ -67,8 +68,22 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const [shortsModalOpen, setShortsModalOpen] = useState(false);
   const [showMoreChannels, setShowMoreChannels] = useState(false);
   const [showMoreScholars, setShowMoreScholars] = useState(false);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isVisible, setIsVisible] = useState(isOpen);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      requestAnimationFrame(() => setIsVisible(true));
+      return;
+    }
+
+    setIsVisible(false);
+    const timer = setTimeout(() => setShouldRender(false), 300);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
+
+  if (!shouldRender) return null;
 
   const isChannelsActive = pathname === "/channels";
   const isScholarsActive = pathname === "/scholars";
@@ -80,22 +95,42 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
+      <div
+        className={cn(
+          "fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ease-in-out",
+          isVisible ? "opacity-100" : "opacity-0"
+        )}
+        onClick={onClose}
+      />
 
-      <div className="fixed top-0 left-0 bottom-0 w-[280px] bg-background z-50 overflow-y-auto shadow-xl">
-        <div className="flex items-center px-4 py-3 border-b sticky top-0 bg-background">
+      <div
+        className={cn(
+          "fixed top-0 left-0 bottom-0 w-[280px] bg-background z-50 overflow-hidden shadow-xl transform transition-transform duration-[400ms] ease-in-out flex flex-col",
+          isVisible ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex items-center gap-4 px-4 py-3 border-b bg-background">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors"
+            aria-label="Close sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
           <Link href="/" onClick={onClose}>
             <Image src="/DeeniTubeLogo.png" alt="Deeni.tube" width={100} height={24} className="h-6 w-auto" />
           </Link>
         </div>
+
+        <div className="flex-1 overflow-y-auto overflow-x-hidden sidebar-scrollbar">
 
         <div className="py-2">
           <MobileSidebarItem href="/" icon={<Home className="h-5 w-5" />} label="Home" active={pathname === "/"} onClick={onClose} />
           <MobileSidebarItem href="/shorts" icon={<PlaySquare className="h-5 w-5" />} label="Shorts" active={pathname === "/shorts"} onClick={onClose} />
         </div>
 
-        {/* Channels Section */}
-        {/* <div className="border-t py-2">
+        <div className="border-t py-2">
           <Link 
             href="/channels"
             onClick={onClose}
@@ -105,7 +140,7 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
             )}
           >
             <Users className="h-5 w-5 flex-shrink-0" />
-            <span className="flex-1">Channels</span>
+            <span className="flex">Channels</span>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </Link>
           
@@ -153,10 +188,9 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               </button>
             </>
           )}
-        </div> */}
+        </div>
 
-        {/* Scholars Section */}
-        {/* <div className="border-t py-2">
+        <div className="border-t py-2">
           <Link 
             href="/scholars"
             onClick={onClose}
@@ -166,7 +200,7 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
             )}
           >
             <GraduationCap className="h-5 w-5 flex-shrink-0" />
-            <span className="flex-1">Scholars</span>
+            <span className="flex">Scholars</span>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </Link>
           
@@ -214,7 +248,12 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               </button>
             </>
           )}
-        </div> */}
+        </div>
+
+        <div className="border-t py-2">
+          <h3 className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Explore</h3>
+          <MobileSidebarItem href="/categories" icon={<FolderOpen className="h-5 w-5" />} label="Categories" active={pathname === "/categories"} onClick={onClose} />
+        </div>
 
         {/* You Section */}
         <div className="border-t py-2">
@@ -244,14 +283,14 @@ export default function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
           <MobileSidebarItem href="/help" icon={<HelpCircle className="h-5 w-5" />} label="Help" onClick={onClose} />
         </div>
 
+        </div>
+
         {/* Footer */}
-        <div className="px-4 py-4 mt-2">
+        <div className="px-4 py-4 border-t mt-auto">
           <p className="text-xs text-center leading-tight tracking-wide text-muted-foreground">
             © 2026 Deeni.tube All rights reserved.
           </p>
         </div>
-
-        <div className="pb-12" />
       </div>
 
       <ShortsModal isOpen={shortsModalOpen} onClose={() => setShortsModalOpen(false)} />

@@ -28,6 +28,7 @@ import {
   Flag,
   MoreHorizontal,
   EyeOff,
+  Heart,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -296,8 +297,7 @@ export default function PlaylistDetailPage() {
   const [dislikedComments, setDislikedComments] = useState<Set<string>>(new Set());
   const [commentsDrawerOpen, setCommentsDrawerOpen] = useState(false);
 
-  const [isLiked, setIsLiked] = useState(false);
-  const [isDisliked, setIsDisliked] = useState(false);
+  const [isLoved, setIsLoved] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -434,14 +434,8 @@ export default function PlaylistDetailPage() {
 
   const handleReply = (commentId: string) => toast("Reply input opened (demo)");
 
-  const handleLikeVideo = () => {
-    setIsLiked(!isLiked);
-    if (isDisliked) setIsDisliked(false);
-  };
-
-  const handleDislikeVideo = () => {
-    setIsDisliked(!isDisliked);
-    if (isLiked) setIsLiked(false);
+  const handleLove = () => {
+    setIsLoved(!isLoved);
   };
 
   const handleShare = () => {
@@ -452,7 +446,7 @@ export default function PlaylistDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background md:-ml-[240px] mt-12">
+      <div className="min-h-screen bg-background">
         <div className="flex flex-col lg:flex-row gap-4 px-4 pt-2 md:pt-4">
           <div className="flex-1 min-w-0">
             <Skeleton className="aspect-[4/3] md:aspect-video w-full rounded-xl" />
@@ -472,7 +466,7 @@ export default function PlaylistDetailPage() {
 
   if (!playlist) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center md:-ml-[240px]">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center py-16">
           <h2 className="text-xl font-semibold">Playlist not found</h2>
           <Button variant="outline" className="mt-4 rounded-full" onClick={() => router.back()}>
@@ -484,7 +478,7 @@ export default function PlaylistDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background md:-ml-[240px] mt-16">
+    <div className="min-h-screen bg-background">
       {/* Mobile back button + title */}
       {isMobile && (
         <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">
@@ -502,7 +496,7 @@ export default function PlaylistDetailPage() {
 
       {/* Mobile: full-width video (edge-to-edge) */}
       {isMobile && (
-        <div className="w-full bg-black">
+        <div className="w-full bg-black pt-12">
           <div className="relative w-full aspect-video">
             <iframe
               src={`https://www.youtube.com/embed/${currentVideo?.videoId || "5qap5aO4i9A"}?autoplay=1`}
@@ -515,8 +509,8 @@ export default function PlaylistDetailPage() {
         </div>
       )}
 
-      <div className="pb-6">
-        <div className="px-4 md:px-4">
+      <div className="md:pt-4 pb-6">
+        <div className="px-4 lg:pt-12 md:pt-12 sm:pt-2 md:px-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 min-w-0">
               {/* Desktop video player */}
@@ -551,25 +545,16 @@ export default function PlaylistDetailPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center bg-muted rounded-full overflow-hidden">
-                        <button
-                          onClick={handleLikeVideo}
-                          className={`flex items-center gap-2 px-4 py-2 hover:bg-muted/80 transition-colors border-r border-border ${
-                            isLiked ? "text-foreground" : ""
-                          }`}
-                        >
-                          <ThumbsUp className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
-                          <span className="text-sm font-medium">15K</span>
-                        </button>
-                        <button
-                          onClick={handleDislikeVideo}
-                          className={`px-4 py-2 hover:bg-muted/80 transition-colors ${
-                            isDisliked ? "text-foreground" : ""
-                          }`}
-                        >
-                          <ThumbsDown className={`h-5 w-5 ${isDisliked ? "fill-current" : ""}`} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={handleLove}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
+                          isLoved
+                            ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                            : "bg-muted hover:bg-muted/80"
+                        }`}
+                      >
+                        <Heart className={`h-5 w-5 ${isLoved ? "fill-current" : ""}`} />
+                      </button>
                       <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowShareModal(true)}>
                         <Share className="h-5 w-5" />
                       </Button>
@@ -646,7 +631,7 @@ export default function PlaylistDetailPage() {
                     </DialogContent>
                   </Dialog>
 
-                  {/* Comments */}
+                  {/* Comments section */}
                   <div className="mt-4">
                     {!isMobile ? (
                       <div>

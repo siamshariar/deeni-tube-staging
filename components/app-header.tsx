@@ -148,21 +148,6 @@ export default function AppHeader() {
     // Call the sidebar's internal toggle function
     if (typeof window !== 'undefined' && (window as any).__sidebarToggle) {
       (window as any).__sidebarToggle();
-      
-      // Update main content margin after a small delay to let sidebar update
-      setTimeout(() => {
-        const sidebar = document.querySelector('aside');
-        const main = document.querySelector('main');
-        if (sidebar && main) {
-          if (sidebar.classList.contains('w-[72px]')) {
-            main.classList.remove('md:pl-[240px]');
-            main.classList.add('md:pl-[72px]');
-          } else {
-            main.classList.remove('md:pl-[72px]');
-            main.classList.add('md:pl-[240px]');
-          }
-        }
-      }, 50);
     }
   };
 
@@ -175,7 +160,6 @@ export default function AppHeader() {
   const hasDesktopSidebar = !(
     pathname?.startsWith("/videos/") ||
     pathname?.startsWith("/playlists/") ||
-    pathname === "/shorts" ||
     pathname === "/signin"
   );
 
