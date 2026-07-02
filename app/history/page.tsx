@@ -504,7 +504,6 @@ function ShortsRow({ shorts }: { shorts: any[] }) {
 
 export default function HistoryPage() {
   const router = useRouter();
-  const isMobile = useMediaQuery("(max-width: 768px)");
   const [videos, setVideos] = useState(allHistoryData);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -632,7 +631,7 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-3 sm:px-4 md:px-6 py-4 md:py-6 max-w-4xl">
+      <div className="px-4 md:px-6 py-4 md:py-6">
         {isLoading ? (
           <div className="mt-14 sm:mt-16">
             <Skeleton className="h-8 w-48 mb-4" />
@@ -656,7 +655,7 @@ export default function HistoryPage() {
         ) : (
           <div className="mt-14 sm:mt-16">
             {/* Header */}
-            <h1 className="text-2xl sm:text-2xl font-bold mb-4">Watch history</h1>
+            <h1 className="text-2xl font-bold mb-4">Watch history</h1>
 
             {/* Category chips */}
             <div className="flex gap-1.5 sm:gap-2 mb-3 sm:mb-4 overflow-x-auto pb-1 scrollbar-none">
