@@ -25,7 +25,7 @@ function AboutSkeleton() {
         <Skeleton className="h-6 w-20" />
       </div>
 
-      <div className="px-4 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
+      <div className="px-3 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Header skeleton */}
         <div className="flex items-center gap-3 mb-8">
           <Skeleton className="h-12 w-12 rounded-full" />
@@ -91,7 +91,7 @@ export default function AboutPage() {
         <h1 className="font-semibold text-lg">About</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
+      <div className="px-3 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Header */}
         <div className="hidden md:flex items-center gap-3 mb-8">
           <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">

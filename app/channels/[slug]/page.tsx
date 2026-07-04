@@ -78,7 +78,7 @@ function ChannelSkeleton() {
   return (
     <div className="min-h-screen bg-background">
       <Skeleton className="w-full h-44 md:h-56 xl:h-64" />
-      <div className="px-4 py-4 border-b">
+      <div className="px-3 py-4 border-b">
         <div className="flex items-start gap-4">
           <Skeleton className="h-16 w-16 md:h-20 md:w-20 rounded-full" />
           <div className="flex-1 space-y-2">
@@ -88,7 +88,7 @@ function ChannelSkeleton() {
           </div>
         </div>
       </div>
-      <div className="border-b px-4">
+      <div className="border-b px-3">
         <div className="flex gap-6 h-12 items-center">
           <Skeleton className="h-4 w-16" />
           <Skeleton className="h-4 w-16" />
@@ -127,7 +127,7 @@ export default function ChannelDetailPage() {
   if (!channel) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center mt-14 md:mt-16">
-        <div className="text-center px-4">
+        <div className="text-center px-3">
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <Play className="h-8 w-8 text-muted-foreground" />
           </div>
@@ -223,7 +223,7 @@ export default function ChannelDetailPage() {
       </div>
 
       {/* Channel info header */}
-      <div className="px-4 py-4 border-b">
+      <div className="px-3 py-4 border-b">
         <div className="flex flex-col md:flex-row md:items-start md:gap-4">
           <Avatar className="flex-shrink-0 ring-4 ring-background -mt-10 md:-mt-16 relative z-10 h-16 w-16 md:h-20 md:w-20">
             <AvatarImage src={channel.avatar} />
@@ -305,7 +305,7 @@ export default function ChannelDetailPage() {
           className="w-full"
           onValueChange={setActiveTab}
         >
-          <TabsList className="h-12 bg-background w-full justify-start overflow-x-auto scrollbar-none px-4">
+          <TabsList className="h-12 bg-background w-full justify-start overflow-x-auto scrollbar-none px-3">
             <TabsTrigger
               value="videos"
               className="px-4 py-1 data-[state=active]:border-b-2 data-[state=active]:border-foreground data-[state=active]:rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none"
@@ -375,7 +375,7 @@ export default function ChannelDetailPage() {
               </div>
             </>
           ) : (
-            <div className="text-center py-16 px-4">
+            <div className="text-center py-16 px-3">
               <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
                 <Play className="h-7 w-7 text-muted-foreground" />
               </div>
@@ -423,7 +423,7 @@ export default function ChannelDetailPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 px-4">
+            <div className="text-center py-16 px-3">
               <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
                 <Play className="h-7 w-7 text-muted-foreground" />
               </div>
@@ -555,7 +555,7 @@ export default function ChannelDetailPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 px-4">
+            <div className="text-center py-16 px-3">
               <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
                 <ListVideo className="h-7 w-7 text-muted-foreground" />
               </div>
@@ -568,7 +568,7 @@ export default function ChannelDetailPage() {
 
       {/* Tab content - About */}
       {activeTab === "about" && (
-        <div className="px-4 py-6 max-w-2xl space-y-4">
+        <div className="px-3 py-6 max-w-2xl space-y-4">
           <div className="p-4 border rounded-xl bg-card">
             <h2 className="text-base font-semibold mb-2">Description</h2>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">

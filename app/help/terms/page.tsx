@@ -19,7 +19,7 @@ export default function TermsPage() {
         <h1 className="font-semibold text-lg">Terms of Service</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
+      <div className="px-3 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
         <div className="hidden md:flex items-center gap-3 mb-8">
           <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
             <FileText className="h-6 w-6 text-purple-600" />

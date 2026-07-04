@@ -92,7 +92,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-14 md:mt-16 max-w-3xl mx-auto">
+      <div className="px-3 md:px-6 py-4 md:py-6 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Desktop title */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Settings</h1>

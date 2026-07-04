@@ -180,7 +180,7 @@ export default function Home() {
       >
         <div
           ref={scrollContainerRef}
-          className="h-full overflow-x-auto scrollbar-none px-4"
+          className="h-full overflow-x-auto scrollbar-none px-3"
           style={{
             WebkitOverflowScrolling: "touch",
             overscrollBehaviorX: "contain",
@@ -237,7 +237,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+            <div className="grid grid-cols-1 gap-4 p-2 md:hidden">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={`msk-${i}`} className="flex flex-col border rounded-xl overflow-hidden shadow-sm">
                   <Skeleton className="aspect-video w-full" />
@@ -272,7 +272,7 @@ export default function Home() {
                 />
               ))}
             </div>
-            <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+            <div className="grid grid-cols-1 gap-4 p-2 md:hidden">
               {displayedVideos.map((video: VideoItem) => (
                 <VideoCard
                   key={video.id}

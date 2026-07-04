@@ -648,7 +648,7 @@ export default function SearchPage() {
         </Button>
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-14 md:mt-16 max-w-4xl mx-auto">
+      <div className="px-3 md:px-6 py-4 md:py-6 mt-14 md:mt-16 max-w-4xl mx-auto">
         {/* Desktop search bar + filters layout */}
         <div className="hidden md:block mb-6">
           <h1 className="text-2xl font-bold mb-4">Search</h1>

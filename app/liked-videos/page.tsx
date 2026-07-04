@@ -77,7 +77,7 @@ export default function LikedVideosPage() {
         </span>
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-6">
+      <div className="px-3 md:px-6 py-4 md:py-6">
         {isEmpty ? (
           <div className="text-center py-20">
             <ThumbsUp className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />

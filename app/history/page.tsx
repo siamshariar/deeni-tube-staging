@@ -631,7 +631,7 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-6 py-4 md:py-6">
+      <div className="px-3 md:px-6 py-4 md:py-6">
         {isLoading ? (
           <div className="mt-14 sm:mt-16">
             <Skeleton className="h-8 w-48 mb-4" />

@@ -60,7 +60,7 @@ export default function MorePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-14 md:mt-16 max-w-3xl mx-auto">
+      <div className="px-3 md:px-6 py-4 md:py-6 mt-14 md:mt-16 max-w-3xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">More</h1>
           <p className="text-sm text-muted-foreground mt-1">

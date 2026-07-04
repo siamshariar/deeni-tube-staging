@@ -18,7 +18,7 @@ function RateSkeleton() {
         <Skeleton className="h-6 w-28" />
       </div>
 
-      <div className="px-4 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
+      <div className="px-3 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Header skeleton */}
         <div className="text-center mb-8">
           <Skeleton className="w-16 h-16 rounded-full mx-auto mb-4" />
@@ -96,7 +96,7 @@ export default function RatePage() {
         <h1 className="font-semibold text-lg">Rate the App</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
+      <div className="px-3 md:px-6 py-6 md:py-8 mt-14 md:mt-16 max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mx-auto w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mb-4">

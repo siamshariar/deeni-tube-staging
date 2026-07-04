@@ -48,7 +48,7 @@ const allLanguageOptions = [
 function ScholarSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 py-6 mt-14 md:mt-16 border-b flex items-start gap-4">
+      <div className="px-3 py-6 mt-14 md:mt-16 border-b flex items-start gap-4">
         <Skeleton className="h-20 w-20 md:h-24 md:w-24 rounded-full" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-7 w-48" />
@@ -166,7 +166,7 @@ export default function ScholarDetailPage() {
       )}
 
       {/* Scholar Profile Section */}
-      <div className="px-4 py-6 mt-14 md:mt-16 border-b">
+      <div className="px-3 py-6 mt-14 md:mt-16 border-b">
         <div className="flex items-start gap-4">
           <Avatar
             className={cn(
@@ -264,7 +264,7 @@ export default function ScholarDetailPage() {
       </Dialog>
 
       {/* Videos Section */}
-      <div className="px-4 py-4">
+      <div className="px-3 py-4">
         <h2 className="font-semibold text-lg mb-3">
           {scholarVideos.length} Videos
         </h2>
@@ -369,7 +369,7 @@ export default function ScholarDetailPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 px-4">
+          <div className="text-center py-16 px-3">
             <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
               <Play className="h-7 w-7 text-muted-foreground" />
             </div>

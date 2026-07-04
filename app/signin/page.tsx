@@ -99,7 +99,7 @@ export default function SignInPage() {
         <button onClick={() => setShowLanguagePopup(true)} className="flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"><Globe className="h-4 w-4" /><span className="hidden sm:inline">Language</span></button>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-[400px] space-y-6">
           <div className="text-center space-y-3">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Welcome to Deeni.tube</h1>

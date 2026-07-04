@@ -142,7 +142,7 @@ export default function CategoryVideosPage() {
         <h1 className="font-semibold text-lg truncate">{categoryName}</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-6 mt-14 md:mt-16">
+      <div className="px-3 md:px-6 py-4 md:py-6 mt-14 md:mt-16">
         {isLoading ? (
           <>
             <div className="hidden md:block mb-4">

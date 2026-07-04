@@ -447,7 +447,7 @@ export default function PlaylistDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="flex flex-col lg:flex-row gap-4 px-4 pt-2 md:pt-4">
+        <div className="flex flex-col lg:flex-row gap-4 px-3 pt-2 md:pt-4">
           <div className="flex-1 min-w-0">
             <Skeleton className="aspect-[4/3] md:aspect-video w-full rounded-xl" />
           </div>
@@ -510,7 +510,7 @@ export default function PlaylistDetailPage() {
       )}
 
       <div className="pb-6">
-        <div className="px-4 pt-4 md:pt-4 md:px-4">
+        <div className="px-3 pt-4 md:pt-4 md:px-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 min-w-0">
               {/* Desktop video player */}
@@ -759,7 +759,7 @@ export default function PlaylistDetailPage() {
                           <DrawerHeader>
                             <DrawerTitle className="text-lg">Comments</DrawerTitle>
                           </DrawerHeader>
-                          <div className="px-4 overflow-y-auto">
+                          <div className="px-3 overflow-y-auto">
                             <div className="flex gap-3 mb-6">
                               <Avatar className="h-8 w-8"><AvatarFallback>Y</AvatarFallback></Avatar>
                               <div className="flex-1">

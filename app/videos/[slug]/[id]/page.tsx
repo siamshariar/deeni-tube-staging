@@ -465,7 +465,7 @@ export default function VideoPlayPage() {
         )}
 
         {/* Content */}
-        <div className="px-4 md:px-4">
+        <div className="px-3 md:px-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 min-w-0">
               {/* Desktop video player */}
@@ -784,7 +784,7 @@ export default function VideoPlayPage() {
                         <DrawerHeader>
                           <DrawerTitle className="text-lg">Comments</DrawerTitle>
                         </DrawerHeader>
-                        <div className="px-4 overflow-y-auto">
+                        <div className="px-3 overflow-y-auto">
                           <div className="flex gap-3 mb-6">
                             <Avatar className="h-8 w-8"><AvatarFallback>Y</AvatarFallback></Avatar>
                             <div className="flex-1">
@@ -921,7 +921,7 @@ export default function VideoPlayPage() {
 
         {/* Related Videos – Mobile */}
         {isMobile && (
-          <div className="px-4 mt-6">
+          <div className="px-3 mt-6">
             <h3 className="font-semibold text-base mb-4">Related Videos</h3>
             <div className="space-y-3">
               {relatedVideos.map((v) => (

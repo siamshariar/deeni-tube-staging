@@ -58,7 +58,7 @@ function DonateSkeleton() {
         <Skeleton className="h-6 w-20" />
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-8 mt-14 md:mt-16 max-w-2xl mx-auto">
+      <div className="px-3 md:px-6 py-4 md:py-8 mt-14 md:mt-16 max-w-2xl mx-auto">
         {/* Header skeleton */}
         <div className="text-center mb-8">
           <Skeleton className="w-16 h-16 rounded-full mx-auto mb-4" />
@@ -158,7 +158,7 @@ export default function DonatePage() {
         <h1 className="font-semibold text-lg">Donate</h1>
       </div>
 
-      <div className="px-4 md:px-6 py-4 md:py-8 mt-14 md:mt-16 max-w-2xl mx-auto">
+      <div className="px-3 md:px-6 py-4 md:py-8 mt-14 md:mt-16 max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
