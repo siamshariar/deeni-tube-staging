@@ -530,58 +530,103 @@ export default function PlaylistDetailPage() {
 
               {currentVideo && (
                 <div className="mt-2">
-                  <h1 className="text-lg md:text-xl font-bold leading-tight">
-                    {currentVideo.title}
-                  </h1>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={currentVideo.channelAvatar} />
-                        <AvatarFallback>{currentVideo.channel?.charAt(0) || "C"}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">{currentVideo.channel}</p>
-                        <p className="text-xs text-muted-foreground">780K subscribers</p>
+                  {/* ── Mobile: avatar left, then title/channel/actions stacked ── */}
+                  <div className="flex md:hidden items-start gap-2">
+                    <Avatar className="h-9 w-9 flex-shrink-0 mt-0.5">
+                      <AvatarImage src={currentVideo.channelAvatar} />
+                      <AvatarFallback>{currentVideo.channel?.charAt(0) || "C"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold leading-snug line-clamp-2">{currentVideo.title}</p>
+                      <p className="text-xs font-medium mt-1 leading-tight">{currentVideo.channel}</p>
+                      <p className="text-xs text-muted-foreground leading-tight">780K subscribers</p>
+                      <div className="flex items-center gap-0.5 mt-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setShowShareModal(true)}>
+                          <Share className="h-4 w-4" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-72">
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <Clock className="h-5 w-5" /> Save to Watch later
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <Bookmark className="h-5 w-5" /> Save to playlist
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toast("Channel removed from feed")} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <UserX className="h-5 w-5" /> Don't recommend channel
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <EyeOff className="h-5 w-5" /> Not interested
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <Flag className="h-5 w-5" /> Report
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={handleLove}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                          isLoved
-                            ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                            : "bg-muted hover:bg-muted/80"
-                        }`}
-                      >
-                        <Heart className={`h-5 w-5 ${isLoved ? "fill-current" : ""}`} />
-                      </button>
-                      <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowShareModal(true)}>
-                        <Share className="h-5 w-5" />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="rounded-full">
-                            <MoreHorizontal className="h-5 w-5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-72">
-                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <Clock className="h-5 w-5" /> Save to Watch later
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <Bookmark className="h-5 w-5" /> Save to playlist
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toast("Channel removed from feed")} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <UserX className="h-5 w-5" /> Don't recommend channel
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <EyeOff className="h-5 w-5" /> Not interested
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <Flag className="h-5 w-5" /> Report
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                  </div>
+
+                  {/* ── Desktop: title above, channel row with actions ── */}
+                  <div className="hidden md:block">
+                    <h1 className="text-xl font-bold leading-tight">{currentVideo.title}</h1>
+                    <div className="flex md:items-center md:justify-between gap-2 mt-2">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={currentVideo.channelAvatar} />
+                          <AvatarFallback>{currentVideo.channel?.charAt(0) || "C"}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium">{currentVideo.channel}</p>
+                          <p className="text-xs text-muted-foreground">780K subscribers</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {/* Love/Heart button — commented out; uncomment to re-enable
+                        <button
+                          onClick={handleLove}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
+                            isLoved
+                              ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                              : "bg-muted hover:bg-muted/80"
+                          }`}
+                        >
+                          <Heart className={`h-5 w-5 ${isLoved ? "fill-current" : ""}`} />
+                        </button>
+                        */}
+                        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setShowShareModal(true)}>
+                          <Share className="h-5 w-5" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="rounded-full">
+                              <MoreHorizontal className="h-5 w-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-72">
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <Clock className="h-5 w-5" /> Save to Watch later
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <Bookmark className="h-5 w-5" /> Save to playlist
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toast("Channel removed from feed")} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <UserX className="h-5 w-5" /> Don't recommend channel
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <EyeOff className="h-5 w-5" /> Not interested
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                              <Flag className="h-5 w-5" /> Report
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </div>
 
@@ -631,8 +676,8 @@ export default function PlaylistDetailPage() {
                     </DialogContent>
                   </Dialog>
 
-                  {/* Comments section */}
-                  <div className="mt-4">
+                  {/* Comments section — commented out; remove the false && wrapper to re-enable */}
+                  {false && (<div className="mt-4">
                     {!isMobile ? (
                       <div>
                         <div className="flex items-center gap-6 mb-4">
@@ -774,6 +819,7 @@ export default function PlaylistDetailPage() {
                       </Drawer>
                     )}
                   </div>
+                  )}
                 </div>
               )}
             </div>
@@ -881,27 +927,46 @@ export default function PlaylistDetailPage() {
                     <button
                       key={video.id}
                       onClick={() => handleSelectVideo(index)}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/30 transition-colors group cursor-pointer"
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-2.5 transition-colors group cursor-pointer",
+                        index === currentVideoIndex
+                          ? "bg-muted/60 hover:bg-muted/70"
+                          : "hover:bg-muted/40"
+                      )}
                       draggable
                       onDragStart={() => handleDragStart(index)}
                       onDragOver={(e) => handleDragOver(e, index)}
                       onDragEnd={handleDragEnd}
                     >
-                      <div className="flex items-center justify-center w-8 text-center relative cursor-grab">
-                        <span className="text-xs text-muted-foreground font-mono group-hover:opacity-0 transition-opacity">
-                          {index === currentVideoIndex ? "▶" : index + 1}
-                        </span>
-                        <GripVertical className="absolute inset-0 m-auto h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {/* Mobile indicator: ▶ for active, grip for others — no numbers */}
+                      <div className="flex md:hidden items-center justify-center w-5 flex-shrink-0 cursor-grab">
+                        {index === currentVideoIndex ? (
+                          <Play className="h-3 w-3 text-primary fill-primary flex-shrink-0" />
+                        ) : (
+                          <GripVertical className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
+                        )}
                       </div>
 
-                      <div className="relative w-24 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-black">
+                      {/* Desktop indicator: number fades on hover, grip appears */}
+                      <div className="hidden md:flex items-center justify-center w-5 flex-shrink-0 relative cursor-grab">
+                        <span className={cn(
+                          "text-[10px] font-mono leading-none transition-opacity group-hover:opacity-0",
+                          index === currentVideoIndex ? "text-primary font-semibold" : "text-muted-foreground"
+                        )}>
+                          {index === currentVideoIndex ? "▶" : index + 1}
+                        </span>
+                        <GripVertical className="absolute inset-0 m-auto h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+
+                      {/* Thumbnail — 16:9, slightly larger on mobile: 106×60; sm: 120×68 */}
+                      <div className="relative w-[106px] h-[60px] sm:w-[120px] sm:h-[68px] rounded-md overflow-hidden flex-shrink-0 bg-black">
                         <Image
                           src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
                           alt={video.title}
                           fill
                           className="object-cover"
                         />
-                        <div className="absolute bottom-0.5 right-0.5 bg-black/80 text-white text-[10px] px-1 rounded font-medium">
+                        <div className="absolute bottom-0.5 right-0.5 bg-black/80 text-white text-[9px] px-1 py-px rounded font-medium leading-none">
                           {video.duration}
                         </div>
                         {index === currentVideoIndex && (
@@ -911,25 +976,26 @@ export default function PlaylistDetailPage() {
                         )}
                       </div>
 
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium line-clamp-2 group-hover:text-primary text-left">
+                      {/* Text: title → channel → timeAgo, left-aligned, centred in row */}
+                      <div className="flex-1 min-w-0 text-left">
+                        <h4 className="text-[13px] font-medium line-clamp-2 group-hover:text-primary leading-[1.35]">
                           {video.title}
                         </h4>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <Avatar className="h-4 w-4">
-                            <AvatarImage src={video.channelAvatar} />
-                            <AvatarFallback className="text-[8px]">{video.channel?.charAt(0) || "C"}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs text-muted-foreground">{video.channel}</span>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <span className="text-xs text-muted-foreground">{video.timeAgo}</span>
-                        </div>
+                        {video.channel && (
+                          <p className="text-[11px] text-muted-foreground truncate mt-1 leading-tight">
+                            {video.channel}
+                          </p>
+                        )}
+                        <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+                          {video.timeAgo}
+                        </p>
                       </div>
 
+                      {/* Three-dot — always visible on mobile, hover-only on desktop */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
-                            className="p-1 rounded-full hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="flex-shrink-0 p-1 rounded-full hover:bg-muted transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <MoreVertical className="h-4 w-4 text-muted-foreground" />

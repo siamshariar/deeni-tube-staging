@@ -28,9 +28,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Video and playlist detail pages use overlay sidebar — content must not shift
   const hasDesktopSidebar = !(
     pathname?.startsWith("/videos/") ||
     pathname?.startsWith("/playlists/") ||
+    pathname?.startsWith("/more/") ||
+    pathname?.startsWith("/help/") ||
     pathname === "/signin"
   );
 

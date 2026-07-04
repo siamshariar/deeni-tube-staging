@@ -224,22 +224,17 @@ export default function ChannelDetailPage() {
 
       {/* Channel info header */}
       <div className="px-4 py-4 border-b">
-        <div className="flex items-start gap-4">
-          <Avatar
-            className={cn(
-              "flex-shrink-0 ring-4 ring-background -mt-10 md:-mt-16 relative z-10",
-              isMobile ? "h-16 w-16" : "h-20 w-20"
-            )}
-          >
+        <div className="flex flex-col md:flex-row md:items-start md:gap-4">
+          <Avatar className="flex-shrink-0 ring-4 ring-background -mt-10 md:-mt-16 relative z-10 h-16 w-16 md:h-20 md:w-20">
             <AvatarImage src={channel.avatar} />
             <AvatarFallback className="text-lg">
               {channel.name.charAt(0)}
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex-1 min-w-0 pt-1">
-            <div className="flex items-center gap-1 flex-wrap">
-              <h1 className="text-xl md:text-2xl font-bold truncate">
+          <div className="flex-1 min-w-0 mt-3 md:mt-0 md:pt-1">
+            <div className="flex items-start gap-1 flex-wrap">
+              <h1 className="text-xl md:text-2xl font-bold">
                 {channel.name}
               </h1>
               {channel.verified && (

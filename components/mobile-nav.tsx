@@ -2,16 +2,17 @@
 "use client"
 
 import Link from "next/link"
-import { Home, Users, GraduationCap, LayoutGrid, ListVideo } from "lucide-react"
+import { Home, PlaySquare, LayoutGrid, ListVideo, User } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
+// Channels and Scholars live in the mobile sidenav drawer only (no duplicates)
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
-  { href: "/channels", icon: Users, label: "Channels" },
+  { href: "/shorts", icon: PlaySquare, label: "Shorts" },
   { href: "/categories", icon: LayoutGrid, label: "Categories" },
-  { href: "/scholars", icon: GraduationCap, label: "Scholars" },
   { href: "/playlists", icon: ListVideo, label: "Playlists" },
+  { href: "/you", icon: User, label: "You" },
 ]
 
 export default function MobileNav() {
@@ -28,6 +29,8 @@ export default function MobileNav() {
     "/scholars/",
     "/categories/",
     "/playlists/",
+    "/more/",
+    "/help/",
   ]
 
   const listPages = ["/channels", "/scholars", "/categories", "/playlists"]

@@ -73,53 +73,69 @@ export function ShareModal({ isOpen, onClose, videoUrl }: ShareModalProps) {
     }
   }, [isOpen])
 
-  const scrollShare = (dir: "left" | "right") => {
-    const el = shareContainerRef.current
-    if (!el) return
-    el.scrollBy({ left: dir === "left" ? -250 : 250, behavior: "smooth" })
-  }
-
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-card rounded-2xl w-[90vw] max-w-[540px] max-h-[85vh] overflow-hidden shadow-2xl animate-fade-in-left">
+
+      {/* Sheet (mobile) / Dialog (desktop) */}
+      <div
+        className="
+          share-modal-sheet md:share-modal-dialog
+          relative bg-card w-full md:w-[90vw] md:max-w-[540px]
+          rounded-t-2xl md:rounded-2xl
+          overflow-hidden shadow-2xl
+        "
+      >
+        {/* Drag handle — mobile only */}
+        <div className="flex justify-center pt-3 pb-1 md:hidden">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        </div>
+
+        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <h2 className="text-foreground text-lg font-semibold">Share</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted">
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-muted transition-colors"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="relative px-5 py-5">
+        {/* Share platform icons */}
+        <div className="relative px-3 py-4">
           {showLeftArrow && (
             <button
-              onClick={() => scrollShare("left")}
-              className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/80 hover:bg-background flex items-center justify-center text-foreground shadow-lg"
+              onClick={() => shareContainerRef.current?.scrollBy({ left: -250, behavior: "smooth" })}
+              className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-background/90 hover:bg-background flex items-center justify-center shadow-md"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
           )}
           {showRightArrow && (
             <button
-              onClick={() => scrollShare("right")}
-              className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/80 hover:bg-background flex items-center justify-center text-foreground shadow-lg"
+              onClick={() => shareContainerRef.current?.scrollBy({ left: 250, behavior: "smooth" })}
+              className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-background/90 hover:bg-background flex items-center justify-center shadow-md"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           )}
           <div
             ref={shareContainerRef}
-            className="flex gap-4 overflow-x-auto scrollbar-none py-2 px-2"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="flex gap-3 overflow-x-auto scrollbar-none px-2 py-1"
           >
             {sharePlatforms.map((p) => (
-              <button key={p.name} className="flex flex-col items-center gap-2 flex-shrink-0 w-[72px] group">
-                <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+              <button
+                key={p.name}
+                className="flex flex-col items-center gap-2 flex-shrink-0 w-[68px] group"
+              >
+                <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                   {p.icon}
                 </div>
-                <span className="text-xs text-muted-foreground group-hover:text-foreground text-center leading-tight truncate w-full">
+                <span className="text-[11px] text-muted-foreground group-hover:text-foreground text-center leading-tight truncate w-full">
                   {p.name}
                 </span>
               </button>
@@ -127,24 +143,28 @@ export function ShareModal({ isOpen, onClose, videoUrl }: ShareModalProps) {
           </div>
         </div>
 
-        <div className="px-5 pb-5">
-          <div className="flex items-center gap-3 bg-muted rounded-xl p-3 border border-border">
+        {/* URL copy row */}
+        <div
+          className="px-4 pb-5"
+          style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
+        >
+          <div className="flex items-center gap-2 bg-muted rounded-xl px-4 py-2.5 border border-border">
             <input
               type="text"
               value={videoUrl}
               readOnly
-              className="flex-1 bg-transparent text-sm text-foreground outline-none truncate"
+              className="flex-1 min-w-0 bg-transparent text-sm text-foreground outline-none truncate"
             />
             <button
               onClick={handleCopy}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+              className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                 copied
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
               }`}
             >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copied!" : "Copy"}
             </button>
           </div>
         </div>
@@ -152,14 +172,3 @@ export function ShareModal({ isOpen, onClose, videoUrl }: ShareModalProps) {
     </div>
   )
 }
-
-// Add this style block somewhere global, e.g., in your root layout
-const styles = `
-@keyframes fadeInLeft {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-.animate-fade-in-left {
-  animation: fadeInLeft 0.3s ease-out forwards;
-}
-`
