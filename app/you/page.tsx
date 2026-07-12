@@ -99,7 +99,6 @@ export default function YouPage() {
               <Skeleton className="h-4 w-48" />
               <Skeleton className="h-4 w-24" />
             </div>
-            <Skeleton className="h-9 w-28 rounded-full" />
           </div>
 
           {/* Language card skeleton */}
