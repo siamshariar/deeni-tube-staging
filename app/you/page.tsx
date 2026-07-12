@@ -179,11 +179,6 @@ export default function YouPage() {
                 <LogOut className="h-4 w-4" /> Sign out
               </button>
             </div>
-            <Button variant="outline" size="sm" className="rounded-full flex-shrink-0" asChild>
-              <Link href={`/channel/${userName}`}>
-                <User className="h-4 w-4 mr-1.5" /> View channel
-              </Link>
-            </Button>
           </div>
         </div>
 
