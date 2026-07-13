@@ -3,7 +3,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, Tv, LogOut, Check, ChevronRight, User } from "lucide-react";
+import {
+  Globe, Tv, LogOut, Check, ChevronRight,
+  History, ThumbsUp, Clock, ListVideo,
+  Settings, HelpCircle, MoreHorizontal, Heart,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -55,6 +59,7 @@ export default function YouPage() {
     }
   }, []);
 
+  const [prefSaved, setPrefSaved] = useState(false);
   const savePreferences = () => {
     localStorage.setItem(
       "deeni-lang-prefs",
@@ -65,12 +70,16 @@ export default function YouPage() {
         isGuest: false,
       })
     );
+    setPrefSaved(true);
+    setTimeout(() => setPrefSaved(false), 2500);
     toast.success("Preferences saved successfully!");
   };
 
   const togglePreferredLanguage = (code: string) => {
     setPreferredLanguages((prev) =>
-      prev.includes(code) ? prev.filter((l) => l !== code) : [...prev, code]
+      prev.includes(code)
+        ? prev.length > 1 ? prev.filter((l) => l !== code) : prev
+        : [...prev, code]
     );
   };
 
@@ -181,6 +190,31 @@ export default function YouPage() {
           </div>
         </div>
 
+        {/* Library Section — visible on mobile only; web screen uses sidebar links */}
+        <div className="mb-6 rounded-xl border shadow-sm overflow-hidden md:hidden">
+          {[
+            { href: "/history", icon: History, label: "History", desc: "Your watch history" },
+            // { href: "/liked-videos", icon: ThumbsUp, label: "Liked Videos", desc: "Videos you've liked" },
+            // { href: "/watch-later", icon: Clock, label: "Watch Later", desc: "Saved for later" },
+            { href: "/playlists", icon: ListVideo, label: "Playlists", desc: "Your playlists" },
+          ].map(({ href, icon: Icon, label, desc }) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors group border-b last:border-0"
+            >
+              <div className="flex items-center gap-3">
+                <Icon className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                <div>
+                  <p className="text-sm font-medium">{label}</p>
+                  <p className="text-xs text-muted-foreground">{desc}</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+            </Link>
+          ))}
+        </div>
+
         {/* Language Preference Card */}
         <div className="mb-6 rounded-xl border shadow-sm overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 border-b">
@@ -248,15 +282,40 @@ export default function YouPage() {
             </div>
 
             {/* Save button */}
-            <div className="flex justify-end">
+            <div className="flex justify-end items-center gap-3">
               <Button
                 onClick={savePreferences}
-                className="rounded-full px-8"
+                className="rounded-full px-8 bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                Save preferences
+                {prefSaved ? "Saved preferences" : "Save preferences"}
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Settings & More Section — visible on mobile only; web screen uses sidebar links */}
+        <div className="mb-6 rounded-xl border shadow-sm overflow-hidden md:hidden">
+          {[
+            { href: "/settings", icon: Settings, label: "Settings", desc: "App preferences" },
+            { href: "/donate", icon: Heart, label: "Donate", desc: "Support the platform" },
+            { href: "/help", icon: HelpCircle, label: "Help & Support", desc: "Get help, guidelines" },
+            { href: "/more", icon: MoreHorizontal, label: "More", desc: "About, feedback & more" },
+          ].map(({ href, icon: Icon, label, desc }) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors group border-b last:border-0"
+            >
+              <div className="flex items-center gap-3">
+                <Icon className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                <div>
+                  <p className="text-sm font-medium">{label}</p>
+                  <p className="text-xs text-muted-foreground">{desc}</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+            </Link>
+          ))}
         </div>
 
         {/* Channel Preference Card */}

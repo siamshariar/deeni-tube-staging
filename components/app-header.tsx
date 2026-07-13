@@ -5,28 +5,16 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import {
-  Search,
-  Mic,
-  ArrowLeft,
-  X,
-  UserCircle,
-  History,
-  Menu,
-} from "lucide-react";
+import { Search, Mic, X, UserCircle, History, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AccountDropdown from "@/components/account-dropdown";
 import NotificationDropdown from "@/components/notification-dropdown";
-import MobileSidebar from "@/components/mobile-sidebar";
 import { cn } from "@/lib/utils";
 import { useHeader } from "@/app/contexts/header-context";
 
 export default function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
   const { headerVisible } = useHeader();
@@ -41,123 +29,83 @@ export default function AppHeader() {
     const checkAuth = () => {
       try {
         const prefs = localStorage.getItem("deeni-lang-prefs");
-        if (prefs) {
-          const parsed = JSON.parse(prefs);
-          setIsLoggedIn(!parsed.isGuest);
-        } else {
-          setIsLoggedIn(false);
-        }
+        setIsLoggedIn(prefs ? !JSON.parse(prefs).isGuest : false);
       } catch {
         setIsLoggedIn(false);
       }
       setAuthLoaded(true);
     };
-
     checkAuth();
-
-    const handleStorage = () => checkAuth();
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener("auth-changed", handleStorage);
+    window.addEventListener("storage", checkAuth);
+    window.addEventListener("auth-changed", checkAuth);
     return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("auth-changed", handleStorage);
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("auth-changed", checkAuth);
     };
   }, []);
 
-  // Load recent searches when search input is focused
   const loadRecentSearches = () => {
     try {
       const stored = localStorage.getItem("recentSearches");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setRecentSearches(Array.isArray(parsed) ? parsed : []);
-      } else {
-        setRecentSearches([]);
-      }
+      setRecentSearches(stored ? JSON.parse(stored) : []);
     } catch {
       setRecentSearches([]);
     }
   };
 
-  // Close desktop recent searches dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    if (!showDesktopRecent) return;
+    const handler = (e: MouseEvent) => {
       if (desktopSearchRef.current && !desktopSearchRef.current.contains(e.target as Node)) {
         setShowDesktopRecent(false);
       }
     };
-    if (showDesktopRecent) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [showDesktopRecent]);
-
-  const handleMobileSearchClick = () => {
-    router.push("/search");
-  };
 
   const handleDesktopSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (desktopSearchQuery.trim()) {
-      // Save to recent searches
-      try {
-        const stored = localStorage.getItem("recentSearches");
-        let searches: string[] = stored ? JSON.parse(stored) : [];
-        if (!Array.isArray(searches)) searches = [];
-        searches = [desktopSearchQuery.trim(), ...searches.filter(s => s !== desktopSearchQuery.trim())].slice(0, 8);
-        localStorage.setItem("recentSearches", JSON.stringify(searches));
-      } catch {}
-
-      router.push(`/search?q=${encodeURIComponent(desktopSearchQuery.trim())}`);
-      setShowDesktopRecent(false);
-    }
+    const q = desktopSearchQuery.trim();
+    if (!q) return;
+    try {
+      const stored = localStorage.getItem("recentSearches");
+      let searches: string[] = stored ? JSON.parse(stored) : [];
+      searches = [q, ...searches.filter(s => s !== q)].slice(0, 8);
+      localStorage.setItem("recentSearches", JSON.stringify(searches));
+    } catch {}
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+    setShowDesktopRecent(false);
   };
 
   const handleRecentClick = (search: string) => {
     setDesktopSearchQuery(search);
     setShowDesktopRecent(false);
-    // Move clicked search to top
     try {
       const stored = localStorage.getItem("recentSearches");
       let searches: string[] = stored ? JSON.parse(stored) : [];
-      if (!Array.isArray(searches)) searches = [];
       searches = [search, ...searches.filter(s => s !== search)].slice(0, 8);
       localStorage.setItem("recentSearches", JSON.stringify(searches));
     } catch {}
-
     router.push(`/search?q=${encodeURIComponent(search)}`);
   };
 
   const removeRecent = (search: string) => {
     const updated = recentSearches.filter(s => s !== search);
     setRecentSearches(updated);
-    try {
-      localStorage.setItem("recentSearches", JSON.stringify(updated));
-    } catch {}
+    try { localStorage.setItem("recentSearches", JSON.stringify(updated)); } catch {}
   };
 
   const clearRecent = () => {
     setRecentSearches([]);
-    try {
-      localStorage.removeItem("recentSearches");
-    } catch {}
+    try { localStorage.removeItem("recentSearches"); } catch {}
   };
 
-  // Toggle sidebar collapse/expand - ONLY called by hamburger click
   const toggleSidebar = () => {
-    // Call the sidebar's internal toggle function
-    if (typeof window !== 'undefined' && (window as any).__sidebarToggle) {
+    if (typeof window !== "undefined" && (window as any).__sidebarToggle) {
       (window as any).__sidebarToggle();
     }
   };
-
-  // Open mobile sidebar (used for pages where desktop sidebar is hidden)
-  const openMobileSidebar = () => {
-    setMobileSidebarOpen(true);
-  };
-
-  // Check if current page has desktop sidebar
-  const hasDesktopSidebar = pathname !== "/signin";
 
   const UserArea = () => (
     <div className="flex items-center gap-1 flex-shrink-0 min-w-[36px] justify-center">
@@ -177,25 +125,26 @@ export default function AppHeader() {
 
   return (
     <>
-      {/* Mobile Header - z-40 to stay above mobile sidebar (z-30) */}
+      {/* ── Mobile Header ─────────────────────────────────────────────── */}
       <header
         className={cn(
           "md:hidden fixed top-0 left-0 right-0 bg-background z-40 w-full max-w-[100vw] transition-transform duration-300 ease-in-out",
-          !headerVisible && "-translate-y-full"
+          (!headerVisible || pathname === "/shorts") && "-translate-y-full"
         )}
       >
-        <div className="flex items-center justify-between px-2 py-2 w-full">
-          <div className="flex items-center gap-3 min-w-0">
-            <button onClick={() => setMobileSidebarOpen(true)} className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors flex-shrink-0" type="button">
-              <Menu className="h-5 w-5" />
-            </button>
-            <Link href="/" className="flex-shrink-0">
-              <Image src="/DeeniTubeLogo.png" alt="Deeni.tube" width={90} height={24} className="h-6 w-auto" priority />
-            </Link>
-          </div>
+        <div className="flex items-center justify-between px-2 py-2 w-full h-14">
+          <Link href="/" className="flex-shrink-0 pl-1">
+            <Image src="/DeeniTubeLogo.png" alt="Deeni.tube" width={90} height={24} className="h-6 w-auto" priority />
+          </Link>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={handleMobileSearchClick}>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Search icon → opens global mobile search modal directly (no page nav) */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => window.dispatchEvent(new CustomEvent("open-search-modal"))}
+            >
               <Search className="h-5 w-5" />
             </Button>
             <NotificationDropdown />
@@ -204,7 +153,7 @@ export default function AppHeader() {
         </div>
       </header>
 
-      {/* Desktop Header */}
+      {/* ── Desktop Header ────────────────────────────────────────────── */}
       <header
         className={cn(
           "hidden md:flex fixed top-0 left-0 right-0 bg-background z-40 w-full max-w-[100vw] flex-col transition-transform duration-300 ease-in-out",
@@ -213,21 +162,20 @@ export default function AppHeader() {
       >
         <div className="flex items-center justify-between px-4 py-2 border-b">
           <div className="flex items-center gap-4 flex-shrink-0">
-            {/* Hamburger button - behavior changes based on page */}
-            <button 
-              onClick={hasDesktopSidebar ? toggleSidebar : openMobileSidebar} 
-              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors" 
-              type="button" 
-              aria-label={hasDesktopSidebar ? "Toggle sidebar" : "Open menu"}
+            <button
+              onClick={toggleSidebar}
+              className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted transition-colors"
+              type="button"
+              aria-label="Toggle sidebar"
             >
               <Menu className="h-5 w-5" />
             </button>
-            
             <Link href="/">
               <Image src="/DeeniTubeLogo.png" alt="Deeni.tube" width={120} height={30} className="h-7 w-auto" priority />
             </Link>
           </div>
 
+          {/* Desktop search bar */}
           <div className="flex-1 max-w-[720px] mx-4 min-w-0" ref={desktopSearchRef}>
             <form onSubmit={handleDesktopSearchSubmit} className="flex items-center">
               <div className="relative flex-1 min-w-0">
@@ -235,7 +183,7 @@ export default function AppHeader() {
                   type="text"
                   placeholder="Search"
                   value={desktopSearchQuery}
-                  onChange={(e) => setDesktopSearchQuery(e.target.value)}
+                  onChange={e => setDesktopSearchQuery(e.target.value)}
                   onFocus={() => { loadRecentSearches(); setShowDesktopRecent(true); }}
                   onClick={() => { loadRecentSearches(); setShowDesktopRecent(true); }}
                   className="w-full h-10 py-2 px-4 rounded-l-full border border-r-0 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background text-foreground"
@@ -250,20 +198,14 @@ export default function AppHeader() {
                   </button>
                 )}
 
-                {/* Recent searches dropdown */}
                 {showDesktopRecent && recentSearches.length > 0 && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-xl shadow-lg z-50 overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-2 border-b">
                       <span className="text-xs font-medium text-muted-foreground">Recent searches</span>
-                      <button
-                        onClick={clearRecent}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Clear all
-                      </button>
+                      <button onClick={clearRecent} className="text-xs text-primary hover:underline">Clear all</button>
                     </div>
                     <div className="max-h-64 overflow-y-auto">
-                      {recentSearches.map((search) => (
+                      {recentSearches.map(search => (
                         <button
                           key={search}
                           onClick={() => handleRecentClick(search)}
@@ -274,10 +216,7 @@ export default function AppHeader() {
                             <span className="text-sm text-left truncate">{search}</span>
                           </div>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeRecent(search);
-                            }}
+                            onClick={e => { e.stopPropagation(); removeRecent(search); }}
                             className="p-1 rounded-full hover:bg-muted/80 text-muted-foreground hover:text-foreground"
                           >
                             <X className="h-3.5 w-3.5" />
@@ -321,8 +260,6 @@ export default function AppHeader() {
           </div>
         </div>
       </header>
-
-      <MobileSidebar isOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
     </>
   );
 }

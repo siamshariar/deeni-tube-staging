@@ -32,8 +32,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const hasDesktopSidebar = !(
     pathname?.startsWith("/videos/") ||
     pathname?.startsWith("/playlists/") ||
-    pathname?.startsWith("/more/") ||
-    pathname?.startsWith("/help/") ||
     pathname === "/signin"
   );
 

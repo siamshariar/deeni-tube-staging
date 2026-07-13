@@ -1,8 +1,8 @@
 // app/playlists/[slug]/[id]/page.tsx
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Play,
@@ -55,6 +55,8 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShareModal } from "@/components/share-modal";
+import { AddToPlaylistDialog } from "@/components/add-to-playlist-dialog";
+import { ReportDialog } from "@/components/report-dialog";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { videoData, VideoItem } from "@/lib/video-data";
 import { extendedPlaylists, PlaylistItem } from "@/lib/playlist-data";
@@ -276,8 +278,11 @@ function VideoSkeleton() {
 export default function PlaylistDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const playlistId = params.id as string;
+  // When opened from a channel page, the playlist is read-only (channel-owned)
+  const isChannelPlaylist = searchParams.get("source") === "channel";
 
   const [playlist, setPlaylist] = useState<PlaylistItem | null>(null);
   const [videos, setVideos] = useState<VideoItem[]>([]);
@@ -296,8 +301,41 @@ export default function PlaylistDetailPage() {
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [dislikedComments, setDislikedComments] = useState<Set<string>>(new Set());
   const [commentsDrawerOpen, setCommentsDrawerOpen] = useState(false);
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   const [isLoved, setIsLoved] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(true);
+  const mobileIframeRef = useRef<HTMLIFrameElement>(null);
+  const desktopIframeRef = useRef<HTMLIFrameElement>(null);
+
+  const registerListener = useCallback((iframe: HTMLIFrameElement | null) => {
+    if (!iframe?.contentWindow) return;
+    setTimeout(() => {
+      iframe.contentWindow?.postMessage(JSON.stringify({ event: "listening", id: 1 }), "https://www.youtube.com");
+    }, 800);
+  }, []);
+
+  // Auto-advance on video end via YouTube postMessage
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.origin !== "https://www.youtube.com") return;
+      try {
+        const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+        if (data?.event === "infoDelivery" && data?.info?.playerState === 0) {
+          if (autoPlay) {
+            setCurrentVideoIndex((prev) => {
+              if (prev < videos.length - 1) return prev + 1;
+              return prev;
+            });
+          }
+        }
+      } catch {}
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [autoPlay, videos.length]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -446,17 +484,62 @@ export default function PlaylistDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="flex flex-col lg:flex-row gap-4 px-3 pt-2 md:pt-4">
-          <div className="flex-1 min-w-0">
-            <Skeleton className="aspect-[4/3] md:aspect-video w-full rounded-xl" />
-          </div>
-          <div className="lg:w-[450px] space-y-3">
-            <Skeleton className="h-8 w-48" />
-            <div className="space-y-2">
-              <VideoSkeleton />
-              <VideoSkeleton />
-              <VideoSkeleton />
+      <div className="min-h-screen bg-background pt-14">
+        {/* Mobile: sticky back bar */}
+        <div className="md:hidden sticky top-14 z-10 bg-background/95 border-b h-11 flex items-center px-4 gap-2">
+          <Skeleton className="h-5 w-5 rounded" />
+          <Skeleton className="h-4 w-40 rounded" />
+        </div>
+
+        {/* Mobile: full-width video */}
+        <div className="md:hidden w-full bg-black">
+          <Skeleton className="w-full aspect-video" />
+        </div>
+
+        <div className="px-3 pt-4 md:px-4 pb-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Left: video + info */}
+            <div className="flex-1 min-w-0 space-y-3">
+              {/* Desktop video */}
+              <Skeleton className="hidden md:block w-full aspect-video rounded-xl" />
+              {/* Title + channel row */}
+              <div className="flex gap-2 items-start">
+                <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-full rounded" />
+                  <Skeleton className="h-3 w-32 rounded" />
+                  <Skeleton className="h-3 w-24 rounded" />
+                </div>
+              </div>
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <Skeleton className="h-8 w-16 rounded-full" />
+                <Skeleton className="h-8 w-16 rounded-full" />
+                <Skeleton className="h-8 w-16 rounded-full" />
+              </div>
+            </div>
+
+            {/* Right: playlist panel */}
+            <div className="lg:w-[450px] flex-shrink-0 rounded-xl border bg-card overflow-hidden">
+              {/* Panel header */}
+              <div className="p-4 border-b space-y-2">
+                <Skeleton className="h-5 w-36 rounded" />
+                <Skeleton className="h-3 w-24 rounded" />
+                <div className="flex gap-2 mt-2">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+              </div>
+              {/* Search */}
+              <div className="p-3 border-b">
+                <Skeleton className="h-9 w-full rounded-full" />
+              </div>
+              {/* Video rows */}
+              <div className="divide-y">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <VideoSkeleton key={i} />
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -499,11 +582,14 @@ export default function PlaylistDetailPage() {
         <div className="w-full bg-black">
           <div className="relative w-full aspect-video">
             <iframe
-              src={`https://www.youtube.com/embed/${currentVideo?.videoId || "5qap5aO4i9A"}?autoplay=1`}
+              ref={mobileIframeRef}
+              key={`mobile-${currentVideoIndex}`}
+              src={`https://www.youtube.com/embed/${currentVideo?.videoId || "5qap5aO4i9A"}?autoplay=1&enablejsapi=1`}
               title={currentVideo?.title || "Video"}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="absolute inset-0 w-full h-full"
+              onLoad={() => registerListener(mobileIframeRef.current)}
             />
           </div>
         </div>
@@ -518,11 +604,14 @@ export default function PlaylistDetailPage() {
                 <div className="w-full bg-black rounded-xl overflow-hidden">
                   <div className="relative w-full aspect-video md:max-h-[75vh] md:mx-auto">
                     <iframe
-                      src={`https://www.youtube.com/embed/${currentVideo?.videoId || "5qap5aO4i9A"}?autoplay=1`}
+                      ref={desktopIframeRef}
+                      key={`desktop-${currentVideoIndex}`}
+                      src={`https://www.youtube.com/embed/${currentVideo?.videoId || "5qap5aO4i9A"}?autoplay=1&enablejsapi=1`}
                       title={currentVideo?.title || "Video"}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       className="absolute inset-0 w-full h-full"
+                      onLoad={() => registerListener(desktopIframeRef.current)}
                     />
                   </div>
                 </div>
@@ -544,30 +633,22 @@ export default function PlaylistDetailPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setShowShareModal(true)}>
                           <Share className="h-4 w-4" />
                         </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                        <Drawer open={menuDrawerOpen} onOpenChange={setMenuDrawerOpen}>
+                          <DrawerTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-72">
-                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <Clock className="h-5 w-5" /> Save to Watch later
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <Bookmark className="h-5 w-5" /> Save to playlist
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast("Channel removed from feed")} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <UserX className="h-5 w-5" /> Don't recommend channel
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <EyeOff className="h-5 w-5" /> Not interested
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <Flag className="h-5 w-5" /> Report
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          </DrawerTrigger>
+                          <DrawerContent className="px-0 max-h-[70vh]">
+                            <div className="mt-2 pb-6">
+                              <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer"><Clock className="h-5 w-5" /> Save to Watch later</div>
+                              <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setMenuDrawerOpen(false); setTimeout(() => setShowPlaylistDialog(true), 150); }}><Bookmark className="h-5 w-5" /> Save to playlist</div>
+                              <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setMenuDrawerOpen(false); toast("Channel removed from feed"); }}><UserX className="h-5 w-5" /> Don't recommend channel</div>
+                              <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setMenuDrawerOpen(false); toast("Video removed"); setTimeout(() => router.back(), 1000); }}><EyeOff className="h-5 w-5" /> Not interested</div>
+                              <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setMenuDrawerOpen(false); setTimeout(() => setShowReportDialog(true), 150); }}><Flag className="h-5 w-5" /> Report</div>
+                            </div>
+                          </DrawerContent>
+                        </Drawer>
                       </div>
                     </div>
                   </div>
@@ -609,21 +690,11 @@ export default function PlaylistDetailPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-72">
-                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <Clock className="h-5 w-5" /> Save to Watch later
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <Bookmark className="h-5 w-5" /> Save to playlist
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast("Channel removed from feed")} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <UserX className="h-5 w-5" /> Don't recommend channel
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <EyeOff className="h-5 w-5" /> Not interested
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                              <Flag className="h-5 w-5" /> Report
-                            </DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer"><Clock className="h-5 w-5" /> Save to Watch later</DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={(e) => { e.preventDefault(); setShowPlaylistDialog(true); }}><Bookmark className="h-5 w-5" /> Save to playlist</DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={() => toast("Channel removed from feed")}><UserX className="h-5 w-5" /> Don't recommend channel</DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }}><EyeOff className="h-5 w-5" /> Not interested</DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={(e) => { e.preventDefault(); setShowReportDialog(true); }}><Flag className="h-5 w-5" /> Report</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -857,9 +928,14 @@ export default function PlaylistDetailPage() {
                 {!collapsed && (
                   <div className="flex items-center gap-2 mt-3">
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => toast.info("Loop toggled (demo)")}>
-                        <Repeat className="h-4 w-4" />
-                      </Button>
+                      <button
+                        onClick={() => setAutoPlay((v) => !v)}
+                        className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors", autoPlay ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}
+                        title={autoPlay ? "Autoplay on" : "Autoplay off"}
+                      >
+                        <Repeat className="h-3.5 w-3.5" />
+                        Autoplay
+                      </button>
                       <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => {
                         if (videos.length) {
                           const random = videos[Math.floor(Math.random() * videos.length)];
@@ -882,12 +958,16 @@ export default function PlaylistDetailPage() {
                             <Share className="h-4 w-4 mr-2" /> Share
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem className="cursor-pointer" onClick={() => toast("Edit playlist (prototype)")}>
-                          <Edit className="h-4 w-4 mr-2" /> Edit playlist
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer text-red-500 dark:text-red-400" onClick={() => toast("Delete playlist (prototype)")}>
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete playlist
-                        </DropdownMenuItem>
+                        {!isChannelPlaylist && (
+                          <>
+                            <DropdownMenuItem className="cursor-pointer" onClick={() => toast("Edit playlist (prototype)")}>
+                              <Edit className="h-4 w-4 mr-2" /> Edit playlist
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer text-red-500 dark:text-red-400" onClick={() => toast("Delete playlist (prototype)")}>
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete playlist
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -933,29 +1013,34 @@ export default function PlaylistDetailPage() {
                           ? "bg-muted/60 hover:bg-muted/70"
                           : "hover:bg-muted/40"
                       )}
-                      draggable
-                      onDragStart={() => handleDragStart(index)}
-                      onDragOver={(e) => handleDragOver(e, index)}
-                      onDragEnd={handleDragEnd}
+                      draggable={!isChannelPlaylist}
+                      onDragStart={!isChannelPlaylist ? () => handleDragStart(index) : undefined}
+                      onDragOver={!isChannelPlaylist ? (e) => handleDragOver(e, index) : undefined}
+                      onDragEnd={!isChannelPlaylist ? handleDragEnd : undefined}
                     >
-                      {/* Mobile indicator: ▶ for active, grip for others — no numbers */}
-                      <div className="flex md:hidden items-center justify-center w-5 flex-shrink-0 cursor-grab">
+                      {/* Mobile indicator: ▶ for active, grip for others (user playlist only) */}
+                      <div className="flex md:hidden items-center justify-center w-5 flex-shrink-0">
                         {index === currentVideoIndex ? (
                           <Play className="h-3 w-3 text-primary fill-primary flex-shrink-0" />
+                        ) : isChannelPlaylist ? (
+                          <span className="text-[10px] font-mono text-muted-foreground">{index + 1}</span>
                         ) : (
-                          <GripVertical className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
+                          <GripVertical className="h-4 w-4 text-muted-foreground/50 flex-shrink-0 cursor-grab" />
                         )}
                       </div>
 
-                      {/* Desktop indicator: number fades on hover, grip appears */}
-                      <div className="hidden md:flex items-center justify-center w-5 flex-shrink-0 relative cursor-grab">
+                      {/* Desktop indicator: number / play icon; grip on hover for user playlists only */}
+                      <div className="hidden md:flex items-center justify-center w-5 flex-shrink-0 relative">
                         <span className={cn(
-                          "text-[10px] font-mono leading-none transition-opacity group-hover:opacity-0",
+                          "text-[10px] font-mono leading-none transition-opacity",
+                          !isChannelPlaylist && "group-hover:opacity-0",
                           index === currentVideoIndex ? "text-primary font-semibold" : "text-muted-foreground"
                         )}>
                           {index === currentVideoIndex ? "▶" : index + 1}
                         </span>
-                        <GripVertical className="absolute inset-0 m-auto h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {!isChannelPlaylist && (
+                          <GripVertical className="absolute inset-0 m-auto h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
+                        )}
                       </div>
 
                       {/* Thumbnail — 16:9, slightly larger on mobile: 106×60; sm: 120×68 */}
@@ -1005,9 +1090,11 @@ export default function PlaylistDetailPage() {
                           <DropdownMenuItem onClick={() => handleSelectVideo(index)}>
                             <Play className="h-4 w-4 mr-2" /> Play now
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-500 dark:text-red-400" onClick={() => toast("Remove from playlist (demo)")}>
-                            <Trash2 className="h-4 w-4 mr-2" /> Remove
-                          </DropdownMenuItem>
+                          {!isChannelPlaylist && (
+                            <DropdownMenuItem className="text-red-500 dark:text-red-400" onClick={() => toast("Remove from playlist (demo)")}>
+                              <Trash2 className="h-4 w-4 mr-2" /> Remove
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </button>
@@ -1020,6 +1107,21 @@ export default function PlaylistDetailPage() {
       </div>
 
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} videoUrl={shareUrl} />
+      {currentVideo && (
+        <>
+          <AddToPlaylistDialog
+            video={{ id: currentVideo.id, title: currentVideo.title, channel: currentVideo.channel }}
+            open={showPlaylistDialog}
+            onOpenChange={setShowPlaylistDialog}
+          />
+          <ReportDialog
+            videoTitle={currentVideo.title}
+            videoId={currentVideo.id}
+            open={showReportDialog}
+            onOpenChange={setShowReportDialog}
+          />
+        </>
+      )}
     </div>
   );
 }

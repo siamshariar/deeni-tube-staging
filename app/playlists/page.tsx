@@ -16,7 +16,6 @@ import {
   Share,
   MoreVertical,
   Play,
-  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,14 +34,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+
 import { toast } from "sonner";
 import { extendedPlaylists, PlaylistItem } from "@/lib/playlist-data";
 import { videoData } from "@/lib/video-data";
 import Image from "next/image";
-
-// Matches Watch Later playlist defined in playlist-data.ts
-const WATCH_LATER_IDS = ["v3", "v7", "v11", "v18", "v22", "v27", "v30", "v34"];
 
 export default function PlaylistsPage() {
   const router = useRouter();
@@ -57,45 +53,22 @@ export default function PlaylistsPage() {
   const [editingPlaylist, setEditingPlaylist] = useState<PlaylistItem | null>(null);
   const [deletingPlaylist, setDeletingPlaylist] = useState<PlaylistItem | null>(null);
   const [newPlaylistName, setNewPlaylistName] = useState("");
-  const [newPlaylistPublic, setNewPlaylistPublic] = useState(true);
+  const [newPlaylistPublic, setNewPlaylistPublic] = useState(false);
   const [editName, setEditName] = useState("");
   const [editPublic, setEditPublic] = useState(true);
-  // Video selection for create dialog
-  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
-  const [videoSearchQuery, setVideoSearchQuery] = useState("");
-
-  const filteredDialogVideos = useMemo(() => {
-    if (!videoSearchQuery.trim()) return videoData;
-    const q = videoSearchQuery.toLowerCase();
-    return videoData.filter(
-      (v) => v.title.toLowerCase().includes(q) || v.channel.toLowerCase().includes(q)
-    );
-  }, [videoSearchQuery]);
-
-  const toggleVideoSelection = (id: string) => {
-    setSelectedVideoIds((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
-    );
-  };
-
-  const addFromWatchLater = () => {
-    setSelectedVideoIds((prev) => {
-      const newIds = WATCH_LATER_IDS.filter((id) => !prev.includes(id));
-      return [...prev, ...newIds];
-    });
-  };
-
   const resetCreateDialog = () => {
     setNewPlaylistName("");
-    setNewPlaylistPublic(true);
-    setSelectedVideoIds([]);
-    setVideoSearchQuery("");
+    setNewPlaylistPublic(false);
   };
 
-  const getPlaylistThumbnail = (playlist: PlaylistItem) => {
-    if (!playlist.videoIds.length) return null;
-    const video = videoData.find((v) => v.id === playlist.videoIds[0]);
-    return video ? `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg` : null;
+  const getPlaylistThumbs = (playlist: PlaylistItem): string[] => {
+    return playlist.videoIds
+      .slice(0, 4)
+      .map((id) => {
+        const v = videoData.find((v) => v.id === id);
+        return v ? `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg` : null;
+      })
+      .filter(Boolean) as string[];
   };
 
   const filteredPlaylists = useMemo(() => {
@@ -125,21 +98,16 @@ export default function PlaylistsPage() {
       id: Date.now().toString(),
       slug: newPlaylistName.trim().toLowerCase().replace(/\s+/g, "-"),
       name: newPlaylistName.trim(),
-      videoIds: selectedVideoIds,
+      videoIds: [],
       updatedAt: "Just now",
       isPublic: newPlaylistPublic,
       type: "playlist",
       thumbnailColor: "#" + Math.floor(Math.random() * 16777215).toString(16).padEnd(6, "0"),
     };
     setPlaylists((prev) => [newPlaylist, ...prev]);
-    const count = selectedVideoIds.length;
     resetCreateDialog();
     setShowCreateDialog(false);
-    toast.success(
-      count > 0
-        ? `Playlist created with ${count} video${count !== 1 ? "s" : ""}!`
-        : "Playlist created!"
-    );
+    toast.success("Playlist created!");
   };
 
   const handleEditPlaylist = () => {
@@ -263,21 +231,32 @@ export default function PlaylistsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredPlaylists.map((playlist) => {
               const videoCount = playlist.videoIds?.length ?? 0;
-              const thumbnailUrl = getPlaylistThumbnail(playlist);
+              const thumbs = getPlaylistThumbs(playlist);
               return (
                 <div
                   key={playlist.id}
                   className="group cursor-pointer border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-card"
                   onClick={() => router.push(`/playlists/${playlist.slug}/${playlist.id}`)}
                 >
-                  {/* Thumbnail */}
-                  <div className="relative aspect-video w-full bg-muted">
-                    {thumbnailUrl ? (
-                      <Image src={thumbnailUrl} alt={playlist.name} fill className="object-cover" />
+                  {/* Multi-thumbnail or solid color fallback */}
+                  <div className="relative aspect-video w-full bg-muted overflow-hidden">
+                    {thumbs.length >= 2 ? (
+                      <div className="grid grid-cols-2 gap-0.5 w-full h-full">
+                        {[0, 1, 2, 3].map((i) => (
+                          <div key={i} className="relative bg-muted overflow-hidden">
+                            {thumbs[i] ? (
+                              <Image src={thumbs[i]} alt="" fill className="object-cover" />
+                            ) : (
+                              <div className="absolute inset-0" style={{ backgroundColor: playlist.thumbnailColor, opacity: 0.4 }} />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : thumbs.length === 1 ? (
+                      <Image src={thumbs[0]} alt={playlist.name} fill className="object-cover" />
                     ) : (
                       <>
                         <div className="absolute inset-0 opacity-30" style={{ backgroundColor: playlist.thumbnailColor }} />
-                        <div className="absolute left-2 right-2 top-2 bottom-2 rounded-lg opacity-40" style={{ backgroundColor: playlist.thumbnailColor }} />
                         <div className="absolute left-4 right-4 top-4 bottom-4 rounded-lg flex items-center justify-center" style={{ backgroundColor: playlist.thumbnailColor }}>
                           <ListVideo className="h-10 w-10 text-white/60" />
                         </div>
@@ -290,11 +269,16 @@ export default function PlaylistsPage() {
                   </div>
 
                   {/* Metadata */}
-                  <div className="p-4 space-y-1">
+                  <div className="p-3">
                     <div className="flex items-start justify-between gap-1">
-                      <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors flex-1">
-                        {playlist.name}
-                      </h3>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors mb-1">
+                          {playlist.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {videoCount} video{videoCount !== 1 ? "s" : ""}
+                        </p>
+                      </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
@@ -325,14 +309,6 @@ export default function PlaylistsPage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
-                      {playlist.isPublic ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                      <span>{playlist.isPublic ? "Public" : "Private"}</span>
-                      <span>•</span>
-                      <span>{videoCount} video{videoCount !== 1 ? "s" : ""}</span>
-                      <span>•</span>
-                      <span>Updated {playlist.updatedAt}</span>
-                    </div>
                   </div>
                 </div>
               );
@@ -349,15 +325,15 @@ export default function PlaylistsPage() {
           if (!open) resetCreateDialog();
         }}
       >
-        <DialogContent className="sm:max-w-lg flex flex-col max-h-[90vh]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create new playlist</DialogTitle>
             <DialogDescription>
-              Name your playlist, set privacy, and add videos.
+              Give your playlist a name and choose its privacy.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto min-h-0 space-y-5 py-4 pr-0.5">
+          <div className="space-y-5 py-4">
             {/* Name */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Playlist name</label>
@@ -371,105 +347,35 @@ export default function PlaylistsPage() {
             </div>
 
             {/* Privacy */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setNewPlaylistPublic(!newPlaylistPublic)}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border transition-colors",
-                  newPlaylistPublic
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border hover:bg-muted"
-                )}
-              >
-                {newPlaylistPublic ? <Globe className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-                {newPlaylistPublic ? "Public" : "Private"}
-              </button>
-              <span className="text-xs text-muted-foreground">
-                {newPlaylistPublic ? "Anyone can see this playlist" : "Only you can see this playlist"}
-              </span>
-            </div>
-
-            {/* Video selection */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  Add videos
-                  {selectedVideoIds.length > 0 && (
-                    <span className="ml-1.5 text-xs text-muted-foreground font-normal">
-                      ({selectedVideoIds.length} selected)
-                    </span>
-                  )}
-                </span>
-                <button
-                  type="button"
-                  onClick={addFromWatchLater}
-                  className="text-xs text-primary hover:underline font-medium"
-                >
-                  + Add Watch Later
-                </button>
-              </div>
-
-              {/* Video search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search videos..."
-                  value={videoSearchQuery}
-                  onChange={(e) => setVideoSearchQuery(e.target.value)}
-                  className="pl-9 h-8 text-sm rounded-full bg-muted/50"
-                />
-                {videoSearchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setVideoSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-3.5 w-3.5" />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Privacy</label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="w-full h-10 px-4 rounded-full border bg-background flex items-center gap-2 text-sm hover:bg-muted/50 transition-colors">
+                    {newPlaylistPublic ? <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+                    <span className="flex-1 text-left font-medium">{newPlaylistPublic ? "Public" : "Private"}</span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   </button>
-                )}
-              </div>
-
-              {/* Selectable video list */}
-              <div className="rounded-xl border overflow-hidden divide-y max-h-56 overflow-y-auto">
-                {filteredDialogVideos.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-muted-foreground">No videos found</div>
-                ) : (
-                  filteredDialogVideos.map((video) => {
-                    const isSelected = selectedVideoIds.includes(video.id);
-                    return (
-                      <button
-                        key={video.id}
-                        type="button"
-                        onClick={() => toggleVideoSelection(video.id)}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-3 py-2 text-left transition-colors",
-                          isSelected ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/50"
-                        )}
-                      >
-                        <div className="relative w-14 h-8 rounded overflow-hidden flex-shrink-0 bg-black">
-                          <Image
-                            src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
-                            alt={video.title}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium line-clamp-1 leading-snug">{video.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">{video.channel}</p>
-                        </div>
-                        <div className={cn(
-                          "w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors",
-                          isSelected ? "bg-primary border-primary" : "border-border"
-                        )}>
-                          {isSelected && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
-                        </div>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] rounded-xl p-1">
+                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer" onClick={() => setNewPlaylistPublic(true)}>
+                    <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Public</p>
+                      <p className="text-xs text-muted-foreground">Anyone can see this playlist</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer" onClick={() => setNewPlaylistPublic(false)}>
+                    <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Private</p>
+                      <p className="text-xs text-muted-foreground">Only you can see this playlist</p>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
+
           </div>
 
           <DialogFooter className="pt-2 border-t">
@@ -509,22 +415,33 @@ export default function PlaylistsPage() {
                 autoFocus
               />
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setEditPublic(!editPublic)}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border transition-colors",
-                  editPublic
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border hover:bg-muted"
-                )}
-              >
-                {editPublic ? <Globe className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-                {editPublic ? "Public" : "Private"}
-              </button>
-              <span className="text-xs text-muted-foreground">
-                {editPublic ? "Anyone can see this playlist" : "Only you can see this playlist"}
-              </span>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Privacy</label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="w-full h-10 px-4 rounded-full border bg-background flex items-center gap-2 text-sm hover:bg-muted/50 transition-colors">
+                    {editPublic ? <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+                    <span className="flex-1 text-left font-medium">{editPublic ? "Public" : "Private"}</span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] rounded-xl p-1">
+                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer" onClick={() => setEditPublic(true)}>
+                    <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Public</p>
+                      <p className="text-xs text-muted-foreground">Anyone can see this playlist</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer" onClick={() => setEditPublic(false)}>
+                    <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Private</p>
+                      <p className="text-xs text-muted-foreground">Only you can see this playlist</p>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           <DialogFooter>

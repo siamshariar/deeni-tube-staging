@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -168,6 +169,7 @@ export default function NotificationDropdown() {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const router = useRouter();
 
   const handleOpen = (isOpen: boolean) => {
     if (isOpen) {
@@ -202,7 +204,7 @@ export default function NotificationDropdown() {
           <button
             className="p-1.5 rounded-full hover:bg-muted transition-colors"
             aria-label="Notification settings"
-            onClick={() => toast.info("Notification settings (demo)")}
+            onClick={() => { setOpen(false); router.push("/settings"); }}
           >
             <Settings className="h-5 w-5 text-muted-foreground" />
           </button>

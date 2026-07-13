@@ -16,16 +16,10 @@ import {
   FolderOpen,
   BookMarked,
   LayoutGrid,
-  ChevronDown,
-  ChevronUp,
-  ChevronRight,
   // Clock,    // Watch Later — hidden, keep for easy re-enable
   // ThumbsUp, // Liked Videos — hidden, keep for easy re-enable
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { channelData } from "@/lib/channel-data";
-import { scholarData } from "@/lib/scholar-data";
 
 // ─── SidebarItem ─────────────────────────────────────────────────────────────
 
@@ -87,130 +81,19 @@ export function UserIcon({ className }: { className?: string }) {
 
 export interface SidebarExpandedContentProps {
   pathname: string | null;
-  showMoreChannels: boolean;
-  setShowMoreChannels: (v: boolean) => void;
-  showMoreScholars: boolean;
-  setShowMoreScholars: (v: boolean) => void;
-  /** Called on every link/navigation click. Used by the mobile drawer to close itself. */
   onLinkClick?: () => void;
 }
 
-export function SidebarExpandedContent({
-  pathname,
-  showMoreChannels,
-  setShowMoreChannels,
-  showMoreScholars,
-  setShowMoreScholars,
-  onLinkClick,
-}: SidebarExpandedContentProps) {
-  const visibleChannels = channelData.slice(0, 7);
-  const hiddenChannels  = channelData.slice(7);
-  const visibleScholars = scholarData.slice(0, 7);
-  const hiddenScholars  = scholarData.slice(7);
-  const isChannelsActive = pathname === "/channels";
-  const isScholarsActive = pathname === "/scholars";
-
+export function SidebarExpandedContent({ pathname, onLinkClick }: SidebarExpandedContentProps) {
   return (
     <>
       <SidebarItem href="/" icon={<Home className="h-5 w-5 flex-shrink-0" />} label="Home" active={pathname === "/"} collapsed={false} onClick={onLinkClick} />
       <SidebarItem href="/shorts" icon={<PlaySquare className="h-5 w-5 flex-shrink-0" />} label="Shorts" active={pathname === "/shorts"} collapsed={false} onClick={onLinkClick} />
 
-      {/* Channels */}
+      {/* Browse */}
       <div className="border-t pt-2 mt-2">
-        <Link
-          href="/channels"
-          onClick={onLinkClick}
-          className={cn(
-            "flex items-center gap-4 px-3 mx-1 py-2 rounded-lg text-sm hover:bg-muted transition-all duration-200",
-            isChannelsActive && "font-semibold bg-muted"
-          )}
-        >
-          <Users className="h-5 w-5 flex-shrink-0" />
-          <span className="text-sm flex">Channels</span>
-          <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
-        </Link>
-        <div className="mt-1">
-          {visibleChannels.map((ch) => (
-            <Link key={ch.id} href={`/channels/${ch.slug}`} onClick={onLinkClick}
-              className="flex items-center gap-4 px-3 mx-1 py-1.5 rounded-lg text-sm hover:bg-muted transition-all duration-200">
-              <Avatar className="h-6 w-6 flex-shrink-0">
-                <AvatarImage src={ch.avatar} alt={ch.name} />
-                <AvatarFallback className="text-[10px]">{ch.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm truncate flex-1">{ch.name}</span>
-            </Link>
-          ))}
-          {hiddenChannels.length > 0 && (
-            <>
-              {showMoreChannels && hiddenChannels.map((ch) => (
-                <Link key={ch.id} href={`/channels/${ch.slug}`} onClick={onLinkClick}
-                  className="flex items-center gap-4 px-3 mx-1 py-1.5 rounded-lg text-sm hover:bg-muted transition-all duration-200">
-                  <Avatar className="h-6 w-6 flex-shrink-0">
-                    <AvatarImage src={ch.avatar} alt={ch.name} />
-                    <AvatarFallback className="text-[10px]">{ch.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm truncate flex-1">{ch.name}</span>
-                </Link>
-              ))}
-              <button
-                onClick={() => setShowMoreChannels(!showMoreChannels)}
-                className="flex items-center gap-4 px-3 mx-1 py-2 rounded-lg text-sm hover:bg-muted transition-colors w-[calc(100%-8px)]"
-              >
-                {showMoreChannels ? <ChevronUp className="h-5 w-5 flex-shrink-0" /> : <ChevronDown className="h-5 w-5 flex-shrink-0" />}
-                <span>{showMoreChannels ? "Show less" : `Show ${hiddenChannels.length} more`}</span>
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Scholars */}
-      <div className="border-t pt-2 mt-2">
-        <Link
-          href="/scholars"
-          onClick={onLinkClick}
-          className={cn(
-            "flex items-center gap-4 px-3 mx-1 py-2 rounded-lg text-sm hover:bg-muted transition-all duration-200",
-            isScholarsActive && "font-semibold bg-muted"
-          )}
-        >
-          <GraduationCap className="h-5 w-5 flex-shrink-0" />
-          <span className="text-sm flex">Scholars</span>
-          <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
-        </Link>
-        <div className="mt-1">
-          {visibleScholars.map((sc) => (
-            <Link key={sc.id} href={`/scholars/${sc.slug}`} onClick={onLinkClick}
-              className="flex items-center gap-4 px-3 mx-1 py-1.5 rounded-lg text-sm hover:bg-muted transition-all duration-200">
-              <Avatar className="h-6 w-6 flex-shrink-0">
-                <AvatarImage src={sc.avatar} alt={sc.name} />
-                <AvatarFallback className="text-[10px]">{sc.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm truncate flex-1">{sc.name}</span>
-            </Link>
-          ))}
-          {hiddenScholars.length > 0 && (
-            <>
-              {showMoreScholars && hiddenScholars.map((sc) => (
-                <Link key={sc.id} href={`/scholars/${sc.slug}`} onClick={onLinkClick}
-                  className="flex items-center gap-4 px-3 mx-1 py-1.5 rounded-lg text-sm hover:bg-muted transition-all duration-200">
-                  <Avatar className="h-6 w-6 flex-shrink-0">
-                    <AvatarImage src={sc.avatar} alt={sc.name} />
-                    <AvatarFallback className="text-[10px]">{sc.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm truncate flex-1">{sc.name}</span>
-                </Link>
-              ))}
-              <button
-                onClick={() => setShowMoreScholars(!showMoreScholars)}
-                className="flex items-center gap-4 px-3 mx-1 py-2 rounded-lg text-sm hover:bg-muted transition-colors w-[calc(100%-8px)]"
-              >
-                {showMoreScholars ? <ChevronUp className="h-5 w-5 flex-shrink-0" /> : <ChevronDown className="h-5 w-5 flex-shrink-0" />}
-                <span>{showMoreScholars ? "Show less" : `Show ${hiddenScholars.length} more`}</span>
-              </button>
-            </>
-          )}
-        </div>
+        <SidebarItem href="/channels" icon={<Users className="h-5 w-5 flex-shrink-0" />} label="Channels" active={pathname === "/channels"} collapsed={false} onClick={onLinkClick} />
+        <SidebarItem href="/scholars" icon={<GraduationCap className="h-5 w-5 flex-shrink-0" />} label="Scholars" active={pathname === "/scholars"} collapsed={false} onClick={onLinkClick} />
       </div>
 
       {/* You */}
@@ -249,9 +132,9 @@ export function SidebarExpandedContent({
         <SidebarItem href="/help" icon={<HelpCircle className="h-5 w-5 flex-shrink-0" />} label="Help" collapsed={false} onClick={onLinkClick} />
       </div>
 
-      {/* Footer */}
-      <div className="px-4 py-3 mt-2">
-        <p className="text-xs text-center leading-tight tracking-wide text-muted-foreground mt-3">
+      {/* Footer — mt-auto pins copyright to the very bottom of the sidebar */}
+      <div className="px-4 py-3 mt-auto border-t">
+        <p className="text-xs text-center leading-tight tracking-wide text-muted-foreground">
           © 2026 Deeni.tube All rights reserved.
         </p>
       </div>

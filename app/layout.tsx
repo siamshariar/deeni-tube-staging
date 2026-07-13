@@ -8,6 +8,7 @@ import AppHeader from "@/components/app-header";
 import DesktopSidebar from "@/components/desktop-sidebar";
 import MobileNav from "@/components/mobile-nav";
 import AppShell from "@/components/app-shell";
+import MobileSearchModal from "@/components/mobile-search-modal";
 import { HeaderProvider } from "@/app/contexts/header-context";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -51,6 +52,7 @@ export default function RootLayout({
               {children}
             </AppShell>
             <MobileNav />
+            <MobileSearchModal />
           </HeaderProvider>
         </ThemeProvider>
       </body>

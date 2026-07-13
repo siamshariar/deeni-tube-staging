@@ -55,7 +55,7 @@ export const channelData: ChannelItem[] = [
     banner: "https://yt3.googleusercontent.com/_HDzgr4yiR7ZQECsrfjHQ6I_-jR0bR1IyAVnRtPuZOhXhbTbuF8d_7nlY7iRer8WGW5nEGHu=w1707-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj",
     language: "bn",
     subscribers: 340000,
-    verified: true,
+    verified: false,
     description:
       "Professor, Department of Al-Fiqh and Legal Studies, Islamic University, Kushtia.",
   },
@@ -68,7 +68,7 @@ export const channelData: ChannelItem[] = [
     banner: "https://yt3.googleusercontent.com/OA8EucS81S9b-0KseK604MAZKxbuu-Xtmr2TaYEIyYlEdyEGNccgybFZGvwJzZUl_DPW0ss8gDE=w1707-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj",
     language: "bn",
     subscribers: 420000,
-    verified: true,
+    verified: false,
     description:
       "Quran tafsir and Islamic lectures",
   },
@@ -81,7 +81,7 @@ export const channelData: ChannelItem[] = [
     banner: "https://yt3.googleusercontent.com/qS993g6QRsKJflH9T5LdDK3hVfQ0NEC11Yo0KYlPCU7BnaJce1mzapL7tRrE2NiSTxwinkExbQ=w1707-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj",
     language: "bn",
     subscribers: 280000,
-    verified: true,
+    verified: false,
     description:
       "Islamic lectures, aqeedah and fiqh.",
   },
@@ -94,7 +94,7 @@ export const channelData: ChannelItem[] = [
     banner: "https://yt3.googleusercontent.com/Cbf_0zoGGpHHgldXkb-4XzCz09OK6XMHiBmA8F4yQa3yUMxsQshWtfnpa476fe4WMKkElgmeAA=w1707-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj",
     language: "bn",
     subscribers: 520000,
-    verified: true,
+    verified: false,
     description:
       "Islamic lectures by Abdullah bin Abdur Razzak and Abdur Razzak Bin Yousuf.",
   },
@@ -107,7 +107,7 @@ export const channelData: ChannelItem[] = [
     banner: "https://yt3.googleusercontent.com/5rXHwGkuuMVZ7XGyo1QhU54Wy_43vdxfmfC-qZFEjLpbPxrKKvVCRH10vqO8AHqrnnwV8QC4mbc=w1707-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj",
     language: "bn",
     subscribers: 380000,
-    verified: true,
+    verified: false,
     description:
       "Islamic lectures and waz by Abdur Razzak Bin Yousuf.",
   },

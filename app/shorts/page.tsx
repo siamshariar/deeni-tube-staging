@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import {
   ChevronUp, ChevronDown, Heart, MessageCircle, Share2, Bookmark, Flag,
@@ -649,6 +649,7 @@ function ShareModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 
 export default function ShortsPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const commentInputRef = useRef<HTMLInputElement>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -1291,10 +1292,11 @@ export default function ShortsPage() {
         </div>
       )}
 
+
       {/* Main Shorts Content */}
       <div
         ref={containerRef}
-        className="fixed inset-0 top-[56px] overflow-y-scroll snap-y snap-mandatory overscroll-y-contain scrollbar-none transition-all duration-300 ease-in-out"
+        className="fixed inset-0 top-0 bottom-[56px] md:top-[56px] md:bottom-0 overflow-y-scroll snap-y snap-mandatory overscroll-y-contain scrollbar-none transition-all duration-300 ease-in-out"
         style={{
           scrollSnapType: "y mandatory",
           left: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${desktopSidebarWidth}px` : "0px",
@@ -1378,7 +1380,12 @@ export default function ShortsPage() {
                 <div className={`absolute top-0 left-0 right-0 z-30 px-4 pt-4 pb-16 transition-opacity duration-200 ${(isHovered || isActive) && !isScrolling ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button onClick={handleTogglePlay} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+                      {/* Mobile: back button in play/pause slot */}
+                      <button onClick={() => router.back()} className="md:hidden w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} aria-label="Go back">
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      {/* Desktop: play/pause */}
+                      <button onClick={handleTogglePlay} className="hidden md:flex w-10 h-10 rounded-full items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
                         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                       </button>
                       <div className="relative flex items-center" onMouseEnter={() => setShowVolumeSlider(true)} onMouseLeave={() => setShowVolumeSlider(false)}>
@@ -1403,12 +1410,13 @@ export default function ShortsPage() {
                         <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
                           <MoreIcon className="h-5 w-5" />
                         </button>
+
+                        {/* Dropdown — same on mobile and desktop */}
                         {showMoreMenu && (
                           <>
-                            <div className="fixed inset-0 z-40 md:hidden" onClick={() => setShowMoreMenu(false)} />
-                            <div className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl py-2 shadow-2xl md:absolute md:top-full md:bottom-auto md:left-auto md:right-0 md:mt-2 md:rounded-xl md:w-[280px]">
-                              <div className="w-10 h-1 bg-muted rounded-full mx-auto my-3 md:hidden" />
-                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => { openPanel("description"); setShowMoreMenu(false) }}>
+                            <div className="fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)} />
+                            <div className="absolute top-full right-0 mt-2 z-50 bg-card rounded-xl shadow-2xl border w-[280px]">
+                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors rounded-t-xl" onClick={() => { openPanel("description"); setShowMoreMenu(false) }}>
                                 <List className="h-5 w-5" /> Description
                               </button>
                               <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => setShowMoreMenu(false)}>
@@ -1420,14 +1428,12 @@ export default function ShortsPage() {
                               </button>
                               <ReportDialog videoTitle={short.title} videoId={short.id}>
                                 <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors">
-                                  <Flag className="h-5 w-5" />
-                                  <span>Report</span>
+                                  <Flag className="h-5 w-5" /> <span>Report</span>
                                 </button>
                               </ReportDialog>
-                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors" onClick={() => { setShowMoreMenu(false); setShowFeedbackDialog(true); }}>
+                              <button className="w-full flex items-center gap-4 px-4 py-3 text-foreground text-sm hover:bg-muted transition-colors rounded-b-xl" onClick={() => { setShowMoreMenu(false); setShowFeedbackDialog(true); }}>
                                 <MessageSquare className="h-5 w-5" /> Send feedback
                               </button>
-                              <div className="h-4 md:hidden" />
                             </div>
                           </>
                         )}

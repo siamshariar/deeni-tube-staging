@@ -26,16 +26,12 @@ export default function DesktopSidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
-  const [showMoreChannels, setShowMoreChannels] = useState(false);
-  const [showMoreScholars, setShowMoreScholars] = useState(false);
 
   // Overlay mode: video detail pages and playlist detail pages.
   // The sidebar appears as a slide-in overlay — content never shifts.
   const isOverlayPage =
     !!pathname?.startsWith("/videos/") ||
-    !!pathname?.startsWith("/playlists/") ||
-    !!pathname?.startsWith("/more/") ||
-    !!pathname?.startsWith("/help/");
+    !!pathname?.startsWith("/playlists/");
 
   // Restore persisted collapsed state on mount
   useEffect(() => {
@@ -108,13 +104,7 @@ export default function DesktopSidebar() {
           )}
         >
           <div className="w-full py-1.5">
-            <SidebarExpandedContent
-              pathname={pathname}
-              showMoreChannels={showMoreChannels}
-              setShowMoreChannels={setShowMoreChannels}
-              showMoreScholars={showMoreScholars}
-              setShowMoreScholars={setShowMoreScholars}
-            />
+            <SidebarExpandedContent pathname={pathname} />
           </div>
         </aside>
       </>
@@ -125,13 +115,13 @@ export default function DesktopSidebar() {
   return (
     <aside
       className={cn(
-        "hidden md:flex fixed left-0 border-r bg-background overflow-y-auto overflow-x-hidden flex-shrink-0 z-30 transition-all duration-300 ease-in-out sidebar-scrollbar",
+        "hidden md:flex flex-col fixed left-0 border-r bg-background overflow-y-auto overflow-x-hidden flex-shrink-0 z-30 transition-all duration-300 ease-in-out sidebar-scrollbar",
         isCollapsed ? "w-[72px]" : "w-[240px]",
         top,
         height
       )}
     >
-      <div className="w-full py-1.5">
+      <div className="w-full py-1.5 flex flex-col flex-1">
         {isCollapsed ? (
           <>
             {/* Mini collapsed items — order: Home, Shorts, Channels, Scholars, You, Playlists, Categories */}
@@ -150,13 +140,7 @@ export default function DesktopSidebar() {
             {/* <SidebarItem href="/liked-videos" icon={<ThumbsUp className="h-5 w-5 flex-shrink-0" />} label="Liked Videos" active={pathname === "/liked-videos"} collapsed={true} /> */}
           </>
         ) : (
-          <SidebarExpandedContent
-            pathname={pathname}
-            showMoreChannels={showMoreChannels}
-            setShowMoreChannels={setShowMoreChannels}
-            showMoreScholars={showMoreScholars}
-            setShowMoreScholars={setShowMoreScholars}
-          />
+          <SidebarExpandedContent pathname={pathname} />
         )}
       </div>
     </aside>

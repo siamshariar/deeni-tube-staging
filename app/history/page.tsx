@@ -32,6 +32,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { videoData, VideoItem } from "@/lib/video-data";
 import { ShareModal } from "@/components/share-modal";
+import { AddToPlaylistDialog } from "@/components/add-to-playlist-dialog";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { useWatchLater } from "@/hooks/useWatchLater";
 
 // Real shorts data - Today (15 shorts)
 const shortsTodayData = [
@@ -434,11 +437,15 @@ function getDateGroup(date: Date): string {
   return "Older";
 }
 
-function ShortsRow({ shorts }: { shorts: any[] }) {
+function ShortsRow({ shorts, onShare }: { shorts: any[]; onShare: (short: any) => void }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const { addToWatchLater, isInWatchLater } = useWatchLater();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerShort, setDrawerShort] = useState<any>(null);
+  const [showShortPlaylistDialog, setShowShortPlaylistDialog] = useState(false);
 
   const checkScroll = () => {
     const el = scrollContainerRef.current;
@@ -479,37 +486,128 @@ function ShortsRow({ shorts }: { shorts: any[] }) {
       )}
 
       {/* Shorts Container - draggable on mobile */}
-      <div 
-        ref={scrollContainerRef} 
-        className="flex gap-2 overflow-x-auto scrollbar-none pb-2 px-0.5 touch-pan-x" 
+      <div
+        ref={scrollContainerRef}
+        className="flex gap-2 overflow-x-auto scrollbar-none pb-2 px-0.5 touch-pan-x"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
       >
         {shorts.map((short) => (
-          <Link key={short.id} href={`/shorts?v=${short.videoId}`} className="flex-shrink-0 group/card w-[140px] sm:w-[150px] md:w-[170px]">
-            <div className="relative w-full aspect-[9/16] rounded-xl overflow-hidden">
-              <Image src={short.thumbnail} alt={short.title} fill className="object-cover" />
-              <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity">
-                <div className="bg-black/60 rounded-full p-2"><Play className="h-5 w-5 text-white fill-white" /></div>
+          <div key={short.id} className="flex-shrink-0 w-[140px] sm:w-[150px] md:w-[170px] group/card">
+            <Link href={`/shorts?v=${short.videoId}`} className="block">
+              <div className="relative w-full aspect-[9/16] rounded-xl overflow-hidden">
+                <Image src={short.thumbnail} alt={short.title} fill className="object-cover" />
+                <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity">
+                  <div className="bg-black/60 rounded-full p-2"><Play className="h-5 w-5 text-white fill-white" /></div>
+                </div>
+                <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">{short.duration}</div>
               </div>
-              <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">{short.duration}</div>
+            </Link>
+            <div className="flex items-start justify-between mt-1.5 gap-1">
+              <Link href={`/shorts?v=${short.videoId}`} className="flex-1 min-w-0">
+                <h4 className="text-xs sm:text-sm font-medium line-clamp-2 group-hover/card:text-primary transition-colors">{short.title}</h4>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{short.views} • {short.timeAgo}</p>
+              </Link>
+              {isMobile ? (
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDrawerShort(short); setDrawerOpen(true); }}
+                  className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0"
+                >
+                  <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0">
+                      <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                    <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onClick={() => {
+                      if (isInWatchLater(short.id)) {
+                        toast.success("Already in Watch Later");
+                      } else {
+                        addToWatchLater({ id: short.id, title: short.title, channel: short.channel, channelAvatar: short.channelAvatar || "", thumbnail: short.thumbnail, views: short.views, timeAgo: short.timeAgo, duration: short.duration, addedAt: Date.now() });
+                        toast.success("Added to Watch Later");
+                      }
+                    }}>
+                      <Clock className="h-3.5 w-3.5 mr-2" /> {isInWatchLater(short.id) ? "Saved to Watch Later" : "Save to Watch Later"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onSelect={(e) => { e.preventDefault(); setDrawerShort(short); setShowShortPlaylistDialog(true); }}>
+                      <Bookmark className="h-3.5 w-3.5 mr-2" /> Save to Playlist
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onClick={() => onShare(short)}>
+                      <Share className="h-3.5 w-3.5 mr-2" /> Share
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
-            <h4 className="text-xs sm:text-sm font-medium line-clamp-2 mt-1.5 group-hover/card:text-primary transition-colors">{short.title}</h4>
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{short.views} • {short.timeAgo}</p>
-          </Link>
+          </div>
         ))}
       </div>
+
+      {/* Mobile Drawer - single instance outside map */}
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerContent>
+          <div className="p-4 pb-8 space-y-1">
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+              onClick={() => {
+                if (drawerShort) {
+                  if (isInWatchLater(drawerShort.id)) {
+                    toast.success("Already in Watch Later");
+                  } else {
+                    addToWatchLater({ id: drawerShort.id, title: drawerShort.title, channel: drawerShort.channel, channelAvatar: drawerShort.channelAvatar || "", thumbnail: drawerShort.thumbnail, views: drawerShort.views, timeAgo: drawerShort.timeAgo, duration: drawerShort.duration, addedAt: Date.now() });
+                    toast.success("Added to Watch Later");
+                  }
+                }
+                setDrawerOpen(false);
+              }}
+            >
+              <Clock className="h-4 w-4 flex-shrink-0" /> {drawerShort && isInWatchLater(drawerShort.id) ? "Saved to Watch Later" : "Save to Watch Later"}
+            </button>
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+              onClick={() => { setShowShortPlaylistDialog(true); setDrawerOpen(false); }}
+            >
+              <Bookmark className="h-4 w-4 flex-shrink-0" /> Save to Playlist
+            </button>
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+              onClick={() => { if (drawerShort) onShare(drawerShort); setDrawerOpen(false); }}
+            >
+              <Share className="h-4 w-4 flex-shrink-0" /> Share
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Add to Playlist Dialog for shorts */}
+      {drawerShort && (
+        <AddToPlaylistDialog
+          video={{ id: drawerShort.id, title: drawerShort.title, channel: drawerShort.channel }}
+          open={showShortPlaylistDialog}
+          onOpenChange={setShowShortPlaylistDialog}
+        />
+      )}
     </div>
   );
 }
 
 export default function HistoryPage() {
   const router = useRouter();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const { addToWatchLater, isInWatchLater } = useWatchLater();
   const [videos, setVideos] = useState(allHistoryData);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
+  const [drawerVideo, setDrawerVideo] = useState<any>(null);
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -599,30 +697,46 @@ export default function HistoryPage() {
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{video.views} • {video.timeAgo}</p>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-1.5 rounded-full hover:bg-muted transition-colors">
-                  <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 sm:w-56 rounded-xl">
-                <DropdownMenuItem onClick={() => router.push(video.type === "short" ? `/shorts?v=${video.videoId}` : `/videos/${video.channel}/${video.videoId || video.id}`)} className="text-xs sm:text-sm">
-                  <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> Play now
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onClick={() => toast.success("Added to Watch Later (demo)")}>
-                  <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> Save to Watch later
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onClick={() => toast.success("Added to playlist (demo)")}>
-                  <Bookmark className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> Save to playlist
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onClick={() => handleShare(video)}>
-                  <Share className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> Share
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleRemove(video.id)} className="text-red-600 dark:text-red-400 text-xs sm:text-sm">
-                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> Remove from History
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {isMobile ? (
+              <button
+                className="p-1.5 rounded-full hover:bg-muted transition-colors"
+                onClick={() => { setDrawerVideo(video); setHistoryDrawerOpen(true); }}
+              >
+                <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+              </button>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-1.5 rounded-full hover:bg-muted transition-colors">
+                    <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 sm:w-56 rounded-xl">
+                  <DropdownMenuItem onClick={() => router.push(video.type === "short" ? `/shorts?v=${video.videoId}` : `/videos/${video.channel}/${video.videoId || video.id}`)} className="text-xs sm:text-sm">
+                    <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> Play now
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onClick={() => {
+                    if (isInWatchLater(video.id)) {
+                      toast.success("Already in Watch Later");
+                    } else {
+                      addToWatchLater({ id: video.id, title: video.title, channel: video.channel, channelAvatar: video.channelAvatar || "", thumbnail: video.thumbnail, views: video.views, timeAgo: video.timeAgo, duration: video.duration, addedAt: Date.now() });
+                      toast.success("Added to Watch Later");
+                    }
+                  }}>
+                    <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> {isInWatchLater(video.id) ? "Saved to Watch Later" : "Save to Watch later"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onSelect={(e) => { e.preventDefault(); setSelectedVideo(video); setShowPlaylistDialog(true); }}>
+                    <Bookmark className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> Save to playlist
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onClick={() => handleShare(video)}>
+                    <Share className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> Share
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleRemove(video.id)} className="text-red-600 dark:text-red-400 text-xs sm:text-sm">
+                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 sm:mr-3" /> Remove from History
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
@@ -693,7 +807,7 @@ export default function HistoryPage() {
                 {Object.entries(groupedVideos).map(([dateGroup, { shorts, videos: dateVideos }]) => (
                   <div key={dateGroup}>
                     <h3 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3 px-2">{dateGroup}</h3>
-                    <ShortsRow shorts={shorts} />
+                    <ShortsRow shorts={shorts} onShare={handleShare} />
                     {dateVideos.length > 0 && (
                       <div className={`space-y-0.5 sm:space-y-1 ${shorts.length > 0 ? 'mt-3 sm:mt-4' : ''}`}>
                         {dateVideos.map((video) => renderVideoItem(video))}
@@ -706,6 +820,65 @@ export default function HistoryPage() {
           </div>
         )}
       </div>
+
+      {/* Mobile Drawer for video list items */}
+      <Drawer open={historyDrawerOpen} onOpenChange={setHistoryDrawerOpen}>
+        <DrawerContent>
+          <div className="p-4 pb-8 space-y-1">
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+              onClick={() => {
+                if (drawerVideo) router.push(drawerVideo.type === "short" ? `/shorts?v=${drawerVideo.videoId}` : `/videos/${drawerVideo.channel}/${drawerVideo.videoId || drawerVideo.id}`);
+                setHistoryDrawerOpen(false);
+              }}
+            >
+              <Play className="h-4 w-4 flex-shrink-0" /> Play now
+            </button>
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+              onClick={() => {
+                if (drawerVideo) {
+                  if (isInWatchLater(drawerVideo.id)) {
+                    toast.success("Already in Watch Later");
+                  } else {
+                    addToWatchLater({ id: drawerVideo.id, title: drawerVideo.title, channel: drawerVideo.channel, channelAvatar: drawerVideo.channelAvatar || "", thumbnail: drawerVideo.thumbnail, views: drawerVideo.views, timeAgo: drawerVideo.timeAgo, duration: drawerVideo.duration, addedAt: Date.now() });
+                    toast.success("Added to Watch Later");
+                  }
+                }
+                setHistoryDrawerOpen(false);
+              }}
+            >
+              <Clock className="h-4 w-4 flex-shrink-0" /> {drawerVideo && isInWatchLater(drawerVideo.id) ? "Saved to Watch Later" : "Save to Watch Later"}
+            </button>
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+              onClick={() => { if (drawerVideo) { setSelectedVideo(drawerVideo); setShowPlaylistDialog(true); } setHistoryDrawerOpen(false); }}
+            >
+              <Bookmark className="h-4 w-4 flex-shrink-0" /> Save to playlist
+            </button>
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+              onClick={() => { if (drawerVideo) handleShare(drawerVideo); setHistoryDrawerOpen(false); }}
+            >
+              <Share className="h-4 w-4 flex-shrink-0" /> Share
+            </button>
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left text-red-600 dark:text-red-400"
+              onClick={() => { if (drawerVideo) handleRemove(drawerVideo.id); setHistoryDrawerOpen(false); }}
+            >
+              <Trash2 className="h-4 w-4 flex-shrink-0" /> Remove from History
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {selectedVideo && (
+        <AddToPlaylistDialog
+          video={{ id: selectedVideo.id, title: selectedVideo.title, channel: selectedVideo.channel }}
+          open={showPlaylistDialog}
+          onOpenChange={setShowPlaylistDialog}
+        />
+      )}
 
       <ShareModal isOpen={shareModalOpen} onClose={() => setShareModalOpen(false)} videoUrl={shareUrl} />
     </div>

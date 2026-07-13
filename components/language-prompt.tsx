@@ -12,13 +12,17 @@ import { cn } from "@/lib/utils";
 interface LanguagePromptProps {
   open: boolean;
   onSave: (languages: string[]) => void;
-  onSkip?: () => void; // kept for backward compatibility but ignored in UI
+  onClose?: () => void;
+  canDismiss?: boolean;
+  onSkip?: () => void;
   initialSelected?: string[];
 }
 
 export default function LanguagePrompt({
   open,
   onSave,
+  onClose,
+  canDismiss = false,
   initialSelected = ["en"],
 }: LanguagePromptProps) {
   const [selected, setSelected] = useState<string[]>(initialSelected);
@@ -38,17 +42,22 @@ export default function LanguagePrompt({
     onSave(selected);
   };
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && canDismiss && onClose) onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={() => {}} modal={true}>
+    <Dialog open={open} onOpenChange={handleOpenChange} modal={true}>
       <DialogContent
         className={cn(
           "p-0 gap-0 overflow-hidden flex flex-col bg-background",
           isMobile
-            ? "max-w-full h-[100dvh] rounded-none border-0 [&>button]:hidden"
-            : "sm:max-w-md max-h-[90vh] overflow-y-auto"
+            ? "max-w-full h-[100dvh] rounded-none border-0"
+            : "sm:max-w-md max-h-[90vh] overflow-y-auto",
+          !canDismiss && "[&>button:first-of-type]:hidden"
         )}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => { if (!canDismiss) e.preventDefault(); }}
+        onEscapeKeyDown={(e) => { if (!canDismiss) e.preventDefault(); }}
       >
         {/* Header */}
         <div className="flex-shrink-0 px-6 pt-12 pb-6 text-center">

@@ -28,8 +28,17 @@ import {
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { videoData, VideoItem, categoryData } from "@/lib/video-data";
 import { ShareModal } from "@/components/share-modal";
+import { AddToPlaylistDialog } from "@/components/add-to-playlist-dialog";
+import { ReportDialog } from "@/components/report-dialog";
+import { SortDropdown } from "@/components/sort-dropdown";
+import { useWatchLater } from "@/hooks/useWatchLater";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+
+const SORT_OPTIONS = [
+  { label: "Priority", value: "priority" },
+  { label: "Latest", value: "latest" },
+  { label: "Most Popular", value: "popular" },
+];
 
 function VideoSkeleton() {
   return (
@@ -72,6 +81,10 @@ export default function CategoryVideosPage() {
   const [sortMode, setSortMode] = useState<"priority" | "latest" | "popular">("priority");
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const { addToWatchLater, removeFromWatchLater, isInWatchLater } = useWatchLater();
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -184,7 +197,7 @@ export default function CategoryVideosPage() {
 
             {/* Search + Sort chips */}
             <div className="mb-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between gap-3">
                 <div className="relative w-full md:max-w-md">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -204,22 +217,11 @@ export default function CategoryVideosPage() {
                   )}
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                  {(["priority", "latest", "popular"] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setSortMode(mode)}
-                      className={cn(
-                        "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                        sortMode === mode
-                          ? "bg-foreground text-background"
-                          : "bg-muted hover:bg-muted/80 text-foreground"
-                      )}
-                    >
-                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                    </button>
-                  ))}
-                </div>
+                <SortDropdown
+                  options={SORT_OPTIONS}
+                  currentValue={sortMode}
+                  onSelect={(v) => setSortMode(v as typeof sortMode)}
+                />
               </div>
             </div>
 
@@ -279,22 +281,16 @@ export default function CategoryVideosPage() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                                <DropdownMenuItem
-                                  className="cursor-pointer"
-                                  onClick={() => toast.success("Added to Watch Later (demo)")}
-                                >
-                                  <Clock className="h-4 w-4 mr-2" /> Save to Watch later
+                                <DropdownMenuItem className="cursor-pointer" onSelect={() => {
+                                  if (isInWatchLater(video.id)) { removeFromWatchLater(video.id); toast.success("Removed from Watch Later"); }
+                                  else { addToWatchLater({ id: video.id, title: video.title, channel: video.channel, channelAvatar: video.channelAvatar, thumbnail: `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`, views: video.views, timeAgo: video.timeAgo, duration: video.duration, addedAt: Date.now() }); toast.success("Added to Watch Later"); }
+                                }}>
+                                  <Clock className="h-4 w-4 mr-2" /> {isInWatchLater(video.id) ? "Saved to Watch Later" : "Save to Watch later"}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="cursor-pointer"
-                                  onClick={() => toast.success("Added to playlist (demo)")}
-                                >
+                                <DropdownMenuItem className="cursor-pointer" onSelect={(e) => { e.preventDefault(); setSelectedVideo(video); setShowPlaylistDialog(true); }}>
                                   <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="cursor-pointer"
-                                  onClick={() => handleShare(video)}
-                                >
+                                <DropdownMenuItem className="cursor-pointer" onSelect={() => { setShareUrl(`${window.location.origin}/videos/${video.channel}/${video.videoId}`); setShareModalOpen(true); }}>
                                   <Share className="h-4 w-4 mr-2" /> Share
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -344,22 +340,16 @@ export default function CategoryVideosPage() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() => toast.success("Added to Watch Later (demo)")}
-                              >
-                                <Clock className="h-4 w-4 mr-2" /> Save to Watch later
+                              <DropdownMenuItem className="cursor-pointer" onSelect={() => {
+                                if (isInWatchLater(video.id)) { removeFromWatchLater(video.id); toast.success("Removed from Watch Later"); }
+                                else { addToWatchLater({ id: video.id, title: video.title, channel: video.channel, channelAvatar: video.channelAvatar, thumbnail: `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`, views: video.views, timeAgo: video.timeAgo, duration: video.duration, addedAt: Date.now() }); toast.success("Added to Watch Later"); }
+                              }}>
+                                <Clock className="h-4 w-4 mr-2" /> {isInWatchLater(video.id) ? "Saved to Watch Later" : "Save to Watch later"}
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() => toast.success("Added to playlist (demo)")}
-                              >
+                              <DropdownMenuItem className="cursor-pointer" onSelect={(e) => { e.preventDefault(); setSelectedVideo(video); setShowPlaylistDialog(true); }}>
                                 <Bookmark className="h-4 w-4 mr-2" /> Save to playlist
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() => handleShare(video)}
-                              >
+                              <DropdownMenuItem className="cursor-pointer" onSelect={() => { setShareUrl(`${window.location.origin}/videos/${video.channel}/${video.videoId}`); setShareModalOpen(true); }}>
                                 <Share className="h-4 w-4 mr-2" /> Share
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -389,11 +379,13 @@ export default function CategoryVideosPage() {
         )}
       </div>
 
-      <ShareModal
-        isOpen={shareModalOpen}
-        onClose={() => setShareModalOpen(false)}
-        videoUrl={shareUrl}
-      />
+      <ShareModal isOpen={shareModalOpen} onClose={() => setShareModalOpen(false)} videoUrl={shareUrl} />
+      {selectedVideo && (
+        <>
+          <AddToPlaylistDialog video={{ id: selectedVideo.id, title: selectedVideo.title, channel: selectedVideo.channel }} open={showPlaylistDialog} onOpenChange={setShowPlaylistDialog} />
+          <ReportDialog videoTitle={selectedVideo.title} videoId={selectedVideo.id} open={showReportDialog} onOpenChange={setShowReportDialog} />
+        </>
+      )}
     </div>
   );
 }

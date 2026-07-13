@@ -4,19 +4,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import {
   ArrowLeft,
   MoreVertical,
   Share,
   Ban,
   Flag,
-  Globe,
-  Lock,
   ListVideo,
   Play,
-  Edit,
-  Trash2,
+  Clock,
+  Bookmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,6 +31,10 @@ import { cn } from "@/lib/utils";
 import { channelData, ChannelItem } from "@/lib/channel-data";
 import { videoData, VideoItem } from "@/lib/video-data";
 import { ShareModal } from "@/components/share-modal";
+import { AddToPlaylistDialog } from "@/components/add-to-playlist-dialog";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { ReportDialog } from "@/components/report-dialog";
+import { useWatchLater } from "@/hooks/useWatchLater";
 import { toast } from "sonner";
 import { extendedPlaylists, PlaylistItem } from "@/lib/playlist-data";
 
@@ -76,8 +77,9 @@ const mockShortsByChannel: Record<string, any[]> = {
 
 function ChannelSkeleton() {
   return (
-    <div className="min-h-screen bg-background">
-      <Skeleton className="w-full h-44 md:h-56 xl:h-64" />
+    <div className="min-h-screen bg-background pt-14">
+      <Skeleton className="w-full h-[100px] md:hidden" />
+      <Skeleton className="w-full hidden md:block h-52 xl:h-64" />
       <div className="px-3 py-4 border-b">
         <div className="flex items-start gap-4">
           <Skeleton className="h-16 w-16 md:h-20 md:w-20 rounded-full" />
@@ -155,10 +157,15 @@ export default function ChannelDetailPage() {
     ).slice(0, 4);
   }, [channelVideos]);
 
+  const { addToWatchLater, isInWatchLater } = useWatchLater();
   const [activeTab, setActiveTab] = useState("videos");
   const [isLoading, setIsLoading] = useState(true);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [shortDrawerOpen, setShortDrawerOpen] = useState(false);
+  const [selectedShort, setSelectedShort] = useState<any>(null);
+  const [showShortPlaylistDialog, setShowShortPlaylistDialog] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -169,6 +176,11 @@ export default function ChannelDetailPage() {
   const handleShare = () => {
     setShareModalOpen(true);
   };
+
+  // Strip YouTube's fcrop64 crop instruction to get the full 16:9 banner
+  const fullBannerUrl = channel.banner
+    ? channel.banner.replace(/=.*$/, "=w1920")
+    : "/vibrant-health-cover.png";
 
   // Navigate to shorts page with specific video
   const handleShortClick = (videoId: string) => {
@@ -181,14 +193,14 @@ export default function ChannelDetailPage() {
     return String(num);
   };
 
-  const getPlaylistThumbnail = (playlist: PlaylistItem) => {
-    if (!playlist.videoIds.length) return null;
-    const firstVideoId = playlist.videoIds[0];
-    const video = videoData.find((v) => v.id === firstVideoId);
-    if (video) {
-      return `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
-    }
-    return null;
+  const getPlaylistThumbs = (playlist: PlaylistItem): string[] => {
+    return playlist.videoIds
+      .slice(0, 4)
+      .map((id) => {
+        const v = videoData.find((v) => v.id === id);
+        return v ? `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg` : null;
+      })
+      .filter(Boolean) as string[];
   };
 
   if (isLoading) {
@@ -196,7 +208,7 @@ export default function ChannelDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-14">
       {/* Mobile back button + channel name */}
       {isMobile && (
         <div className="sticky top-[56px] z-10 bg-background/95 backdrop-blur-sm border-b">
@@ -212,14 +224,24 @@ export default function ChannelDetailPage() {
         </div>
       )}
 
-      {/* Banner */}
-      <div className="relative w-full h-44 md:h-56 xl:h-64 overflow-hidden bg-muted">
+      {/* Mobile: original fcrop64 URL is a ~6:1 pre-cropped strip — natural height (~100px), no extra space */}
+      <div className="relative md:hidden">
         <img
           src={channel.banner || "/vibrant-health-cover.png"}
           alt="Channel banner"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="w-full h-auto block"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+      </div>
+
+      {/* Desktop: fullBannerUrl (=w1920) loads reliably — fixed banner height with object-cover */}
+      <div className="relative hidden md:block h-52 xl:h-64">
+        <img
+          src={fullBannerUrl}
+          alt="Channel banner"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
       </div>
 
       {/* Channel info header */}
@@ -239,11 +261,13 @@ export default function ChannelDetailPage() {
               </h1>
               {channel.verified && (
                 <svg
-                  className="w-5 h-5 text-blue-500 flex-shrink-0"
-                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5 text-muted-foreground flex-shrink-0"
                   viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-label="Verified"
                 >
-                  <path d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307z" />
+                  <path d="M12 1C5.925 1 1 5.925 1 12s4.925 11 11 11 11-4.925 11-11S18.075 1 12 1Zm5.707 7.293a1 1 0 010 1.414L10 17.414l-3.707-3.707a1 1 0 111.414-1.414L10 14.586l6.293-6.293a1 1 0 011.414 0Z" />
                 </svg>
               )}
             </div>
@@ -276,7 +300,7 @@ export default function ChannelDetailPage() {
                 <DropdownMenuContent align="end" className="w-56 rounded-xl">
                   <DropdownMenuItem
                     className="cursor-pointer"
-                    onClick={() => toast("Channel reported")}
+                    onSelect={(e) => { e.preventDefault(); setShowReportDialog(true); }}
                   >
                     <Flag className="h-4 w-4 mr-3" /> Report
                   </DropdownMenuItem>
@@ -392,12 +416,11 @@ export default function ChannelDetailPage() {
           {channelShorts.length > 0 ? (
             <div className="grid gap-3 p-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {channelShorts.map((short) => (
-                <button
-                  key={short.id}
-                  onClick={() => handleShortClick(short.videoId)}
-                  className="flex flex-col group cursor-pointer text-left"
-                >
-                  <div className="relative aspect-[9/16] w-full rounded-xl overflow-hidden bg-muted shadow-sm hover:shadow-md transition-shadow">
+                <div key={short.id} className="flex flex-col group">
+                  <div
+                    className="relative aspect-[9/16] w-full rounded-xl overflow-hidden bg-muted shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => handleShortClick(short.videoId)}
+                  >
                     <Image
                       src={`https://img.youtube.com/vi/${short.videoId}/hqdefault.jpg`}
                       alt={short.title}
@@ -413,13 +436,45 @@ export default function ChannelDetailPage() {
                       </div>
                     </div>
                   </div>
-                  <h3 className="font-medium text-xs sm:text-sm line-clamp-2 mt-2 group-hover:text-primary transition-colors">
-                    {short.title}
-                  </h3>
-                  <p className="text-muted-foreground text-[10px] sm:text-xs mt-0.5">
-                    {short.views} views • {short.timeAgo}
-                  </p>
-                </button>
+                  {/* Title row with 3-dot aligned to the right */}
+                  <div className="flex items-start justify-between mt-2 gap-1">
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleShortClick(short.videoId)}>
+                      <h3 className="font-medium text-xs sm:text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                        {short.title}
+                      </h3>
+                      <p className="text-muted-foreground text-[10px] sm:text-xs mt-0.5">
+                        {short.views} views • {short.timeAgo}
+                      </p>
+                    </div>
+                    {isMobile ? (
+                      <button
+                        className="flex-shrink-0 p-1 rounded-full hover:bg-muted transition-colors mt-0.5"
+                        onClick={(e) => { e.stopPropagation(); setSelectedShort(short); setShortDrawerOpen(true); }}
+                      >
+                        <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="flex-shrink-0 p-1 rounded-full hover:bg-muted transition-colors mt-0.5">
+                            <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                          <DropdownMenuItem className="cursor-pointer" onClick={() => { if (isInWatchLater(short.id)) { toast.success("Already in Watch Later"); } else { addToWatchLater({ id: short.id, title: short.title, channel: channel.name, channelAvatar: channel.avatar || "", thumbnail: `https://img.youtube.com/vi/${short.videoId}/hqdefault.jpg`, views: short.views, timeAgo: short.timeAgo, duration: short.duration, addedAt: Date.now() }); toast.success("Added to Watch Later"); } }}>
+                            <Clock className="h-4 w-4 mr-2" /> {isInWatchLater(short.id) ? "Saved to Watch Later" : "Save to Watch Later"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer" onSelect={(e) => { e.preventDefault(); setSelectedShort(short); setShowShortPlaylistDialog(true); }}>
+                            <Bookmark className="h-4 w-4 mr-2" /> Save to Playlist
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer" onClick={() => { setShareUrl(`${window.location.origin}/shorts?v=${short.videoId}`); setShareModalOpen(true); }}>
+                            <Share className="h-4 w-4 mr-2" /> Share
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
@@ -431,6 +486,42 @@ export default function ChannelDetailPage() {
               <p className="text-sm text-muted-foreground">This channel hasn't uploaded any shorts.</p>
             </div>
           )}
+
+          {/* Mobile Drawer - single instance outside map */}
+          <Drawer open={shortDrawerOpen} onOpenChange={setShortDrawerOpen}>
+            <DrawerContent>
+              <div className="p-4 pb-8 space-y-1">
+                <button
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+                  onClick={() => {
+                    if (selectedShort) {
+                      if (isInWatchLater(selectedShort.id)) {
+                        toast.success("Already in Watch Later");
+                      } else {
+                        addToWatchLater({ id: selectedShort.id, title: selectedShort.title, channel: channel.name, channelAvatar: channel.avatar || "", thumbnail: `https://img.youtube.com/vi/${selectedShort.videoId}/hqdefault.jpg`, views: selectedShort.views, timeAgo: selectedShort.timeAgo, duration: selectedShort.duration, addedAt: Date.now() });
+                        toast.success("Added to Watch Later");
+                      }
+                    }
+                    setShortDrawerOpen(false);
+                  }}
+                >
+                  <Clock className="h-4 w-4 flex-shrink-0" /> {selectedShort && isInWatchLater(selectedShort.id) ? "Saved to Watch Later" : "Save to Watch Later"}
+                </button>
+                <button
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+                  onClick={() => { setShowShortPlaylistDialog(true); setShortDrawerOpen(false); }}
+                >
+                  <Bookmark className="h-4 w-4 flex-shrink-0" /> Save to Playlist
+                </button>
+                <button
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm text-left"
+                  onClick={() => { if (selectedShort) { setShareUrl(`${window.location.origin}/shorts?v=${selectedShort.videoId}`); setShareModalOpen(true); } setShortDrawerOpen(false); }}
+                >
+                  <Share className="h-4 w-4 flex-shrink-0" /> Share
+                </button>
+              </div>
+            </DrawerContent>
+          </Drawer>
         </>
       )}
 
@@ -439,120 +530,73 @@ export default function ChannelDetailPage() {
         <div className="p-4">
           {channelPlaylists.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {channelPlaylists.map((playlist) => (
-                <div
-                  key={playlist.id}
-                  className="group cursor-pointer border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-card"
-                  onClick={() =>
-                    router.push(`/playlists/${playlist.slug}/${playlist.id}`)
-                  }
-                >
-                  <div className="relative aspect-video w-full">
-                    {getPlaylistThumbnail(playlist) ? (
-                      <Image
-                        src={getPlaylistThumbnail(playlist)!}
-                        alt={playlist.name}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <>
-                        <div
-                          className="absolute inset-0 opacity-30"
-                          style={{ backgroundColor: playlist.thumbnailColor }}
-                        />
-                        <div
-                          className="absolute left-2 right-2 top-2 bottom-2 rounded-lg opacity-40"
-                          style={{ backgroundColor: playlist.thumbnailColor }}
-                        />
-                        <div
-                          className="absolute left-4 right-4 top-4 bottom-4 rounded-lg flex items-center justify-center"
-                          style={{ backgroundColor: playlist.thumbnailColor }}
-                        >
-                          <ListVideo className="h-10 w-10 text-white/60" />
+              {channelPlaylists.map((playlist) => {
+                const thumbs = getPlaylistThumbs(playlist);
+                return (
+                  <div
+                    key={playlist.id}
+                    className="group cursor-pointer border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-card"
+                    onClick={() =>
+                      router.push(`/playlists/${playlist.slug}/${playlist.id}?source=channel`)
+                    }
+                  >
+                    <div className="relative aspect-video w-full bg-muted overflow-hidden">
+                      {thumbs.length >= 2 ? (
+                        <div className="grid grid-cols-2 gap-0.5 w-full h-full">
+                          {[0, 1, 2, 3].map((i) => (
+                            <div key={i} className="relative bg-muted overflow-hidden">
+                              {thumbs[i] ? (
+                                <Image src={thumbs[i]} alt="" fill className="object-cover" />
+                              ) : (
+                                <div className="absolute inset-0" style={{ backgroundColor: playlist.thumbnailColor, opacity: 0.4 }} />
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      </>
-                    )}
-                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium flex items-center gap-1">
-                      <ListVideo className="h-3 w-3" />
-                      {playlist.videoIds.length}
-                    </div>
-                  </div>
-
-                  <div className="p-4 space-y-1">
-                    <div className="flex items-start justify-between gap-1">
-                      <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors flex-1">
-                        {playlist.name}
-                      </h3>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className="p-1 rounded-full hover:bg-muted transition-colors -mr-1 flex-shrink-0"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(
-                                `/playlists/${playlist.slug}/${playlist.id}`
-                              );
-                            }}
-                          >
-                            <Play className="h-4 w-4 mr-2" /> Play all
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toast("Edit playlist (prototype)");
-                            }}
-                          >
-                            <Edit className="h-4 w-4 mr-2" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600 dark:text-red-400"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toast("Delete playlist (prototype)");
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      {playlist.isPublic ? (
-                        <Globe className="h-3 w-3" />
+                      ) : thumbs.length === 1 ? (
+                        <Image src={thumbs[0]} alt={playlist.name} fill className="object-cover" />
                       ) : (
-                        <Lock className="h-3 w-3" />
+                        <>
+                          <div className="absolute inset-0 opacity-30" style={{ backgroundColor: playlist.thumbnailColor }} />
+                          <div className="absolute left-4 right-4 top-4 bottom-4 rounded-lg flex items-center justify-center" style={{ backgroundColor: playlist.thumbnailColor }}>
+                            <ListVideo className="h-10 w-10 text-white/60" />
+                          </div>
+                        </>
                       )}
-                      <span>{playlist.isPublic ? "Public" : "Private"}</span>
-                      <span>•</span>
-                      <span>{playlist.videoIds.length} videos</span>
-                      <span>•</span>
-                      <span>Updated {playlist.updatedAt}</span>
+                      <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium flex items-center gap-1">
+                        <ListVideo className="h-3 w-3" />
+                        {playlist.videoIds.length}
+                      </div>
                     </div>
-                    <div className="pt-1">
-                      <button
-                        className="text-xs font-medium text-primary hover:underline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(
-                            `/playlists/${playlist.slug}/${playlist.id}`
-                          );
-                        }}
-                      >
-                        View full playlist
-                      </button>
+
+                    <div className="p-3">
+                      <div className="flex items-start justify-between gap-1">
+                        <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors flex-1 min-w-0">
+                          {playlist.name}
+                        </h3>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="p-1 rounded-full hover:bg-muted transition-colors -mr-1 flex-shrink-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/playlists/${playlist.slug}/${playlist.id}?source=channel`); }}>
+                              <Play className="h-4 w-4 mr-2" /> Play all
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setShareUrl(`${window.location.origin}/playlists/${playlist.slug}/${playlist.id}`); setShareModalOpen(true); }}>
+                              <Share className="h-4 w-4 mr-2" /> Share
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-16 px-3">
@@ -599,12 +643,15 @@ export default function ChannelDetailPage() {
         </div>
       )}
 
-      {/* Share Modal */}
-      <ShareModal
-        isOpen={shareModalOpen}
-        onClose={() => setShareModalOpen(false)}
-        videoUrl={shareUrl}
-      />
+      {selectedShort && (
+        <AddToPlaylistDialog
+          video={{ id: selectedShort.id, title: selectedShort.title, channel: channel.name }}
+          open={showShortPlaylistDialog}
+          onOpenChange={setShowShortPlaylistDialog}
+        />
+      )}
+      <ShareModal isOpen={shareModalOpen} onClose={() => setShareModalOpen(false)} videoUrl={shareUrl} />
+      <ReportDialog videoTitle={channel.name} videoId={channel.id} open={showReportDialog} onOpenChange={setShowReportDialog} />
     </div>
   );
 }

@@ -155,7 +155,7 @@ export default function AccountDropdown() {
             )}
           </Avatar>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-80 p-0 mr-4" align="end" sideOffset={8}>
+        <DropdownMenuContent className="w-80 p-2 mr-4" align="end" sideOffset={8}>
           {/* User info header */}
           <div className="flex items-center gap-3 p-4 border-b">
             <Avatar className="h-10 w-10">
@@ -178,11 +178,7 @@ export default function AccountDropdown() {
               <User className="mr-3 h-5 w-5" />
               <span>Preferences</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/donate")}>
-              <Heart className="mr-3 h-5 w-5 text-red-500" />
-              <span>Donate</span>
-              <ChevronRight className="ml-auto h-4 w-4" />
-            </DropdownMenuItem>
+
             <DropdownMenuItem className="py-3 cursor-pointer" onClick={() => handleNavigate("/channels")}>
               <Settings className="mr-3 h-5 w-5" />
               <span>Channel Preferences</span>

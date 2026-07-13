@@ -38,7 +38,7 @@ export function SortDropdown({
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 rounded-xl">
+      <DropdownMenuContent align="start" className="w-48 rounded-xl">
         {options.map((option) => (
           <DropdownMenuItem
             key={option.value}

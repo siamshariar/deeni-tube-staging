@@ -1,14 +1,14 @@
 // components/video-card.tsx
 "use client";
 
-import { MoreVertical, Clock, Bookmark, Share, UserX, Ban, Flag, BookmarkCheck, EyeOff } from "lucide-react";
+import { MoreVertical, Clock, Bookmark, Share, UserX, Flag, BookmarkCheck, EyeOff } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWatchLater } from "@/hooks/useWatchLater";
 import { useFeedPreferences } from "@/hooks/useFeedPreferences";
@@ -43,10 +43,12 @@ export default function VideoCard({
   duration,
   thumbnail,
 }: VideoCardProps) {
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const [open, setOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
   const { addToWatchLater, removeFromWatchLater, isInWatchLater } = useWatchLater();
   const { toggleFollowChannel, isFollowed } = useFeedPreferences();
   const { isGuest } = useLanguage();
@@ -109,48 +111,51 @@ export default function VideoCard({
 
   if (hidden) return null;
 
-  const menuItems = (
+  // Drawer items (mobile)
+  const drawerItems = (
     <>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => setShowShareModal(true)}>
-        <Share className="h-5 w-5" />
-        <span>Share</span>
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setOpen(false); setTimeout(() => setShowShareModal(true), 150); }}>
+        <Share className="h-5 w-5" /><span>Share</span>
       </div>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={handleWatchLaterToggle}>
-        {saved ? (
-          <>
-            <BookmarkCheck className="h-5 w-5 fill-current text-primary" />
-            <span className="text-primary">Saved</span>
-          </>
-        ) : (
-          <>
-            <Clock className="h-5 w-5" />
-            <span>Save to Watch later</span>
-          </>
-        )}
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setOpen(false); handleWatchLaterToggle(); }}>
+        {saved ? <><BookmarkCheck className="h-5 w-5 fill-current text-primary" /><span className="text-primary">Saved</span></> : <><Clock className="h-5 w-5" /><span>Save to Watch later</span></>}
       </div>
-      <AddToPlaylistDialog
-        video={{ id: videoId, title, channel }}
-        onAdded={() => toast.success("Added to playlist")}
-      >
-        <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
-          <Bookmark className="h-5 w-5" />
-          <span>Save to playlist</span>
-        </div>
-      </AddToPlaylistDialog>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={handleDontRecommend}>
-        <UserX className="h-5 w-5" />
-        <span>Don't recommend channel</span>
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setOpen(false); setTimeout(() => setShowPlaylistDialog(true), 150); }}>
+        <Bookmark className="h-5 w-5" /><span>Save to playlist</span>
       </div>
-      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={handleNotInterested}>
-        <EyeOff className="h-5 w-5" />
-        <span>Not interested</span>
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setOpen(false); handleDontRecommend(); }}>
+        <UserX className="h-5 w-5" /><span>Don't recommend channel</span>
       </div>
-      <ReportDialog videoTitle={title} videoId={videoId}>
-        <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer">
-          <Flag className="h-5 w-5" />
-          <span>Report</span>
-        </div>
-      </ReportDialog>
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setOpen(false); handleNotInterested(); }}>
+        <EyeOff className="h-5 w-5" /><span>Not interested</span>
+      </div>
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setOpen(false); setTimeout(() => setShowReportDialog(true), 150); }}>
+        <Flag className="h-5 w-5" /><span>Report</span>
+      </div>
+    </>
+  );
+
+  // Dropdown items (desktop) — use onSelect+preventDefault for items that open modals
+  const dropdownItems = (
+    <>
+      <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={(e) => { e.preventDefault(); setShowShareModal(true); }}>
+        <Share className="h-5 w-5" /><span>Share</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={handleWatchLaterToggle}>
+        {saved ? <><BookmarkCheck className="h-5 w-5 fill-current text-primary" /><span className="text-primary">Saved</span></> : <><Clock className="h-5 w-5" /><span>Save to Watch later</span></>}
+      </DropdownMenuItem>
+      <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={(e) => { e.preventDefault(); setShowPlaylistDialog(true); }}>
+        <Bookmark className="h-5 w-5" /><span>Save to playlist</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={handleDontRecommend}>
+        <UserX className="h-5 w-5" /><span>Don't recommend channel</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={handleNotInterested}>
+        <EyeOff className="h-5 w-5" /><span>Not interested</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={(e) => { e.preventDefault(); setShowReportDialog(true); }}>
+        <Flag className="h-5 w-5" /><span>Report</span>
+      </DropdownMenuItem>
     </>
   );
 
@@ -181,29 +186,31 @@ export default function VideoCard({
               <span>{views}</span><span>•</span><span>{timestamp}</span>
             </div>
           </div>
-          {isDesktop ? (
+          {isMobile ? (
+            <Drawer open={open} onOpenChange={setOpen}>
+              <DrawerTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full self-start" onClick={e => e.stopPropagation()}>
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="px-0 max-h-[70vh]">
+                <div className="mt-2 pb-6">{drawerItems}</div>
+              </DrawerContent>
+            </Drawer>
+          ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full self-start" onClick={e => e.stopPropagation()}>
                   <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[240px] p-0 rounded-xl">{menuItems}</DropdownMenuContent>
+              <DropdownMenuContent align="end" className="w-60 p-0 rounded-xl">{dropdownItems}</DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <Drawer open={open} onOpenChange={setOpen}>
-              <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full self-start" onClick={e => { e.stopPropagation(); setOpen(true); }}>
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="px-0 max-h-[70vh]">
-                <div className="mt-2 pb-6">{menuItems}</div>
-              </DrawerContent>
-            </Drawer>
           )}
         </div>
         <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} videoUrl={videoUrl} />
+        <AddToPlaylistDialog video={{ id: videoId, title, channel }} open={showPlaylistDialog} onOpenChange={setShowPlaylistDialog} />
+        <ReportDialog videoTitle={title} videoId={videoId} open={showReportDialog} onOpenChange={setShowReportDialog} />
       </div>
     );
   }
@@ -228,26 +235,26 @@ export default function VideoCard({
           <Link href={videoLink} className="line-clamp-2 font-medium text-sm hover:text-primary transition-colors flex-1 leading-snug">
             {title}
           </Link>
-          {isDesktop ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 -mr-1 opacity-0 group-hover/card:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[240px] p-0 rounded-xl">{menuItems}</DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
+          {isMobile ? (
             <Drawer open={open} onOpenChange={setOpen}>
               <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 -mr-1" onClick={e => { e.stopPropagation(); setOpen(true); }}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 -mr-1" onClick={e => e.stopPropagation()}>
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DrawerTrigger>
               <DrawerContent className="px-0 max-h-[70vh]">
-                <div className="mt-2 pb-6">{menuItems}</div>
+                <div className="mt-2 pb-6">{drawerItems}</div>
               </DrawerContent>
             </Drawer>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 -mr-1" onClick={e => e.stopPropagation()}>
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60 p-0 rounded-xl">{dropdownItems}</DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
 
@@ -266,6 +273,8 @@ export default function VideoCard({
         </div>
       </div>
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} videoUrl={videoUrl} />
+      <AddToPlaylistDialog video={{ id: videoId, title, channel }} open={showPlaylistDialog} onOpenChange={setShowPlaylistDialog} />
+      <ReportDialog videoTitle={title} videoId={videoId} open={showReportDialog} onOpenChange={setShowReportDialog} />
     </div>
   );
 }

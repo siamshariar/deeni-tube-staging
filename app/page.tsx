@@ -1,7 +1,7 @@
 // app/page.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import VideoCard from "@/components/video-card";
 import LanguagePrompt from "@/components/language-prompt";
@@ -22,6 +22,7 @@ export default function Home() {
   const [hasSelected, setHasSelected] = useState(false);
   const [isGuest, setIsGuest] = useState(true);
   const [showLanguagePrompt, setShowLanguagePrompt] = useState(false);
+  const [isFirstTime, setIsFirstTime] = useState(false);
   const [visibleChannelIds, setVisibleChannelIds] = useState<string[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -75,10 +76,12 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setInitialLoading(false), 800);
+  // Runs synchronously before first paint — sets modal/language state so
+  // the feed is never visible to the user before the language modal on first visit.
+  useLayoutEffect(() => {
     const hasSelectedPref = localStorage.getItem("deeni-lang-prefs");
     if (!hasSelectedPref) {
+      setIsFirstTime(true);
       setShowLanguagePrompt(true);
     } else {
       try {
@@ -88,6 +91,10 @@ export default function Home() {
         setIsGuest(parsed.isGuest !== false);
       } catch {}
     }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setInitialLoading(false), 800);
     const savedVisible = localStorage.getItem("feed-visible-channels");
     if (savedVisible) {
       try {
@@ -133,7 +140,10 @@ export default function Home() {
       setPrevScrollPos(currentScrollPos);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      setHeaderVisible(true); // restore header when leaving home page
+    };
   }, [prevScrollPos, setHeaderVisible]);
 
   const filteredVideos = allVideos.filter(
@@ -163,19 +173,21 @@ export default function Home() {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <LanguagePrompt
         open={showLanguagePrompt}
+        canDismiss={!isFirstTime}
         onSave={(langs: string[]) => saveLanguagePrefs(langs, true)}
+        onClose={() => setShowLanguagePrompt(false)}
         onSkip={skipLanguage}
-        initialSelected={["en"]}
+        initialSelected={preferredLanguages}
       />
 
-      {/* Category chip bar — hides/shows with header, starts right below header */}
+      {/* Category chip bar — hidden until first-time language selection is done */}
       <div
         className={cn(
           "fixed z-20 h-12 border-b bg-background w-full transition-all duration-300",
           chipBarLeft,
           chipBarWidth,
           chipBarTop,
-          !headerVisible && "-translate-y-full opacity-0 pointer-events-none"
+          (!headerVisible || (isFirstTime && showLanguagePrompt)) && "-translate-y-full opacity-0 pointer-events-none"
         )}
       >
         <div
@@ -208,10 +220,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Content area */}
+      {/* Content area — hidden behind modal on first visit */}
       <div
         style={{ marginTop: contentMarginTop }}
-        className="transition-[margin-top] duration-300"
+        className={cn("transition-[margin-top] duration-300", isFirstTime && showLanguagePrompt && "invisible")}
       >
         {hasSelected && preferredLanguages.length > 0 && (
           <div className="px-4 py-1.5 text-xs text-muted-foreground bg-muted/30 border-b hidden md:block">

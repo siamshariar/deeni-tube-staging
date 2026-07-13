@@ -2,17 +2,17 @@
 "use client"
 
 import Link from "next/link"
-import { Home, PlaySquare, LayoutGrid, ListVideo, User } from "lucide-react"
+import { Home, PlaySquare, Users, LayoutGrid, GraduationCap, User } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
-// Channels and Scholars live in the mobile sidenav drawer only (no duplicates)
 const navItems = [
-  { href: "/", icon: Home, label: "Home" },
-  { href: "/shorts", icon: PlaySquare, label: "Shorts" },
-  { href: "/categories", icon: LayoutGrid, label: "Categories" },
-  { href: "/playlists", icon: ListVideo, label: "Playlists" },
-  { href: "/you", icon: User, label: "You" },
+  { href: "/",          icon: Home,          label: "Home" },
+  { href: "/shorts",    icon: PlaySquare,    label: "Shorts" },
+  { href: "/channels",  icon: Users,         label: "Channels" },
+  { href: "/categories",icon: LayoutGrid,    label: "Categories" },
+  { href: "/scholars",  icon: GraduationCap, label: "Scholars" },
+  { href: "/you",       icon: User,          label: "You" },
 ]
 
 export default function MobileNav() {
@@ -33,7 +33,7 @@ export default function MobileNav() {
     "/help/",
   ]
 
-  const listPages = ["/channels", "/scholars", "/categories", "/playlists"]
+  const listPages = ["/channels", "/scholars", "/categories", "/playlists", "/you", "/shorts"]
 
   // Hide on detail pages, show on list pages
   if (detailPatterns.some(prefix => pathname?.startsWith(prefix) && !listPages.includes(pathname))) {
@@ -42,12 +42,8 @@ export default function MobileNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border"
       style={{
-        background: "hsl(var(--background) / 0.92)",
-        backdropFilter: "saturate(180%) blur(20px)",
-        WebkitBackdropFilter: "saturate(180%) blur(20px)",
-        borderTop: "1px solid hsl(var(--border))",
         height: "calc(56px + env(safe-area-inset-bottom, 0px))",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
         display: "flex",

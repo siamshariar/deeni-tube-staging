@@ -17,11 +17,15 @@ const REPORT_REASONS = [
 interface ReportDialogProps {
   videoTitle: string;
   videoId: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ReportDialog({ videoTitle, videoId, children }: ReportDialogProps) {
-  const [open, setOpen] = useState(false);
+export function ReportDialog({ videoTitle, videoId, children, open: externalOpen, onOpenChange }: ReportDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleSubmit = () => {
@@ -50,7 +54,7 @@ export function ReportDialog({ videoTitle, videoId, children }: ReportDialogProp
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Report video</DialogTitle>

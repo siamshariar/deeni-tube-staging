@@ -46,7 +46,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ShareModal } from "@/components/share-modal";
+import { AddToPlaylistDialog } from "@/components/add-to-playlist-dialog";
+import { ReportDialog } from "@/components/report-dialog";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useWatchLater } from "@/hooks/useWatchLater";
 import { toast } from "sonner";
 import { videoData, VideoItem } from "@/lib/video-data"; // ✅ shared data
 
@@ -298,6 +301,12 @@ export default function VideoPlayPage() {
   const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
   const [commentsDrawerOpen, setCommentsDrawerOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
+  const [relatedDrawerOpen, setRelatedDrawerOpen] = useState(false);
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [selectedRelatedVideo, setSelectedRelatedVideo] = useState<VideoItem | null>(null);
+  const { addToWatchLater, removeFromWatchLater, isInWatchLater } = useWatchLater();
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [dislikedComments, setDislikedComments] = useState<Set<string>>(new Set());
 
@@ -499,30 +508,20 @@ export default function VideoPlayPage() {
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setShowShareModal(true)}>
                       <Share className="h-4 w-4" />
                     </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                    <Drawer open={menuDrawerOpen} onOpenChange={setMenuDrawerOpen}>
+                      <DrawerTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-72">
-                        <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <Clock className="h-5 w-5" /> Save to Watch later
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <Bookmark className="h-5 w-5" /> Save to playlist
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast("Channel removed from feed")} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <UserX className="h-5 w-5" /> Don't recommend channel
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <EyeOff className="h-5 w-5" /> Not interested
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                          <Flag className="h-5 w-5" /> Report
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      </DrawerTrigger>
+                      <DrawerContent className="px-0 max-h-[70vh]">
+                        <div className="mt-2 pb-6">
+                          <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setMenuDrawerOpen(false); toast("Channel removed from feed"); }}><UserX className="h-5 w-5" /> Don't recommend channel</div>
+                          <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setMenuDrawerOpen(false); toast("Video removed"); setTimeout(() => router.back(), 1000); }}><EyeOff className="h-5 w-5" /> Not interested</div>
+                          <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setMenuDrawerOpen(false); setTimeout(() => setShowReportDialog(true), 150); }}><Flag className="h-5 w-5" /> Report</div>
+                        </div>
+                      </DrawerContent>
+                    </Drawer>
                   </div>
                 </div>
 
@@ -584,21 +583,9 @@ export default function VideoPlayPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-72">
-                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <Clock className="h-5 w-5" /> Save to Watch later
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <Bookmark className="h-5 w-5" /> Save to playlist
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toast("Channel removed from feed")} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <UserX className="h-5 w-5" /> Don't recommend channel
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }} className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <EyeOff className="h-5 w-5" /> Not interested
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer">
-                            <Flag className="h-5 w-5" /> Report
-                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={() => toast("Channel removed from feed")}><UserX className="h-5 w-5" /> Don't recommend channel</DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={() => { toast("Video removed"); setTimeout(() => router.back(), 1000); }}><EyeOff className="h-5 w-5" /> Not interested</DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer" onSelect={(e) => { e.preventDefault(); setShowReportDialog(true); }}><Flag className="h-5 w-5" /> Report</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -884,34 +871,34 @@ export default function VideoPlayPage() {
                 <h3 className="font-semibold text-base mb-2">Related Videos</h3>
                 <div className="space-y-3">
                   {relatedVideos.map((v) => (
-                    <Link
-                      key={v.id}
-                      href={`/videos/${v.channel}/${v.videoId}`}
-                      className="flex gap-2 group hover:bg-muted/30 rounded-lg p-1 transition-colors"
-                    >
-                      <div className="relative w-[168px] h-[94px] flex-shrink-0">
-                        <Image
-                          src={`https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`}
-                          alt={v.title}
-                          fill
-                          className="object-cover rounded-lg"
-                        />
-                        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium">
-                          {v.duration}
-                        </div>
-                      </div>
+                    <div key={v.id} className="flex gap-2 group hover:bg-muted/30 rounded-lg p-1 transition-colors">
+                      <Link href={`/videos/${v.channel}/${v.videoId}`} className="relative w-[168px] h-[94px] flex-shrink-0">
+                        <Image src={`https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`} alt={v.title} fill className="object-cover rounded-lg" />
+                        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium">{v.duration}</div>
+                      </Link>
                       <div className="flex-1 min-w-0 py-1">
-                        <h4 className="font-medium text-sm line-clamp-2 group-hover:text-primary">
-                          {v.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {v.channel}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {v.views} • {v.timeAgo}
-                        </p>
+                        <div className="flex items-start gap-1">
+                          <Link href={`/videos/${v.channel}/${v.videoId}`} className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm line-clamp-2 group-hover:text-primary">{v.title}</h4>
+                          </Link>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1 rounded-full hover:bg-muted flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52 rounded-xl">
+                              <DropdownMenuItem className="cursor-pointer" onSelect={() => { if (isInWatchLater(v.id)) { removeFromWatchLater(v.id); toast.success("Removed from Watch Later"); } else { addToWatchLater({ id: v.id, title: v.title, channel: v.channel, channelAvatar: v.channelAvatar || "", thumbnail: `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`, views: v.views, timeAgo: v.timeAgo, duration: v.duration, addedAt: Date.now() }); toast.success("Saved to Watch Later"); } }}><Clock className="h-4 w-4 mr-2" /> {isInWatchLater(v.id) ? "Saved to Watch Later" : "Save to Watch Later"}</DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer" onSelect={(e) => { e.preventDefault(); setShowPlaylistDialog(true); setSelectedRelatedVideo(v); }}><Bookmark className="h-4 w-4 mr-2" /> Save to playlist</DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer" onSelect={(e) => { e.preventDefault(); setShowReportDialog(true); setSelectedRelatedVideo(v); }}><Flag className="h-4 w-4 mr-2" /> Report</DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer" onSelect={() => { setShowShareModal(true); }}><Share className="h-4 w-4 mr-2" /> Share</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{v.channel}</p>
+                        <p className="text-xs text-muted-foreground">{v.views} • {v.timeAgo}</p>
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -925,36 +912,37 @@ export default function VideoPlayPage() {
             <h3 className="font-semibold text-base mb-4">Related Videos</h3>
             <div className="space-y-3">
               {relatedVideos.map((v) => (
-                <Link
-                  key={v.id}
-                  href={`/videos/${v.channel}/${v.videoId}`}
-                  className="flex gap-3 group py-2 border-b last:border-0"
-                >
-                  <div className="relative w-40 aspect-video flex-shrink-0">
-                    <Image
-                      src={`https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`}
-                      alt={v.title}
-                      fill
-                      className="object-cover rounded-lg"
-                    />
-                    <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 py-0.5 rounded font-medium">
-                      {v.duration}
-                    </div>
-                  </div>
+                <div key={v.id} className="flex gap-3 group py-2 border-b last:border-0">
+                  <Link href={`/videos/${v.channel}/${v.videoId}`} className="relative w-40 aspect-video flex-shrink-0">
+                    <Image src={`https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`} alt={v.title} fill className="object-cover rounded-lg" />
+                    <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 py-0.5 rounded font-medium">{v.duration}</div>
+                  </Link>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm line-clamp-2 group-hover:text-primary">
-                      {v.title}
-                    </h4>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {v.channel}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {v.views} • {v.timeAgo}
-                    </p>
+                    <div className="flex items-start gap-1">
+                      <Link href={`/videos/${v.channel}/${v.videoId}`} className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm line-clamp-2 group-hover:text-primary">{v.title}</h4>
+                      </Link>
+                      <button className="p-1 rounded-full hover:bg-muted flex-shrink-0" onClick={(e) => { e.stopPropagation(); setSelectedRelatedVideo(v); setRelatedDrawerOpen(true); }}>
+                        <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{v.channel}</p>
+                    <p className="text-xs text-muted-foreground">{v.views} • {v.timeAgo}</p>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
+            {/* Single Drawer outside map — uses separate state from main video drawer */}
+            <Drawer open={relatedDrawerOpen} onOpenChange={(o) => { if (!o) { setRelatedDrawerOpen(false); setSelectedRelatedVideo(null); } }}>
+              <DrawerContent className="px-0 max-h-[70vh]">
+                <div className="mt-2 pb-6">
+                  <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setRelatedDrawerOpen(false); if (selectedRelatedVideo) { if (isInWatchLater(selectedRelatedVideo.id)) { removeFromWatchLater(selectedRelatedVideo.id); toast.success("Removed from Watch Later"); } else { addToWatchLater({ id: selectedRelatedVideo.id, title: selectedRelatedVideo.title, channel: selectedRelatedVideo.channel, channelAvatar: selectedRelatedVideo.channelAvatar || "", thumbnail: `https://img.youtube.com/vi/${selectedRelatedVideo.videoId}/hqdefault.jpg`, views: selectedRelatedVideo.views, timeAgo: selectedRelatedVideo.timeAgo, duration: selectedRelatedVideo.duration, addedAt: Date.now() }); toast.success("Saved to Watch Later"); } } }}><Clock className="h-5 w-5" /> {selectedRelatedVideo && isInWatchLater(selectedRelatedVideo.id) ? "Saved to Watch Later" : "Save to Watch Later"}</div>
+                  <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setRelatedDrawerOpen(false); setTimeout(() => { setShowPlaylistDialog(true); }, 150); }}><Bookmark className="h-5 w-5" /> Save to playlist</div>
+                  <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setRelatedDrawerOpen(false); setTimeout(() => { setShowReportDialog(true); }, 150); }}><Flag className="h-5 w-5" /> Report</div>
+                  <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer" onClick={() => { setRelatedDrawerOpen(false); setShowShareModal(true); }}><Share className="h-5 w-5" /> Share</div>
+                </div>
+              </DrawerContent>
+            </Drawer>
           </div>
         )}
       </div>
@@ -964,6 +952,17 @@ export default function VideoPlayPage() {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         videoUrl={typeof window !== "undefined" ? window.location.href : ""}
+      />
+      <AddToPlaylistDialog
+        video={selectedRelatedVideo ? { id: selectedRelatedVideo.id, title: selectedRelatedVideo.title, channel: selectedRelatedVideo.channel } : { id: mainVideo.id, title: mainVideo.title, channel: mainVideo.channel }}
+        open={showPlaylistDialog}
+        onOpenChange={(o) => { setShowPlaylistDialog(o); if (!o) setSelectedRelatedVideo(null); }}
+      />
+      <ReportDialog
+        videoTitle={selectedRelatedVideo ? selectedRelatedVideo.title : mainVideo.title}
+        videoId={selectedRelatedVideo ? selectedRelatedVideo.id : mainVideo.id}
+        open={showReportDialog}
+        onOpenChange={(o) => { setShowReportDialog(o); if (!o) setSelectedRelatedVideo(null); }}
       />
     </div>
   );
