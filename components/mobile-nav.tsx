@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Home, PlaySquare, Users, LayoutGrid, GraduationCap, User } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { useHeader } from "@/app/contexts/header-context"
 
 const navItems = [
   { href: "/",          icon: Home,          label: "Home" },
@@ -18,6 +19,7 @@ const navItems = [
 export default function MobileNav() {
   const pathname = usePathname()
   const isMobile = useMediaQuery("(max-width: 768px)")
+  const { headerVisible } = useHeader()
 
   if (!isMobile) return null
 
@@ -42,7 +44,9 @@ export default function MobileNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border"
+      className={`fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border transition-transform duration-300 ease-in-out ${
+        !headerVisible ? "translate-y-full" : "translate-y-0"
+      }`}
       style={{
         height: "calc(56px + env(safe-area-inset-bottom, 0px))",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
