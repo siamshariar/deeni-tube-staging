@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export default function Home() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { headerVisible, setHeaderVisible } = useHeader();
-  const [prevScrollPos, setPrevScrollPos] = useState(0);
+  const prevScrollPosRef = useRef(0);
   const [activeChip, setActiveChip] = useState("All");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -126,7 +126,7 @@ export default function Home() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
-      const isScrollingDown = currentScrollPos > prevScrollPos;
+      const isScrollingDown = currentScrollPos > prevScrollPosRef.current;
       const isNearTop = currentScrollPos < 56;
 
       if (isNearTop) {
@@ -137,14 +137,14 @@ export default function Home() {
         setHeaderVisible(true);
       }
 
-      setPrevScrollPos(currentScrollPos);
+      prevScrollPosRef.current = currentScrollPos;
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
       setHeaderVisible(true); // restore header when leaving home page
     };
-  }, [prevScrollPos, setHeaderVisible]);
+  }, [setHeaderVisible]);
 
   const filteredVideos = allVideos.filter(
     (v: VideoItem) =>
